@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="Vl4gtO" name="AudioVisualiser" projectType="audioplug" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
+  <MAINGROUP id="qUTN4J" name="AudioVisualiser">
+    <GROUP id="{2C5C7675-649F-AAD9-2D9E-98D3A1FE4CF2}" name="Source">
+      <GROUP id="{2390F4DA-F3D6-7BD9-B2AB-6025A80E1B32}" name="profiles">
+        <FILE id="LQjqOr" name="RenderProfileComponent.cpp" compile="1" resource="0"
+              file="Source/RenderProfileComponent.cpp"/>
+        <FILE id="KtHVKG" name="RenderProfileComponent.h" compile="0" resource="0"
+              file="Source/RenderProfileComponent.h"/>
+      </GROUP>
+      <FILE id="hmrUVy" name="tv.png" compile="0" resource="1" file="Source/tv.png"/>
+      <FILE id="YE2KIK" name="CircularBuffer.cpp" compile="1" resource="0"
+            file="Source/CircularBuffer.cpp"/>
+      <FILE id="iTx3Xw" name="CircularBuffer.h" compile="0" resource="0"
+            file="Source/CircularBuffer.h"/>
+      <GROUP id="{F84C6851-88F1-C34A-B55C-867AC3CB76A4}" name="render">
+        <FILE id="bgmj4b" name="Mesh.h" compile="0" resource="0" file="Source/Mesh.h"/>
+        <FILE id="aoJELf" name="RenderState3D.cpp" compile="1" resource="0"
+              file="Source/RenderState3D.cpp"/>
+        <FILE id="FMfEsr" name="RenderState3D.h" compile="0" resource="0" file="Source/RenderState3D.h"/>
+        <GROUP id="{7E4981D0-DA0A-9F15-7BC9-717EFFCFF3F1}" name="renders">
+          <FILE id="eAUQLl" name="Classic1_2D.h" compile="0" resource="0" file="Source/Classic1_2D.h"/>
+          <FILE id="YREYxA" name="Classic2_2D.h" compile="0" resource="0" file="Source/Classic2_2D.h"/>
+          <FILE id="wXEFh0" name="Classic3_2D.h" compile="0" resource="0" file="Source/Classic3_2D.h"/>
+          <FILE id="puYTWN" name="Classic4_2D.h" compile="0" resource="0" file="Source/Classic4_2D.h"/>
+          <FILE id="q7v8Dz" name="RenderHeaders.h" compile="0" resource="0" file="Source/RenderHeaders.h"/>
+          <FILE id="xiBIbS" name="SDF_1_2D.h" compile="0" resource="0" file="Source/SDF_1_2D.h"/>
+          <FILE id="aFcpUy" name="TimeDomain1_2D.h" compile="0" resource="0"
+                file="Source/TimeDomain1_2D.h"/>
+          <FILE id="FiyJuj" name="TimeDomain2_2D.h" compile="0" resource="0"
+                file="Source/TimeDomain2_2D.h"/>
+          <FILE id="jPUCew" name="TimeDomain3_2D.h" compile="0" resource="0"
+                file="Source/TimeDomain3_2D.h"/>
+        </GROUP>
+        <FILE id="M3cAmq" name="RenderState.cpp" compile="1" resource="0" file="Source/RenderState.cpp"/>
+        <FILE id="kr0uxs" name="RenderState.h" compile="0" resource="0" file="Source/RenderState.h"/>
+        <FILE id="Xgrkxg" name="RenderState2D.cpp" compile="1" resource="0"
+              file="Source/RenderState2D.cpp"/>
+        <FILE id="NiSJAU" name="RenderState2D.h" compile="0" resource="0" file="Source/RenderState2D.h"/>
+        <FILE id="IqJcss" name="TVImageOverlay.h" compile="0" resource="0"
+              file="Source/TVImageOverlay.h"/>
+      </GROUP>
+      <FILE id="kUa8Hx" name="SelectorTabPanel.cpp" compile="1" resource="0"
+            file="Source/SelectorTabPanel.cpp"/>
+      <FILE id="NGgCf3" name="SelectorTabPanel.h" compile="0" resource="0"
+            file="Source/SelectorTabPanel.h"/>
+      <FILE id="h24g7z" name="OpenGLComponent.cpp" compile="1" resource="0"
+            file="Source/OpenGLComponent.cpp"/>
+      <FILE id="lKbdaf" name="OpenGLComponent.h" compile="0" resource="0"
+            file="Source/OpenGLComponent.h"/>
+      <FILE id="QzyCmz" name="PluginProcessor.cpp" compile="1" resource="0"
+            file="Source/PluginProcessor.cpp"/>
+      <FILE id="rXek4b" name="PluginProcessor.h" compile="0" resource="0"
+            file="Source/PluginProcessor.h"/>
+      <FILE id="hLbfXk" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="PLr4Ld" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_opengl" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_video" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
+  <EXPORTFORMATS>
+    <VS2022 targetFolder="Builds/VisualStudio2022">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="AudioVisualiser"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="AudioVisualiser"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_opengl" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+        <MODULEPATH id="juce_video" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
+      </MODULEPATHS>
+    </VS2022>
+  </EXPORTFORMATS>
+</JUCERPROJECT>
