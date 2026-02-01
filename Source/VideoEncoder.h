@@ -27,8 +27,27 @@ class VideoEncoder {
 
 public:
 
-    VideoEncoder(juce::String& file, juce::String& codec, int width, int height);
-    ~VideoEncoder();
+    // a wrapper around a single output AVStream - mux.c 2003
+    typedef struct OutputStream {
+        AVStream* st;
+        AVCodecContext* enc;
+
+        /* pts of the next frame that will be generated */
+        int64_t next_pts;
+        int samples_count;
+
+        AVFrame* frame;
+        AVFrame* tmp_frame;
+
+        AVPacket* tmp_pkt;
+
+        float t, tincr, tincr2;
+
+        struct SwsContext* sws_ctx;
+        struct SwrContext* swr_ctx;
+    } OutputStream;
+
+    VideoEncoder(const juce::String& file, const juce::String& codec, int width, int height);
     
     void encode(AVFrame* frame);
     
@@ -38,18 +57,20 @@ public:
     
     bool finishRecordingSession();
 
-    private:
-
-        juce::String file_name, codec_name;
-        int width, height;
-
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VideoEncoder)
-
 private:
-    FILE* f;
-    AVFormatContext* formatContext;
-    AVCodecContext* videoContext;
-    const AVOutputFormat* outputFormat;
-    const AVCodec* codec;
-    AVStream* stream;
+
+    bool initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec, enum AVCodecID codec_id);
+
+    const juce::String file_name, codec_name;
+    int width, height;
+
+    OutputStream video_st = { 0 }, audio_st = { 0 };
+    const AVOutputFormat* fmt;
+    AVFormatContext* oc;
+    const AVCodec* audio_codec, * video_codec;
+
+    bool active;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VideoEncoder)
+
 };
