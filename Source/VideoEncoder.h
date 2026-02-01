@@ -23,6 +23,11 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+#define STREAM_PIX_FMT_DEFAULT AV_PIX_FMT_YUV420P
+#define STREAM_FRAME_RATE 30
+
+#define SCALE_FLAGS SWS_BICUBIC
+
 class VideoEncoder {
 
 public:
@@ -49,7 +54,7 @@ public:
 
     VideoEncoder(const juce::String& file, const juce::String& codec, int width, int height);
     
-    void encode(AVFrame* frame);
+    int encode(AVFormatContext* fmt_ctx, AVCodecContext* c, AVStream* st, AVFrame* frame, AVPacket* pkt);
     
     void addVideoFrame(const juce::Image& image);
 
@@ -57,14 +62,20 @@ public:
     
     bool finishRecordingSession();
 
+    void fill_yuv_image(AVFrame* pict, int frame_index, int width, int height);
+
 private:
 
     bool initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec, enum AVCodecID codec_id);
+    void openVideo(AVFormatContext* oc, const AVCodec* codec, OutputStream* ost, AVDictionary* opt_arg);
+    AVFrame* allocFrame(enum AVPixelFormat pix_fmt, int width, int height);
 
     const juce::String file_name, codec_name;
     int width, height;
+    int have_video = 0, have_audio = 0;
+    int encode_video = 0, encode_audio = 0;
 
-    OutputStream video_st = { 0 }, audio_st = { 0 };
+    OutputStream video_st = { 0 };
     const AVOutputFormat* fmt;
     AVFormatContext* oc;
     const AVCodec* audio_codec, * video_codec;
