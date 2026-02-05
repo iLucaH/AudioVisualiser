@@ -5,6 +5,14 @@
     Created: 23 Jan 2026 3:31:10pm
     Author:  lucas
 
+    Sources:
+    * https://stackoverflow.com/questions/49862610/opengl-to-ffmpeg-encode
+    * https://github.com/FFmpeg/FFmpeg/blob/master/doc/examples/mux.c
+    * https://github.com/FFmpeg/FFmpeg/blob/master/doc/examples/encode_video.c
+    * https://github.com/filmstro/filmstro_ffmpeg/blob/master/modules/filmstro_ffmpeg/filmstro_ffmpeg_FFmpegVideoWriter.cpp
+    * https://docs.nvidia.com/video-technologies/video-codec-sdk/13.0/ffmpeg-with-nvidia-gpu/index.html
+    * https://developer.nvidia.com/video-codec-sdk/download
+
   ==============================================================================
 */
 
@@ -12,6 +20,42 @@
 
 VideoEncoder::VideoEncoder(const juce::String& file, const juce::String& codec, int width, int height) : file_name(file), codec_name(codec), width(width), height(height) {
     active = false;
+}
+
+int VideoEncoder::getDeviceName(juce::String& gpuName) {
+    //Setup the cuda context for hardware encoding with ffmpeg
+    NV_ENC_BUFFER_FORMAT eFormat = NV_ENC_BUFFER_FORMAT_IYUV;
+    int iGpu = 0;
+    CUresult ret;
+    ret = cuInit(0);
+    if (ret != CUDA_SUCCESS) {
+        DBG("Cuda instance failed to initialise!");
+        return -1;
+    }
+    int nGpu = 0;
+    ret = cuDeviceGetCount(&nGpu);
+    if (ret != CUDA_SUCCESS) {
+        DBG("Cuda instance failed to cuDeviceGetCount!");
+        return -1;
+    }
+    if (nGpu <= iGpu) {
+        DBG("GPU ordinal out of range.");
+        return -1;
+    }
+    CUdevice cuDevice = 0;
+    ret = cuDeviceGet(&cuDevice, iGpu);
+    if (ret != CUDA_SUCCESS) {
+        DBG("Cuda instance failed to cuDeviceGet!");
+        return -1;
+    }
+    char szDeviceName[80];
+    ret = cuDeviceGetName(szDeviceName, sizeof(szDeviceName), cuDevice);
+    if (ret != CUDA_SUCCESS) {
+        DBG("Cuda instance failed to cuDeviceGetName!");
+        return -1;
+    }
+    gpuName = szDeviceName;
+    return 1;
 }
 
 bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec, enum AVCodecID codec_id) {
@@ -201,7 +245,8 @@ bool VideoEncoder::startRecordingSession() {
     return true;
 }
 
-void VideoEncoder::addVideoFrame(const juce::Image&) {
+void VideoEncoder::addVideoFrame(const juce::Image& image)
+{
     if (!active) return;
 
     OutputStream* ost = &video_st;
@@ -209,33 +254,30 @@ void VideoEncoder::addVideoFrame(const juce::Image&) {
     if (av_frame_make_writable(ost->frame) < 0)
         return;
 
-    if (ost->enc->pix_fmt != AV_PIX_FMT_YUV420P) {
-        if (!ost->sws_ctx) {
-            ost->sws_ctx = sws_getContext(
-                ost->enc->width, ost->enc->height,
-                AV_PIX_FMT_YUV420P,
-                ost->enc->width, ost->enc->height,
-                ost->enc->pix_fmt,
-                SCALE_FLAGS, NULL, NULL, NULL
-            );
-        }
+    juce::Image::BitmapData data(image, juce::Image::BitmapData::readOnly);
 
-        fill_yuv_image(ost->tmp_frame, ost->next_pts,
-            ost->enc->width, ost->enc->height);
+    uint8_t* srcData[4] = { data.data, nullptr, nullptr, nullptr };
+    int srcLinesize[4] = { data.lineStride, 0, 0, 0 };
 
-        sws_scale(
-            ost->sws_ctx,
-            (const uint8_t* const*)ost->tmp_frame->data,
-            ost->tmp_frame->linesize,
-            0, ost->enc->height,
-            ost->frame->data,
-            ost->frame->linesize
+    if (!ost->sws_ctx) {
+        ost->sws_ctx = sws_getContext(
+            image.getWidth(), image.getHeight(),
+            AV_PIX_FMT_BGRA,
+            ost->enc->width, ost->enc->height,
+            ost->enc->pix_fmt,
+            SCALE_FLAGS, nullptr, nullptr, nullptr
         );
     }
-    else {
-        fill_yuv_image(ost->frame, ost->next_pts,
-            ost->enc->width, ost->enc->height);
-    }
+
+    sws_scale(
+        ost->sws_ctx,
+        srcData,
+        srcLinesize,
+        0,
+        image.getHeight(),
+        ost->frame->data,
+        ost->frame->linesize
+    );
 
     ost->frame->pts = ost->next_pts++;
 
@@ -259,7 +301,11 @@ int VideoEncoder::encode(AVFormatContext* fmt_ctx, AVCodecContext* c, AVStream* 
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
             break;
         else if (ret < 0) {
-            DBG("Error encoding a frame");
+            
+            
+            
+            
+            ("Error encoding a frame");
             return 1;
         }
 

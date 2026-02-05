@@ -23,6 +23,9 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+#include <nvEncodeAPI.h>
+#include <cuda.h>
+
 #define STREAM_PIX_FMT_DEFAULT AV_PIX_FMT_YUV420P
 #define STREAM_FRAME_RATE 30
 
@@ -69,6 +72,7 @@ private:
     bool initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec, enum AVCodecID codec_id);
     void openVideo(AVFormatContext* oc, const AVCodec* codec, OutputStream* ost, AVDictionary* opt_arg);
     AVFrame* allocFrame(enum AVPixelFormat pix_fmt, int width, int height);
+    int getDeviceName(juce::String& gpuName);
 
     const juce::String file_name, codec_name;
     int width, height;

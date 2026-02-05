@@ -16,6 +16,7 @@
 #include "RenderState.h"
 #include "RenderState2D.h"
 #include "PluginProcessor.h"
+#include "VideoEncoder.h"
 
 //==============================================================================
 /*
@@ -74,13 +75,15 @@ public:
 
 private:
     AudioVisualiserAudioProcessor& processor;
-    CircularBuffer<float>& circularBuffer;
+    RingBuffer<float>& ringBuffer;
     juce::AudioBuffer<GLfloat> readBuffer;
     GLfloat visualizationBuffer[RING_BUFFER_READ_SIZE];
 
     unsigned int selectedState = 1;
     unsigned int time = 0;
     std::vector<std::unique_ptr<RenderState>> renderStates;
+
+    uint8_t* pixelBuffer;
 
     void addRenderState(std::unique_ptr<RenderState> state) {
         renderStates.push_back(std::move(state));
