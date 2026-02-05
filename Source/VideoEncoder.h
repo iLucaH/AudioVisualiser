@@ -19,12 +19,16 @@
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavutil/opt.h>
+#include <libavutil/hwcontext_cuda.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 }
 
 #include <nvEncodeAPI.h>
 #include <cuda.h>
+#include <cudaGL.h>
+
+#include "Texture.h"
 
 #define STREAM_PIX_FMT_DEFAULT AV_PIX_FMT_YUV420P
 #define STREAM_FRAME_RATE 30
@@ -83,6 +87,13 @@ private:
     const AVOutputFormat* fmt;
     AVFormatContext* oc;
     const AVCodec* audio_codec, * video_codec;
+    
+    // Cuda and nvenc related variables.
+    AVBufferRef* avBufferDevice, *avBufferFrame;
+    CUcontext* cudaContext;
+    unsigned int texture_id;
+    CUDA_MEMCPY3D memcopyStruct;
+
 
     bool active;
 

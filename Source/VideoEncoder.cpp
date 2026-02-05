@@ -18,7 +18,7 @@
 
 #include "VideoEncoder.h"
 
-VideoEncoder::VideoEncoder(const juce::String& file, const juce::String& codec, int width, int height) : file_name(file), codec_name(codec), width(width), height(height) {
+VideoEncoder::VideoEncoder(const juce::String& file, const juce::String& codec, int width, int height) : file_name(file), codec_name(codec), width(width), height(height), memcopyStruct({0}) {
     active = false;
 }
 
@@ -60,7 +60,7 @@ int VideoEncoder::getDeviceName(juce::String& gpuName) {
 
 bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec, enum AVCodecID codec_id) {
     AVCodecContext* codecContext;
-    int i;
+    int i, ret;
 
     // Find the encoder using the codec_id discovered from the AVOutputFormat
     *codec = avcodec_find_encoder(codec_id);
@@ -90,7 +90,7 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
     // Create the codec context (AVCodecContext)
     codecContext = avcodec_alloc_context3(*codec);
     if (!codecContext) {
-        DBG("Could not alloc an encoding context\n");
+        DBG("Could not alloc an encoding context.");
         return false;
     }
     // Assign this new codec context to the output stream struct.
@@ -118,6 +118,67 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
         return false;
     }
 
+    // Cuda related setup.
+    juce::String gpuName;
+    getDeviceName(gpuName);
+    ret = av_hwdevice_ctx_create(&avBufferDevice, AV_HWDEVICE_TYPE_CUDA, gpuName.toRawUTF8(), NULL, NULL);
+    if (ret < 0) {
+        DBG("Could not create a AV_HWDEVICE_TYPE_CUDA instance.");
+        return false;
+    }
+
+    // Cast down to access cuda context.
+    AVHWDeviceContext* hwDevContext = (AVHWDeviceContext*)(avBufferDevice->data);
+    AVCUDADeviceContext* cudaDevCtx = (AVCUDADeviceContext*)(hwDevContext->hwctx);
+    cudaContext = &(cudaDevCtx->cuda_ctx);
+
+    // Create the hwframe_context.
+    // This is an abstraction of a cuda buffer for us. This enables us to, with one call, setup the cuda buffer and ready it for input.
+    avBufferFrame = av_hwframe_ctx_alloc(avBufferDevice);
+    AVHWFramesContext* frameCtxPtr = (AVHWFramesContext*)(avBufferFrame->data);
+    frameCtxPtr->width = width;
+    frameCtxPtr->height = height;
+    frameCtxPtr->sw_format = AV_PIX_FMT_YUV420P;
+    frameCtxPtr->format = AV_PIX_FMT_CUDA;
+    frameCtxPtr->device_ref = avBufferDevice;
+    frameCtxPtr->device_ctx = (AVHWDeviceContext*)avBufferDevice->data;
+
+    // Init the frame so that we can allocate a cuda buffer.
+    ret = av_hwframe_ctx_init(avBufferFrame);
+    if (ret < 0) {
+        DBG("Could not init a av_hwframe_ctx_init frame.");
+        return false;
+    }
+
+    // Cast the OGL texture/buffer to cuda ptr.
+    CUresult res;
+    CUcontext oldCtx; // Calls to oldCtx are allowed to fail.
+    CUgraphicsResource cudaTextureResource;
+    texture_id = create_gl_texture_id(width, height);
+    res = cuCtxPopCurrent(&oldCtx);
+    res = cuCtxPushCurrent(*cudaContext);
+    res = cuGraphicsGLRegisterImage(&cudaTextureResource, texture_id, juce::gl::GL_TEXTURE_2D, CU_GRAPHICS_REGISTER_FLAGS_READ_ONLY);
+    if (res != CUDA_SUCCESS) {
+        DBG("Could not register a cuGraphicsGLRegisterImage gl image.");
+    }
+    res = cuCtxPopCurrent(&oldCtx);
+
+    // Assign some hardware accel specific data to AvCodecContext.
+    codecContext->hw_device_ctx = avBufferDevice; // This must be done BEFORE avcodec_open2().
+    codecContext->pix_fmt = AV_PIX_FMT_CUDA; // Since this is a cuda buffer, although its really opengl with a cuda ptr
+    codecContext->hw_frames_ctx = avBufferFrame;
+    codecContext->codec_type = AVMEDIA_TYPE_VIDEO;
+    codecContext->sw_pix_fmt = STREAM_PIX_FMT_DEFAULT; // This is only used for decoding which we aren't doing.
+
+    // Setup some cuda stuff for memcpy-ing later
+    memcopyStruct.srcXInBytes = 0;
+    memcopyStruct.srcY = 0;
+    memcopyStruct.srcMemoryType = CUmemorytype::CU_MEMORYTYPE_ARRAY;
+
+    memcopyStruct.dstXInBytes = 0;
+    memcopyStruct.dstY = 0;
+    memcopyStruct.dstMemoryType = CUmemorytype::CU_MEMORYTYPE_DEVICE;
+
     return true;
 }
 
@@ -132,6 +193,9 @@ AVFrame* VideoEncoder::allocFrame(enum AVPixelFormat pix_fmt, int width, int hei
     frame->format = pix_fmt;
     frame->width = width;
     frame->height = height;
+
+    // Allocate RGB video frame buffer.
+    ret = av_hwframe_get_buffer(avBufferFrame, frame, 0);
 
     // Allocate buffers for the frame data.
     ret = av_frame_get_buffer(frame, 0);
@@ -301,10 +365,6 @@ int VideoEncoder::encode(AVFormatContext* fmt_ctx, AVCodecContext* c, AVStream* 
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
             break;
         else if (ret < 0) {
-            
-            
-            
-            
             ("Error encoding a frame");
             return 1;
         }
