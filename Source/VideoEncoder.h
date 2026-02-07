@@ -28,8 +28,6 @@ extern "C" {
 #include <cuda.h>
 #include <cudaGL.h>
 
-#include "Texture.h"
-
 #define STREAM_PIX_FMT_DEFAULT AV_PIX_FMT_YUV420P
 #define STREAM_FRAME_RATE 30
 
@@ -76,7 +74,43 @@ private:
     bool initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec, enum AVCodecID codec_id);
     void openVideo(AVFormatContext* oc, const AVCodec* codec, OutputStream* ost, AVDictionary* opt_arg);
     AVFrame* allocFrame(enum AVPixelFormat pix_fmt, int width, int height);
-    int getDeviceName(juce::String& gpuName);
+    
+
+    int getDeviceName(juce::String& gpuName) {
+        //Setup the cuda context for hardware encoding with ffmpeg
+        NV_ENC_BUFFER_FORMAT eFormat = NV_ENC_BUFFER_FORMAT_IYUV;
+        int iGpu = 0;
+        CUresult ret;
+        ret = cuInit(0);
+        if (ret != CUDA_SUCCESS) {
+            DBG("Cuda instance failed to initialise!");
+            return -1;
+        }
+        int nGpu = 0;
+        ret = cuDeviceGetCount(&nGpu);
+        if (ret != CUDA_SUCCESS) {
+            DBG("Cuda instance failed to cuDeviceGetCount!");
+            return -1;
+        }
+        if (nGpu <= iGpu) {
+            DBG("GPU ordinal out of range.");
+            return -1;
+        }
+        CUdevice cuDevice = 0;
+        ret = cuDeviceGet(&cuDevice, iGpu);
+        if (ret != CUDA_SUCCESS) {
+            DBG("Cuda instance failed to cuDeviceGet!");
+            return -1;
+        }
+        char szDeviceName[80];
+        ret = cuDeviceGetName(szDeviceName, sizeof(szDeviceName), cuDevice);
+        if (ret != CUDA_SUCCESS) {
+            DBG("Cuda instance failed to cuDeviceGetName!");
+            return -1;
+        }
+        gpuName = szDeviceName;
+        return 1;
+    }
 
     const juce::String file_name, codec_name;
     int width, height;
@@ -92,7 +126,8 @@ private:
     AVBufferRef* avBufferDevice, *avBufferFrame;
     CUcontext* cudaContext;
     unsigned int texture_id;
-    CUDA_MEMCPY3D memcopyStruct;
+    CUDA_MEMCPY2D memcopyStruct;
+    CUgraphicsResource cudaTextureResource;
 
 
     bool active;

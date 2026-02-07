@@ -40,5 +40,7 @@ private:
     juce::ImageComponent tvComponent;
     SelectorTabPanel selectorPanel;
 
+    int tick;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioVisualiserAudioProcessorEditor)
 };
