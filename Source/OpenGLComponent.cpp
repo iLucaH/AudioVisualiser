@@ -13,7 +13,7 @@
 #include "RenderHeaders.h"
 
 //==============================================================================
-OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p) : processor(p), circularBuffer(p.getCircularBuffer()), readBuffer(2, RING_BUFFER_READ_SIZE) {
+OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p) : processor(p), ringBuffer(p.getRingBuffer()), readBuffer(2, RING_BUFFER_READ_SIZE) {
     addRenderState(std::make_unique<Classic1_2D>(1, openGLContext));
     addRenderState(std::make_unique<Classic2_2D>(2, openGLContext));
     addRenderState(std::make_unique<Classic3_2D>(3, openGLContext));
@@ -30,6 +30,7 @@ OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p) : processor(p
 }
 
 OpenGLComponent::~OpenGLComponent() {
+    videoEncoder.release();
     openGLContext.detach();
 }
 
@@ -41,12 +42,16 @@ void OpenGLComponent::resized() {
 }
 
 void OpenGLComponent::newOpenGLContextCreated() {
+    juce::gl::glDebugMessageControl(juce::gl::GL_DONT_CARE, juce::gl::GL_DONT_CARE, juce::gl::GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, juce::gl::GL_FALSE);
     for (int i = 0; i < renderStates.size(); i++) {
         RenderState* renderState = renderStates[i].get();
         if (renderState->isInititalised() == false) {
             renderState->initAndCompileShaders();
         }
     }
+    videoEncoder = std::make_unique<VideoEncoder>(juce::String("C:/Users/lucas/OneDrive/Desktop/test/test.mp4"), getWidth(), getHeight());
+    bool ret = videoEncoder->startRecordingSession();
+    DBG("" + ret);
 }
 
 void OpenGLComponent::renderOpenGL() {
@@ -80,19 +85,20 @@ void OpenGLComponent::renderOpenGL() {
     openGLContext.extensions.glUniform1f(screenWidthUniform, getWidth() * scale);
     openGLContext.extensions.glUniform1f(screenHeightUniform, getHeight() * scale);
 
-    circularBuffer.readSamples(readBuffer, RING_BUFFER_READ_SIZE);
+    ringBuffer.readSamples(readBuffer, RING_BUFFER_READ_SIZE);
     juce::FloatVectorOperations::clear(visualizationBuffer, RING_BUFFER_READ_SIZE);
     for (int i = 0; i < 2; ++i) { // Sum channels together
         juce::FloatVectorOperations::add(visualizationBuffer, readBuffer.getReadPointer(i, 0), RING_BUFFER_READ_SIZE);
     }
-    DBG("TESTING ABCDEFG");
-    for (int i = 0; i < 256; i++) {
-        DBG(visualizationBuffer[i]);
-    }
     GLuint visualizationUniform = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "audioBufferTD");
     openGLContext.extensions.glUniform1fv(visualizationUniform, RING_BUFFER_READ_SIZE, visualizationBuffer);
-
+    if (time == 1000) {
+        videoEncoder->finishRecordingSession();
+    } else if (time < 1000) {
+        videoEncoder->addVideoFrame();
+    }
     renderState->render();
+
 }
 
 void OpenGLComponent::openGLContextClosing() {

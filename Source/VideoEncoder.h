@@ -52,30 +52,26 @@ public:
         AVPacket* tmp_pkt;
 
         float t, tincr, tincr2;
-
-        struct SwsContext* sws_ctx;
-        struct SwrContext* swr_ctx;
     } OutputStream;
 
-    VideoEncoder(const juce::String& file, const juce::String& codec, int width, int height);
+    VideoEncoder(const juce::String& file, int width, int height);
     
     int encode(AVFormatContext* fmt_ctx, AVCodecContext* c, AVStream* st, AVFrame* frame, AVPacket* pkt);
     
-    void addVideoFrame(const juce::Image& image);
+    void addVideoFrame();
 
     bool startRecordingSession();
     
     bool finishRecordingSession();
 
-    void fill_yuv_image(AVFrame* pict, int frame_index, int width, int height);
+    void cleanup();
 
 private:
 
-    bool initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec, enum AVCodecID codec_id);
+    bool initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec);
     void openVideo(AVFormatContext* oc, const AVCodec* codec, OutputStream* ost, AVDictionary* opt_arg);
     AVFrame* allocFrame(enum AVPixelFormat pix_fmt, int width, int height);
     
-
     int getDeviceName(juce::String& gpuName) {
         //Setup the cuda context for hardware encoding with ffmpeg
         NV_ENC_BUFFER_FORMAT eFormat = NV_ENC_BUFFER_FORMAT_IYUV;
@@ -112,7 +108,7 @@ private:
         return 1;
     }
 
-    const juce::String file_name, codec_name;
+    const juce::String file_name;
     int width, height;
     int have_video = 0, have_audio = 0;
     int encode_video = 0, encode_audio = 0;
@@ -128,7 +124,6 @@ private:
     unsigned int texture_id;
     CUDA_MEMCPY2D memcopyStruct;
     CUgraphicsResource cudaTextureResource;
-
 
     bool active;
 

@@ -20,17 +20,17 @@
 
 #include "Texture.h"
 
-VideoEncoder::VideoEncoder(const juce::String& file, const juce::String& codec, int width, int height) : file_name(file), codec_name(codec), width(width), height(height), memcopyStruct({0}) {
+VideoEncoder::VideoEncoder(const juce::String& file, int width, int height) : file_name(file), width(width), height(height), memcopyStruct({0}) {
     active = false;
     texture_id = create_gl_texture_id(width, height);
 }
 
-bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec, enum AVCodecID codec_id) {
+bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec) {
     AVCodecContext* codecContext;
     int i, ret;
 
     // Find the encoder using the codec_id discovered from the AVOutputFormat
-    *codec = avcodec_find_encoder(codec_id);
+    *codec = avcodec_find_encoder_by_name("h264_nvenc");
     if (!(*codec)) {
         DBG("Could not find encoder for '%s'\n",
             avcodec_get_name(codec_id));
@@ -53,6 +53,7 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
 
     // Not too sure just yet why this is necessary but it is present in mux.c line 151.
     ost->st->id = oc->nb_streams - 1;
+    ost->next_pts = 0;
 
     // Create the codec context (AVCodecContext)
     codecContext = avcodec_alloc_context3(*codec);
@@ -64,7 +65,7 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
     ost->enc = codecContext;
     if ((*codec)->type == AVMEDIA_TYPE_VIDEO) {
         // Apply video settings to the codec context.
-        codecContext->codec_id = codec_id;
+        codecContext->codec_id = (*codec)->id;
         codecContext->bit_rate = 400000;
         codecContext->width = width % 2 == 0 ? width : width - 1; // Must be a multiple of 2.
         codecContext->height = height % 2 == 0 ? height : height - 1; // Must be a multiple of 2.
@@ -88,7 +89,7 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
     // Cuda related setup.
     juce::String gpuName;
     getDeviceName(gpuName);
-    ret = av_hwdevice_ctx_create(&avBufferDevice, AV_HWDEVICE_TYPE_CUDA, gpuName.toRawUTF8(), NULL, NULL);
+    ret = av_hwdevice_ctx_create(&avBufferDevice, AV_HWDEVICE_TYPE_CUDA, NULL, NULL, 0);
     if (ret < 0) {
         DBG("Could not create a AV_HWDEVICE_TYPE_CUDA instance.");
         return false;
@@ -105,14 +106,16 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
     AVHWFramesContext* frameCtxPtr = (AVHWFramesContext*)(avBufferFrame->data);
     frameCtxPtr->width = width;
     frameCtxPtr->height = height;
-    frameCtxPtr->sw_format = AV_PIX_FMT_YUV420P;
+    frameCtxPtr->sw_format = AV_PIX_FMT_RGBA;
     frameCtxPtr->format = AV_PIX_FMT_CUDA;
-    frameCtxPtr->device_ref = avBufferDevice;
-    frameCtxPtr->device_ctx = (AVHWDeviceContext*)avBufferDevice->data;
+    //frameCtxPtr->device_ref = avBufferDevice;
+    //frameCtxPtr->device_ctx = (AVHWDeviceContext*)avBufferDevice->data;
 
     // Init the frame so that we can allocate a cuda buffer.
     ret = av_hwframe_ctx_init(avBufferFrame);
     if (ret < 0) {
+        av_buffer_unref(&avBufferDevice);
+        av_buffer_unref(&avBufferFrame);
         DBG("Could not init a av_hwframe_ctx_init frame.");
         return false;
     }
@@ -124,13 +127,16 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
     res = cuCtxPushCurrent(*cudaContext);
     res = cuGraphicsGLRegisterImage(&cudaTextureResource, texture_id, juce::gl::GL_TEXTURE_2D, CU_GRAPHICS_REGISTER_FLAGS_READ_ONLY);
     if (res != CUDA_SUCCESS) {
+        av_buffer_unref(&avBufferDevice);
+        av_buffer_unref(&avBufferFrame);
+        cuCtxDestroy(*cudaContext);
         DBG("Could not register a cuGraphicsGLRegisterImage gl image.");
     }
     res = cuCtxPopCurrent(&oldCtx);
 
     // Assign some hardware accel specific data to AvCodecContext.
     codecContext->hw_device_ctx = avBufferDevice; // This must be done BEFORE avcodec_open2().
-    codecContext->pix_fmt = AV_PIX_FMT_CUDA; // Since this is a cuda buffer, although its really opengl with a cuda ptr
+    codecContext->pix_fmt = AV_PIX_FMT_YUV420P; // Since this is a cuda buffer, although its really opengl with a cuda ptr
     codecContext->hw_frames_ctx = avBufferFrame;
     codecContext->codec_type = AVMEDIA_TYPE_VIDEO;
     codecContext->sw_pix_fmt = STREAM_PIX_FMT_DEFAULT; // This is only used for decoding which we aren't doing.
@@ -162,10 +168,11 @@ AVFrame* VideoEncoder::allocFrame(enum AVPixelFormat pix_fmt, int width, int hei
     // Allocate RGB video frame buffer.
     ret = av_hwframe_get_buffer(avBufferFrame, frame, 0);
 
-    // Allocate buffers for the frame data.
-    ret = av_frame_get_buffer(frame, 0);
+    //// Allocate buffers for the frame data.
+    //ret = av_frame_get_buffer(frame, 0);
     if (ret < 0) {
         DBG("Could not allocate frame data.\n");
+        av_frame_free(&frame);
         return nullptr;
     }
 
@@ -197,17 +204,7 @@ void VideoEncoder::openVideo(AVFormatContext* oc, const AVCodec* codec, OutputSt
         return;
     }
 
-    // If the pixel format isn't YUV420P, then we need to convert to it, and we can use
-    // a temp frame to hold the data and wait for sws_scale to be called on it which will
-    // transfer the output format to the right format.
-    ost->tmp_frame = NULL;
-    if (c->pix_fmt != AV_PIX_FMT_YUV420P) {
-        ost->tmp_frame = allocFrame(AV_PIX_FMT_YUV420P, c->width, c->height);
-        if (!ost->tmp_frame) {
-            DBG("Could not allocate temporary video frame\n");
-            return;
-        }
-    }
+    ost->tmp_frame = nullptr;
 
     // Inform the muxer of the stream. All muxing function calls such as av_write_header
     // will be aware of the stream and codec parameters. 
@@ -244,7 +241,7 @@ bool VideoEncoder::startRecordingSession() {
     // Init stream and codec.
     if (fmt->video_codec != AV_CODEC_ID_NONE) {
         // do add video stream here
-        initialiseVideo(&video_st, oc, &video_codec, fmt->video_codec);
+        initialiseVideo(&video_st, oc, &video_codec);
         have_video = 1;
         encode_video = 1;
     }
@@ -274,8 +271,7 @@ bool VideoEncoder::startRecordingSession() {
     return true;
 }
 
-void VideoEncoder::addVideoFrame(const juce::Image& image)
-{
+void VideoEncoder::addVideoFrame() {
     if (!active) return;
 
     OutputStream* ost = &video_st;
@@ -361,42 +357,19 @@ int VideoEncoder::encode(AVFormatContext* fmt_ctx, AVCodecContext* c, AVStream* 
 
 }
 
-/* Prepare a dummy image. 
- *  Copyright (c) 2003 Fabrice Bellard
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-void VideoEncoder::fill_yuv_image(AVFrame* pict, int frame_index,
-    int width, int height)
-{
-    int x, y, i;
-
-    i = frame_index;
-
-    /* Y */
-    for (y = 0; y < height; y++)
-        for (x = 0; x < width; x++)
-            pict->data[0][y * pict->linesize[0] + x] = x + y + i * 3;
-
-    /* Cb and Cr */
-    for (y = 0; y < height / 2; y++) {
-        for (x = 0; x < width / 2; x++) {
-            pict->data[1][y * pict->linesize[1] + x] = 128 + y + i * 2;
-            pict->data[2][y * pict->linesize[2] + x] = 64 + x + i * 5;
-        }
-    }
-}
-
 bool VideoEncoder::finishRecordingSession() {
     if (!active)
         return false;
 
-    active = false;
+    cleanup();
+
+    return true;
+}
+
+void VideoEncoder::cleanup() {
+    // If the encoder is not active, then there should be nothing to clean up.
+    if (!active)
+        return;
 
     // Flush the encoder by parsing a nullptr.
     encode(oc, video_st.enc, video_st.st, nullptr, video_st.tmp_pkt);
@@ -410,8 +383,10 @@ bool VideoEncoder::finishRecordingSession() {
         av_frame_free(&ost->frame);
         av_frame_free(&ost->tmp_frame);
         av_packet_free(&ost->tmp_pkt);
-        sws_freeContext(ost->sws_ctx);
-        // swr_free(&ost->swr_ctx);
+
+        av_buffer_unref(&avBufferDevice);
+        av_buffer_unref(&avBufferFrame);
+        cuGraphicsUnregisterResource(cudaTextureResource);
     }
 
     // Close the file if it's still open.
@@ -420,6 +395,4 @@ bool VideoEncoder::finishRecordingSession() {
 
     // Free the stream attached to the output context.
     avformat_free_context(oc);
-
-    return true;
 }
