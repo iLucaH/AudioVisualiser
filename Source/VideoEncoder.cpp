@@ -76,7 +76,8 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
 
         // One intra frame every 12 frames. Must be set by the user.
         codecContext->gop_size = 12; /* emit one intra frame every twelve frames at most */
-        codecContext->pix_fmt = STREAM_PIX_FMT_DEFAULT;
+        codecContext->pix_fmt = AV_PIX_FMT_CUDA;
+        codecContext->sw_pix_fmt = AV_PIX_FMT_YUV420P;
 
         // Inform the codecContext to seperate stream headers if the format requires it.
         if (oc->oformat->flags & AVFMT_GLOBALHEADER)
@@ -135,11 +136,8 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
     res = cuCtxPopCurrent(&oldCtx);
 
     // Assign some hardware accel specific data to AvCodecContext.
-    codecContext->hw_device_ctx = avBufferDevice; // This must be done BEFORE avcodec_open2().
-    codecContext->pix_fmt = AV_PIX_FMT_YUV420P; // Since this is a cuda buffer, although its really opengl with a cuda ptr
-    codecContext->hw_frames_ctx = avBufferFrame;
-    codecContext->codec_type = AVMEDIA_TYPE_VIDEO;
-    codecContext->sw_pix_fmt = STREAM_PIX_FMT_DEFAULT; // This is only used for decoding which we aren't doing.
+    codecContext->hw_device_ctx = av_buffer_ref(avBufferDevice);
+    codecContext->hw_frames_ctx = av_buffer_ref(avBufferFrame);
 
     // Setup some cuda stuff for memcpy-ing later
     memcopyStruct.srcXInBytes = 0;
@@ -187,10 +185,18 @@ void VideoEncoder::openVideo(AVFormatContext* oc, const AVCodec* codec, OutputSt
     // Copy the dictionary settings over to the codec context.
     av_dict_copy(&opt, opt_arg, 0);
 
+    // Add NVENC-specific options
+    av_dict_set(&opt, "preset", "medium", 0);  // or "slow", "medium", "fast"
+    av_dict_set(&opt, "tune", "hq", 0);
+    av_dict_set(&opt, "rc", "vbr", 0);
+
     // Open the codec.
     ret = avcodec_open2(c, codec, &opt);
     if (ret < 0) {
-        DBG("Could not open the video codec.");
+        char errbuf[AV_ERROR_MAX_STRING_SIZE];
+        av_strerror(ret, errbuf, sizeof(errbuf));
+        DBG("Could not open the video codec: " << errbuf << " (error code: " << ret << ")");
+        av_dict_free(&opt);
         return;
     }
 
@@ -218,7 +224,6 @@ void VideoEncoder::openVideo(AVFormatContext* oc, const AVCodec* codec, OutputSt
 bool VideoEncoder::startRecordingSession() {
     if (active)
         return false;
-    active = true;
     int ret, i;
     AVDictionary* opt = NULL;
     
@@ -248,6 +253,12 @@ bool VideoEncoder::startRecordingSession() {
 
     if (have_video)
         openVideo(oc, video_codec, &video_st, opt);
+    // Confirm the video context actually opened.
+    if (!video_st.enc || !avcodec_is_open(video_st.enc)) {
+        DBG("Failed to open video openVideo(oc, video_codec, &video_st, opt);.");
+        cleanup();
+        return false;
+    }
 
     // Analyse the file for debug printing.
     av_dump_format(oc, 0, file_name.toRawUTF8(), 1);
@@ -268,6 +279,7 @@ bool VideoEncoder::startRecordingSession() {
         DBG("Could not write a header to the output file.\n");
         return false;
     }
+    active = true;
     return true;
 }
 
