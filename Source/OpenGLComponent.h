@@ -17,6 +17,7 @@
 #include "RenderState2D.h"
 #include "PluginProcessor.h"
 #include "VideoEncoder.h"
+#include "RingBuffer.h"
 
 //==============================================================================
 /*
@@ -82,6 +83,7 @@ private:
     unsigned int selectedState = 1;
     unsigned int time = 0;
     std::vector<std::unique_ptr<RenderState>> renderStates;
+    std::unique_ptr<VideoEncoder> videoEncoder;
 
     uint8_t* pixelBuffer;
 

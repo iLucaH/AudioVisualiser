@@ -33,16 +33,6 @@ AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioV
     
     selectorPanel.setBounds(903, 28, 140, 498);
     addAndMakeVisible(selectorPanel);
-
-    videoEncoder = std::make_unique<VideoEncoder>("C:/Users/lucas/OneDrive/Desktop/test/test.mp4", "h264_nvenc", width, height);
-    videoEncoder->startRecordingSession();
-    for (int i = 0; i < STREAM_FRAME_RATE * 10; i++) {
-        videoEncoder->addVideoFrame(juce::Image());
-    }
-    videoEncoder->finishRecordingSession();
-
-    videoEncoder.release();
-
 }
 
 AudioVisualiserAudioProcessorEditor::~AudioVisualiserAudioProcessorEditor() {

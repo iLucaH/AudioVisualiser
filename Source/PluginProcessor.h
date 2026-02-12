@@ -9,7 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "CircularBuffer.h"
+#include "RingBuffer.h"
 
 //==============================================================================
 /**
@@ -59,12 +59,12 @@ public:
         return channel == 0 ? leftRMS : rightRMS;
     }
 
-    CircularBuffer<float>& getCircularBuffer() { 
-        return *circularBuffer;
+    RingBuffer<float>& getRingBuffer() {
+        return *ringBuffer;
     }
 
 private:
-    std::unique_ptr<CircularBuffer<float>> circularBuffer;
+    std::unique_ptr<RingBuffer<float>> ringBuffer;
     float leftRMS = 0;
     float rightRMS = 0;
 

@@ -94,7 +94,7 @@ void AudioVisualiserAudioProcessor::changeProgramName (int index, const juce::St
 void AudioVisualiserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock) {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    circularBuffer = std::make_unique<CircularBuffer<float>>(2, samplesPerBlock * 10); // multiply by 10 to allow extra room. SamplesPerBlock is not a guarenteed number.
+    ringBuffer = std::make_unique<RingBuffer<float>>(2, samplesPerBlock * 10); // multiply by 10 to allow extra room. SamplesPerBlock is not a guarenteed number.
 }
 
 void AudioVisualiserAudioProcessor::releaseResources() {
@@ -150,7 +150,7 @@ void AudioVisualiserAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
     leftRMS = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
     rightRMS = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
     // write the samples in the time domain (amplitude over time)
-    circularBuffer->writeSamples(buffer, 0, buffer.getNumSamples());
+    ringBuffer->writeSamples(buffer, 0, buffer.getNumSamples());
 }
 
 //==============================================================================
