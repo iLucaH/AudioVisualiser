@@ -50,8 +50,8 @@ void OpenGLComponent::newOpenGLContextCreated() {
         }
     }
     videoEncoder = std::make_unique<VideoEncoder>(juce::String("C:/Users/lucas/OneDrive/Desktop/test/test.mp4"), getWidth(), getHeight());
-    // bool ret = videoEncoder->startRecordingSession();
-    // DBG("" + ret);
+    bool ret = videoEncoder->startRecordingSession();
+    DBG("Recording session started");
 }
 
 void OpenGLComponent::renderOpenGL() {
@@ -92,11 +92,11 @@ void OpenGLComponent::renderOpenGL() {
     }
     GLuint visualizationUniform = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "audioBufferTD");
     openGLContext.extensions.glUniform1fv(visualizationUniform, RING_BUFFER_READ_SIZE, visualizationBuffer);
-    //if (time == 1000) {
-    //    videoEncoder->finishRecordingSession();
-    //} else if (time < 1000) {
-    //    videoEncoder->addVideoFrame();
-    //}
+    if (time == 1000) {
+        videoEncoder->finishRecordingSession();
+    } else if (time < 1000) {
+        videoEncoder->addVideoFrame();
+    }
     renderState->render();
 
 }

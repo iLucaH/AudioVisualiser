@@ -107,7 +107,7 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
     AVHWFramesContext* frameCtxPtr = (AVHWFramesContext*)(avBufferFrame->data);
     frameCtxPtr->width = width;
     frameCtxPtr->height = height;
-    frameCtxPtr->sw_format = AV_PIX_FMT_RGBA;
+    frameCtxPtr->sw_format = AV_PIX_FMT_YUV420P;
     frameCtxPtr->format = AV_PIX_FMT_CUDA;
     //frameCtxPtr->device_ref = avBufferDevice;
     //frameCtxPtr->device_ctx = (AVHWDeviceContext*)avBufferDevice->data;
@@ -224,6 +224,7 @@ void VideoEncoder::openVideo(AVFormatContext* oc, const AVCodec* codec, OutputSt
 bool VideoEncoder::startRecordingSession() {
     if (active)
         return false;
+    DBG("Starting Recording Session!");
     int ret, i;
     AVDictionary* opt = NULL;
     
@@ -374,7 +375,7 @@ bool VideoEncoder::finishRecordingSession() {
         return false;
 
     cleanup();
-
+    DBG("Finishing Recording Session!");
     return true;
 }
 
