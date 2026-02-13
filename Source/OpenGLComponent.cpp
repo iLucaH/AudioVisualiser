@@ -49,7 +49,20 @@ void OpenGLComponent::newOpenGLContextCreated() {
             renderState->initAndCompileShaders();
         }
     }
+
+    // Video encoder initialised in this function because it creates an GLTexture which we need to use for the render target.
     videoEncoder = std::make_unique<VideoEncoder>(juce::String("C:/Users/lucas/OneDrive/Desktop/test/test.mp4"), getWidth(), getHeight());
+    
+    juce::gl::glGenFramebuffers(1, &fbo);
+    juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, fbo);
+    juce::gl::glFramebufferTexture2D(juce::gl::GL_FRAMEBUFFER, juce::gl::GL_COLOR_ATTACHMENT0, juce::gl::GL_TEXTURE_2D, videoEncoder->getTextureID(), 0);
+    juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
+
+    if (juce::gl::glCheckFramebufferStatus(juce::gl::GL_FRAMEBUFFER) != juce::gl::GL_FRAMEBUFFER_COMPLETE) {
+        DBG("FBO creation incomplete!");
+    }
+
+
     bool ret = videoEncoder->startRecordingSession();
     DBG("Recording session started");
 }
@@ -94,9 +107,14 @@ void OpenGLComponent::renderOpenGL() {
     openGLContext.extensions.glUniform1fv(visualizationUniform, RING_BUFFER_READ_SIZE, visualizationBuffer);
     if (time == 1000) {
         videoEncoder->finishRecordingSession();
-    } else if (time < 1000) {
+    }
+    if (videoEncoder->isActive()) {
+        juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, fbo);
+        juce::gl::glViewport(0, 0, getWidth(), getHeight());
+        renderState->render();
         videoEncoder->addVideoFrame();
     }
+    juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
     renderState->render();
 
 }

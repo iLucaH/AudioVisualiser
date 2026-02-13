@@ -66,6 +66,14 @@ public:
 
     void cleanup();
 
+    unsigned int getTextureID() {
+		return texture_id;
+    }
+
+    bool isActive() {
+        return active;
+    }
+
 private:
 
     bool initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec);
@@ -77,32 +85,38 @@ private:
         NV_ENC_BUFFER_FORMAT eFormat = NV_ENC_BUFFER_FORMAT_IYUV;
         int iGpu = 0;
         CUresult ret;
+        int driverVersion;
+        ret = cuDriverGetVersion(&driverVersion);
+        if (ret == CUDA_ERROR_INVALID_VALUE) {
+			DBG("No version of CUDA found!");
+			return -1;
+        }
         ret = cuInit(0);
         if (ret != CUDA_SUCCESS) {
             DBG("Cuda instance failed to initialise!");
-            return -1;
+            return -2;
         }
         int nGpu = 0;
         ret = cuDeviceGetCount(&nGpu);
         if (ret != CUDA_SUCCESS) {
             DBG("Cuda instance failed to cuDeviceGetCount!");
-            return -1;
+            return -3;
         }
         if (nGpu <= iGpu) {
             DBG("GPU ordinal out of range.");
-            return -1;
+            return -4;
         }
         CUdevice cuDevice = 0;
         ret = cuDeviceGet(&cuDevice, iGpu);
         if (ret != CUDA_SUCCESS) {
             DBG("Cuda instance failed to cuDeviceGet!");
-            return -1;
+            return -5;
         }
         char szDeviceName[80];
         ret = cuDeviceGetName(szDeviceName, sizeof(szDeviceName), cuDevice);
         if (ret != CUDA_SUCCESS) {
             DBG("Cuda instance failed to cuDeviceGetName!");
-            return -1;
+            return -6;
         }
         gpuName = szDeviceName;
         return 1;

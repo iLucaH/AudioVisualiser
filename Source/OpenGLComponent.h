@@ -85,6 +85,7 @@ private:
     std::vector<std::unique_ptr<RenderState>> renderStates;
     std::unique_ptr<VideoEncoder> videoEncoder;
 
+    GLuint fbo;
     uint8_t* pixelBuffer;
 
     void addRenderState(std::unique_ptr<RenderState> state) {

@@ -77,7 +77,9 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
         // One intra frame every 12 frames. Must be set by the user.
         codecContext->gop_size = 12; /* emit one intra frame every twelve frames at most */
         codecContext->pix_fmt = AV_PIX_FMT_CUDA;
-        codecContext->sw_pix_fmt = AV_PIX_FMT_YUV420P;
+        // AV_PIX_FMT_RGBA is used instead of AV_PIX_FMT_YUV420P because we want the GPU to understand that the opengl data
+        // is in RGB format and therefore should be converted from RGB to nvenc's output context format which is YUV.
+        codecContext->sw_pix_fmt = AV_PIX_FMT_RGBA;
 
         // Inform the codecContext to seperate stream headers if the format requires it.
         if (oc->oformat->flags & AVFMT_GLOBALHEADER)
@@ -107,7 +109,9 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
     AVHWFramesContext* frameCtxPtr = (AVHWFramesContext*)(avBufferFrame->data);
     frameCtxPtr->width = width;
     frameCtxPtr->height = height;
-    frameCtxPtr->sw_format = AV_PIX_FMT_YUV420P;
+    // AV_PIX_FMT_RGBA is used instead of AV_PIX_FMT_YUV420P because we want the GPU to understand that the opengl data
+    // is in RGB format and therefore should be converted from RGB to nvenc's output context format which is YUV.
+    frameCtxPtr->sw_format = AV_PIX_FMT_RGBA;
     frameCtxPtr->format = AV_PIX_FMT_CUDA;
     //frameCtxPtr->device_ref = avBufferDevice;
     //frameCtxPtr->device_ctx = (AVHWDeviceContext*)avBufferDevice->data;
@@ -375,6 +379,7 @@ bool VideoEncoder::finishRecordingSession() {
         return false;
 
     cleanup();
+    active = false;
     DBG("Finishing Recording Session!");
     return true;
 }
