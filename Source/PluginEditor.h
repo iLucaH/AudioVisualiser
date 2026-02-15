@@ -13,6 +13,7 @@
 #include "OpenGLComponent.h"
 #include "SelectorTabPanel.h"
 #include "TVImageOverlay.h"
+#include "CreateVideoComponent.h"
 
 //==============================================================================
 /**
@@ -39,6 +40,7 @@ private:
     juce::TabbedComponent tabs{ juce::TabbedButtonBar::TabsAtTop };
     juce::ImageComponent tvComponent;
     SelectorTabPanel selectorPanel;
+    CreateVideoComponent videoComponent;
 
     int tick;
 

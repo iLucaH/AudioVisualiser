@@ -15,9 +15,6 @@ AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioV
     width = 1080;
     height = 544;
     setSize (width, height);
-    
-    //addAndMakeVisible(openGLComponent);
-    //openGLComponent.setBounds(15, 45, 640, 360);
 
     setResizable(true, true);
     const float ratio = 1.98529411f;
@@ -33,6 +30,19 @@ AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioV
     
     selectorPanel.setBounds(903, 28, 140, 498);
     addAndMakeVisible(selectorPanel);
+
+    videoComponent.addToDesktop();
+
+    juce::Rectangle<int> area(100, 100, 600, 300);
+
+    juce::RectanglePlacement placement(juce::RectanglePlacement::xMid
+        | juce::RectanglePlacement::yMid);
+
+    videoComponent.setBounds(area);
+    videoComponent.setResizable(true, true);
+    videoComponent.setUsingNativeTitleBar(true);
+    videoComponent.setVisible(true);
+    videoComponent.toFront(true);
 }
 
 AudioVisualiserAudioProcessorEditor::~AudioVisualiserAudioProcessorEditor() {
@@ -43,10 +53,4 @@ void AudioVisualiserAudioProcessorEditor::paint (juce::Graphics& g) {
 }
 
 void AudioVisualiserAudioProcessorEditor::resized() {
-    //tabs.setBounds(getLocalBounds());
-    //auto margianLeft = getWidth() * 0.025;
-    //auto margianRight = getHeight() * 0.03 + 30;
-    //auto scaleW = getWidth() * 0.95;
-    //auto scaleY = getWidth() * 0.55;
-    //openGLComponent.setBoundsScaled(juce::Rectangle<int>(margianLeft, margianRight, scaleW, scaleY));
 }

@@ -63,8 +63,8 @@ void OpenGLComponent::newOpenGLContextCreated() {
     }
 
 
-    bool ret = videoEncoder->startRecordingSession();
-    DBG("Recording session started");
+    //bool ret = videoEncoder->startRecordingSession();
+    //DBG("Recording session started");
 }
 
 void OpenGLComponent::renderOpenGL() {
