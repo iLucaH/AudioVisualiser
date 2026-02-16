@@ -74,6 +74,10 @@ public:
         return renderStates[id].get()->getRenderProfile();
     }
 
+    VideoEncoder* getVideoEncoder() { 
+        return videoEncoder.get(); 
+    }
+
 private:
     AudioVisualiserAudioProcessor& processor;
     RingBuffer<float>& ringBuffer;

@@ -42,6 +42,9 @@ private:
     SelectorTabPanel selectorPanel;
     CreateVideoComponent videoComponent;
 
+    bool recorderSessionInitialised = false;
+    juce::TextButton launchRecorder;
+
     int tick;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioVisualiserAudioProcessorEditor)

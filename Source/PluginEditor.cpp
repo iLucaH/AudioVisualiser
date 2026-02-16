@@ -11,7 +11,7 @@
 
 //==============================================================================
 AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioVisualiserAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p), openGLComponent(p), selectorPanel(openGLComponent), tvOverlayComponent(openGLComponent) {
+    : AudioProcessorEditor(&p), audioProcessor(p), openGLComponent(p), selectorPanel(openGLComponent), tvOverlayComponent(openGLComponent), launchRecorder("Launch Recorder"), videoComponent(openGLComponent) {
     width = 1080;
     height = 544;
     setSize (width, height);
@@ -31,18 +31,21 @@ AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioV
     selectorPanel.setBounds(903, 28, 140, 498);
     addAndMakeVisible(selectorPanel);
 
-    videoComponent.addToDesktop();
+    addAndMakeVisible(launchRecorder);
+    launchRecorder.setBounds(933, 494, 80, 31);
+    launchRecorder.onClick = [this] {
+        if (!recorderSessionInitialised) {
+            DBG("Launching the recorder panel!");
+            videoComponent.addToDesktop();
 
-    juce::Rectangle<int> area(100, 100, 600, 300);
-
-    juce::RectanglePlacement placement(juce::RectanglePlacement::xMid
-        | juce::RectanglePlacement::yMid);
-
-    videoComponent.setBounds(area);
-    videoComponent.setResizable(true, true);
-    videoComponent.setUsingNativeTitleBar(true);
-    videoComponent.setVisible(true);
-    videoComponent.toFront(true);
+            videoComponent.setResizable(true, true);
+            videoComponent.setUsingNativeTitleBar(true);
+        }
+        juce::Rectangle<int> area(100, 100, 600, 300);
+        videoComponent.setBounds(area);
+        videoComponent.setVisible(true);
+        videoComponent.toFront(true);
+    };
 }
 
 AudioVisualiserAudioProcessorEditor::~AudioVisualiserAudioProcessorEditor() {

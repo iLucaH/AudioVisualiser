@@ -54,7 +54,7 @@ public:
         float t, tincr, tincr2;
     } OutputStream;
 
-    VideoEncoder(const juce::String& file, int width, int height);
+    VideoEncoder(int width, int height);
     
     int encode(AVFormatContext* fmt_ctx, AVCodecContext* c, AVStream* st, AVFrame* frame, AVPacket* pkt);
     
@@ -72,6 +72,10 @@ public:
 
     bool isActive() {
         return active;
+    }
+
+    void setFileName(juce::String fileName) {
+        file_name = fileName;
     }
 
 private:
@@ -122,7 +126,7 @@ private:
         return 1;
     }
 
-    const juce::String file_name;
+    juce::String file_name;
     int width, height;
     int have_video = 0, have_audio = 0;
     int encode_video = 0, encode_audio = 0;

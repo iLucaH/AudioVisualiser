@@ -20,7 +20,7 @@
 
 #include "Texture.h"
 
-VideoEncoder::VideoEncoder(const juce::String& file, int width, int height) : file_name(file), width(width), height(height), memcopyStruct({0}) {
+VideoEncoder::VideoEncoder(int width, int height) : width(width), height(height), memcopyStruct({0}) {
     active = false;
     texture_id = create_gl_texture_id(width, height);
 }
@@ -227,6 +227,8 @@ void VideoEncoder::openVideo(AVFormatContext* oc, const AVCodec* codec, OutputSt
 
 bool VideoEncoder::startRecordingSession() {
     if (active)
+        return false;
+    if (!file_name.toRawUTF8())
         return false;
     DBG("Starting Recording Session!");
     int ret, i;

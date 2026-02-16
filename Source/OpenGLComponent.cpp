@@ -51,7 +51,7 @@ void OpenGLComponent::newOpenGLContextCreated() {
     }
 
     // Video encoder initialised in this function because it creates an GLTexture which we need to use for the render target.
-    videoEncoder = std::make_unique<VideoEncoder>(juce::String("C:/Users/lucas/OneDrive/Desktop/test/test.mp4"), getWidth(), getHeight());
+    videoEncoder = std::make_unique<VideoEncoder>(getWidth(), getHeight());
     
     juce::gl::glGenFramebuffers(1, &fbo);
     juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, fbo);
