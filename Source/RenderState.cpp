@@ -47,6 +47,11 @@ void RenderState::initAndCompileShaders() {
     setInitialised();
 }
 
+void RenderState::initNewFragmentShader(juce::String& shader) {
+    fragmentShader = shader;
+    initAndCompileShaders();
+}
+
 GLuint RenderState::getShaderProgramID() {
     if (shaderProgram)
         return shaderProgram->getProgramID();

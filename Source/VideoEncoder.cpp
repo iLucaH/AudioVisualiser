@@ -66,7 +66,7 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
     if ((*codec)->type == AVMEDIA_TYPE_VIDEO) {
         // Apply video settings to the codec context.
         codecContext->codec_id = (*codec)->id;
-        codecContext->bit_rate = 400000;
+        codecContext->bit_rate = 8000000; // 8 Mbps
         codecContext->width = width % 2 == 0 ? width : width - 1; // Must be a multiple of 2.
         codecContext->height = height % 2 == 0 ? height : height - 1; // Must be a multiple of 2.
         
@@ -115,6 +115,7 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
     frameCtxPtr->format = AV_PIX_FMT_CUDA;
     //frameCtxPtr->device_ref = avBufferDevice;
     //frameCtxPtr->device_ctx = (AVHWDeviceContext*)avBufferDevice->data;
+
 
     // Init the frame so that we can allocate a cuda buffer.
     ret = av_hwframe_ctx_init(avBufferFrame);
@@ -190,7 +191,8 @@ void VideoEncoder::openVideo(AVFormatContext* oc, const AVCodec* codec, OutputSt
     av_dict_copy(&opt, opt_arg, 0);
 
     // Add NVENC-specific options
-    av_dict_set(&opt, "preset", "medium", 0);  // or "slow", "medium", "fast"
+    av_dict_set(&opt, "preset", "slow", 0);  // or "slow", "medium", "fast"
+    av_dict_set(&opt, "profile", "high", 0);
     av_dict_set(&opt, "tune", "hq", 0);
     av_dict_set(&opt, "rc", "vbr", 0);
 

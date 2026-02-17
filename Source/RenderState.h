@@ -24,6 +24,8 @@ public:
 
     void initAndCompileShaders();
 
+    void initNewFragmentShader(juce::String& fragmentShader);
+
     GLuint getShaderProgramID();
 
     bool isInititalised() {

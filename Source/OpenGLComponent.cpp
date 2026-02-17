@@ -22,6 +22,7 @@ OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p) : processor(p
     addRenderState(std::make_unique<TimeDomain2_2D>(6, openGLContext));
     addRenderState(std::make_unique<TimeDomain3_2D>(7, openGLContext));
     addRenderState(std::make_unique<SDF_1_2D>(8, openGLContext));
+    addRenderState(std::make_unique<AskAI>(9, openGLContext));
     
     setOpaque(true); // Indicates that no part of this Component is transparent
     openGLContext.setRenderer(this); // Set this instance as the renderer for the context
