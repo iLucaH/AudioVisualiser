@@ -55,6 +55,9 @@ public:
     juce::Rectangle<int> cacheBounds;
     bool openGLViewportActive = true;
 
+    std::atomic<juce::String*> pendingEncoderFileName{ nullptr };
+    std::atomic<bool> pendingStop{ false };
+
     void setBoundsScaled(juce::Rectangle<int> bounds) {
         if (openGLViewportActive) {
             setBounds(bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight());
@@ -87,6 +90,7 @@ private:
     unsigned int selectedState = 1;
     unsigned int time = 0;
     std::vector<std::unique_ptr<RenderState>> renderStates;
+
     std::unique_ptr<VideoEncoder> videoEncoder;
 
     GLuint fbo;

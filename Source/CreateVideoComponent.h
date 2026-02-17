@@ -39,25 +39,19 @@ public:
 				return;
 			juce::File outputFile(pathNameButton.getButtonText());
 			outputFile = outputFile.getChildFile(fileNameEditor.getText());
-			glComponent.getVideoEncoder()->setFileName(outputFile.getFullPathName());
-			if (glComponent.getVideoEncoder()->startRecordingSession()) {
-				repaint();
-				state = true;
-			} else {
-				DBG("Failed to start recording session!");
-				// handle error.
-			}
+
+			auto* str = new juce::String(outputFile.getFullPathName());
+			glComponent.pendingEncoderFileName.store(str);
+			repaint();
+			state = true;
+
 		};
 		finishButton.onClick = [this] {
 			if (!state) // if we aren't already running, then we won't need to do any of this logic.
 				return;
-			if (glComponent.getVideoEncoder()->finishRecordingSession()) {
-				repaint();
-			} else {
-				DBG("Failed to end recording session!");
-				// handle error.
-			}
-			state = false; // state should be false even if finishing the session fails.
+			glComponent.pendingStop.store(true);
+			repaint();
+			state = false;
 		};
 
 		pathNameButton.onClick = [this] {

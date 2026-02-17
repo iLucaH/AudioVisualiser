@@ -60,7 +60,7 @@ public:
     
     void addVideoFrame();
 
-    bool startRecordingSession();
+    bool startRecordingSession(const juce::String& file_name);
     
     bool finishRecordingSession();
 
@@ -72,10 +72,6 @@ public:
 
     bool isActive() {
         return active;
-    }
-
-    void setFileName(juce::String fileName) {
-        file_name = fileName;
     }
 
 private:
@@ -126,7 +122,6 @@ private:
         return 1;
     }
 
-    juce::String file_name;
     int width, height;
     int have_video = 0, have_audio = 0;
     int encode_video = 0, encode_audio = 0;

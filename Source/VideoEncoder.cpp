@@ -225,7 +225,7 @@ void VideoEncoder::openVideo(AVFormatContext* oc, const AVCodec* codec, OutputSt
     }
 }
 
-bool VideoEncoder::startRecordingSession() {
+bool VideoEncoder::startRecordingSession(const juce::String& file_name) {
     if (active)
         return false;
     if (!file_name.toRawUTF8())

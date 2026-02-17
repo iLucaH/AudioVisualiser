@@ -30,7 +30,6 @@ OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p) : processor(p
 }
 
 OpenGLComponent::~OpenGLComponent() {
-    videoEncoder.release();
     openGLContext.detach();
 }
 
@@ -105,7 +104,14 @@ void OpenGLComponent::renderOpenGL() {
     }
     GLuint visualizationUniform = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "audioBufferTD");
     openGLContext.extensions.glUniform1fv(visualizationUniform, RING_BUFFER_READ_SIZE, visualizationBuffer);
-    if (time == 1000) {
+
+    // Video Encoding
+    juce::String* filePtr = pendingEncoderFileName.exchange(nullptr);
+    if (filePtr) {
+        videoEncoder->startRecordingSession(*filePtr);
+        delete filePtr; // filePtr is created using new
+    }
+    if (pendingStop.exchange(false)) {
         videoEncoder->finishRecordingSession();
     }
     if (videoEncoder->isActive()) {
@@ -114,6 +120,7 @@ void OpenGLComponent::renderOpenGL() {
         renderState->render();
         videoEncoder->addVideoFrame();
     }
+
     juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
     renderState->render();
 
