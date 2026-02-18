@@ -12,6 +12,7 @@
 
 #include <JuceHeader.h>
 #include "RenderState2D.h"
+#include "AVAPIResolver.h"
 
 class AskAI : public RenderState2D {
 public:
@@ -49,8 +50,17 @@ public:
 
             // Typing in the prompt text field happens in the same thread as this thread getting the text (Messanger thread).
             // Therefore there is no race condition here.
-            juce::String promptText = prompt.getText();
+            const juce::String promptText = prompt.getText();
+            juce::Thread::launch([this, promptText]() {
+                    juce::String response = getPromptResponse(promptText);
 
+                    // No response will be received if something goes wrong on the get request end.
+                    if (response.length() > 0) {
+                        auto* fragShader = new juce::String(response);
+                        pendingFragShader.store(fragShader);
+                        pendingSubmit.store(true);
+                    }
+                });
         };
         renderProfile.addComponent(&submit);
 
