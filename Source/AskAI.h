@@ -53,12 +53,13 @@ public:
             const juce::String promptText = prompt.getText();
             juce::Thread::launch([this, promptText]() {
                     juce::String response = getPromptResponse(promptText);
-
                     // No response will be received if something goes wrong on the get request end.
                     if (response.length() > 0) {
                         auto* fragShader = new juce::String(response);
                         pendingFragShader.store(fragShader);
                         pendingSubmit.store(true);
+                    } else {
+                        DBG("Could not resolve a prompt for the AskAI RenderState!");
                     }
                 });
         };
