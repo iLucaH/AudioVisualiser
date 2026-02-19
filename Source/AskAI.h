@@ -14,7 +14,7 @@
 #include "RenderState2D.h"
 #include "AVAPIResolver.h"
 
-class AskAI : public RenderState2D {
+class AskAI : public RenderState2D, public juce::AsyncUpdater {
 public:
     AskAI(int id, juce::OpenGLContext& context) : RenderState2D(id, context, juce::String(R"(
     #version 330 core
@@ -38,30 +38,27 @@ public:
         submit.setButtonText("Click to submit prompt!");
         submit.setBounds(7, 237, 125, 25);
         submit.onClick = [this]() {
-            // The API is not yet complete and therefore this code is in limbo.
+            // If we are already making a prompt submit request, then we should not continue with this one.
+            if (pendingAPIRequest.load())
+                return;
 
-            // Here a new thread should be dispatched that will call the rest API service for a GET request.
-            // The returning result should be stored as pendingFragShader and pendingSubmit should be set to true.
-
-            // e.g.
-            // pendingSubmit.store(true);
-            //auto* fragShader = new juce::String(FRAGMENT SHADER HERE);
-            //pendingFragShader.store(fragShader);
-
-            // Typing in the prompt text field happens in the same thread as this thread getting the text (Messanger thread).
-            // Therefore there is no race condition here.
             const juce::String promptText = prompt.getText();
+            // Launch the API request on a seperate thread because it is a blocking operation.
             juce::Thread::launch([this, promptText]() {
-                    juce::String response = getPromptResponse(promptText);
-                    // No response will be received if something goes wrong on the get request end.
-                    if (response.length() > 0) {
-                        auto* fragShader = new juce::String(response);
-                        pendingFragShader.store(fragShader);
-                        pendingSubmit.store(true);
-                    } else {
-                        DBG("Could not resolve a prompt for the AskAI RenderState!");
-                    }
-                });
+                pendingAPIRequest.store(true); 
+                // Request the Fragment Shader from the API.
+                juce::String response = getPromptResponse(promptText);
+                // No response will be received if something goes wrong on the get request end.
+                if (response.length() > 0) {
+                    auto* fragShader = new juce::String(response); // The fragShader will be freed once exchanged in the render loop.
+                    pendingFragShader.store(fragShader);
+                    pendingSubmit.store(true);
+                } else {
+                    DBG("Could not resolve a prompt for the AskAI RenderState!");
+                    displayStatusError.store(true);
+                }
+                pendingAPIRequest.store(false);
+            });
         };
         renderProfile.addComponent(&submit);
 
@@ -72,6 +69,26 @@ public:
         prompt.setScrollbarsShown(true);
         prompt.setBounds(7, 7, 125, 225);
         renderProfile.addComponent(&prompt);
+
+        statusText.setText("Test", juce::dontSendNotification);
+        statusText.setBorderSize(juce::BorderSize<int>(2));
+        statusText.setBounds(8, 265, 125, 25);
+        renderProfile.addComponent(&statusText);
+    }
+
+    // Handle updating component entities on the messange thread. You can only update on the messange thread
+    // and aquiring a MessageManagerLock on the render loop will block the GL thread until it aquires the lock.
+    void handleAsyncUpdate() override {
+        if (pendingAPIRequest.load()) {
+            statusText.setColour(juce::Label::textColourId, juce::Colours::green);
+            statusText.setText("Loading new shader...", juce::dontSendNotification);
+        } else if (displayStatusError.load()) {
+            statusText.setColour(juce::Label::textColourId, juce::Colours::red);
+            statusText.setText("There was an error\nloading the shader!", juce::dontSendNotification);
+        } else {
+            // Display nothing if there is no updates or errors.
+            statusText.setText("", juce::dontSendNotification);
+        }
     }
 
     // This method will be called on the OpenGL Thread.
@@ -84,17 +101,28 @@ public:
                 DBG("New AI Fragment shader is being handled.");
                 initNewFragmentShader(*shaderPtr);
                 delete shaderPtr; // filePtr is created using new
+                displayStatusError.store(false);
             } else {
                 DBG("New AI Fragment shader failed to init and compile!");
+                displayStatusError.store(true);
             }
         }
+
+        // Handle GUI updates as the state of the statusText is always changing.
+        // This render loop is a good opportunity to make updates per frame.
+        triggerAsyncUpdate();
+
         RenderState2D::render();
     }
 
 
 private:
+    juce::Label statusText;
     juce::TextButton submit;
     juce::TextEditor prompt;
+
     std::atomic<juce::String*> pendingFragShader{ nullptr };
+    std::atomic<bool> pendingAPIRequest{ false };
     std::atomic<bool> pendingSubmit{ false };
+    std::atomic<bool> displayStatusError{ false };
 };

@@ -117,7 +117,10 @@ public:
     void readSamples(juce::AudioBuffer<Type>& bufferToFill, int readSize)
     {
         // Ensure readSize does not exceed bufferSize
-        jassert(readSize < bufferSize);
+        if (readSize >= bufferSize) {
+            DBG("readSize: " << readSize << " bufferSize: " << bufferSize);
+            jassert(false);
+        }
 
         /*
             Further, as stated in the class comment, it is also bad to have a
