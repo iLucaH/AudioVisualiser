@@ -46,7 +46,7 @@ protected:
 
     std::unique_ptr<juce::OpenGLShaderProgram> shaderProgram;
     juce::String vertexShader;
-    juce::String fragmentShader;
+    std::shared_ptr<juce::String> fragmentShader; // shared between messanger thread and gl thread for saving and loading purposes.
 
     RenderProfileComponent renderProfile;
 

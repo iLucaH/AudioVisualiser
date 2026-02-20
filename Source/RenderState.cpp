@@ -11,7 +11,7 @@
 #include "RenderState.h"
 
 RenderState::RenderState(int id, juce::OpenGLContext& context, juce::String vert, juce::String frag)
-    : renderStateID(id), openGLContext(context), fragmentShader(frag), vertexShader(vert), renderProfile(id) {
+    : renderStateID(id), openGLContext(context), fragmentShader(std::make_shared<juce::String>(frag)), vertexShader(vert), renderProfile(id) {
     DBG(vertexShader);
 }
 
@@ -19,7 +19,8 @@ void RenderState::initAndCompileShaders() {
     shaderProgram.reset(new juce::OpenGLShaderProgram(openGLContext));
 
     bool vertexOK = shaderProgram->addVertexShader(vertexShader);
-    bool fragmentOK = shaderProgram->addFragmentShader(fragmentShader);
+    auto shaderPtr = std::atomic_load(&fragmentShader);
+    bool fragmentOK = shaderProgram->addFragmentShader(*shaderPtr);
     bool linkOK = shaderProgram->link();
 
     if (!vertexOK) {
@@ -48,7 +49,7 @@ void RenderState::initAndCompileShaders() {
 }
 
 void RenderState::initNewFragmentShader(juce::String& shader) {
-    fragmentShader = shader;
+    std::atomic_store(&fragmentShader, std::make_shared<juce::String>(shader));
     initAndCompileShaders();
 }
 

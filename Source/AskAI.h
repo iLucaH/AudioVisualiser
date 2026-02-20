@@ -13,6 +13,7 @@
 #include <JuceHeader.h>
 #include "RenderState2D.h"
 #include "AVAPIResolver.h"
+#include "AVIOHandler.h"
 
 class AskAI : public RenderState2D, public juce::AsyncUpdater {
 public:
@@ -31,12 +32,13 @@ public:
     void main() {
         outColour = vec4(0.0f, 0.0f, 0.0f, 1.0);
     }
-)")) {
+)")), saveChooser("Save Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs"),
+      loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs") {
         renderProfile.setPresetName("AskAI");
 
         // Submit prompt button logic here.
         submit.setButtonText("Click to submit prompt!");
-        submit.setBounds(7, 237, 125, 25);
+        submit.setBounds(7, 199, 125, 25);
         submit.onClick = [this]() {
             // If we are already making a prompt submit request, then we should not continue with this one.
             if (pendingAPIRequest.load())
@@ -62,17 +64,52 @@ public:
         };
         renderProfile.addComponent(&submit);
 
+        save.setButtonText("Save");
+        save.setBounds(5, 270, 63, 20);
+        save.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
+        save.onClick = [this]() {
+            auto flags = juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting;
+            saveChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
+                juce::String filePath = chooser.getResult().getFullPathName();
+                if (filePath.isEmpty())
+                    return;
+                DBG("Saving render state to: " << filePath);
+                auto shaderPtr = std::atomic_load(&fragmentShader);
+                if (shaderPtr)
+                    saveRenderStateToFile(filePath, *shaderPtr);
+                });
+            };
+        renderProfile.addComponent(&save);
+
+        load.setButtonText("Load");
+        load.setBounds(73, 270, 63, 20);
+        load.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightcoral);
+        load.onClick = [this]() {
+            auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
+            saveChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
+                juce::String filePath = chooser.getResult().getFullPathName();
+                if (filePath.isEmpty())
+                    return;
+                DBG("Loading render state from " << filePath);
+                juce::String renderState = getRenderStateFromFile(filePath);
+                auto* fragShader = new juce::String(renderState);
+                pendingFragShader.store(fragShader);
+                pendingSubmit.store(true);
+                });
+            };
+        renderProfile.addComponent(&load);
+
         // Type prompt logic here.
         prompt.setText("Type your prompt here!");
         prompt.setMultiLine(true, true);
         prompt.setReturnKeyStartsNewLine(true);
         prompt.setScrollbarsShown(true);
-        prompt.setBounds(7, 7, 125, 225);
+        prompt.setBounds(7, 7, 125, 187);
         renderProfile.addComponent(&prompt);
 
-        statusText.setText("Test", juce::dontSendNotification);
+        statusText.setText("", juce::dontSendNotification);
         statusText.setBorderSize(juce::BorderSize<int>(2));
-        statusText.setBounds(8, 265, 125, 25);
+        statusText.setBounds(8, 234, 125, 25);
         renderProfile.addComponent(&statusText);
     }
 
@@ -118,8 +155,9 @@ public:
 
 private:
     juce::Label statusText;
-    juce::TextButton submit;
+    juce::TextButton submit, save, load;
     juce::TextEditor prompt;
+    juce::FileChooser saveChooser, loadChooser;
 
     std::atomic<juce::String*> pendingFragShader{ nullptr };
     std::atomic<bool> pendingAPIRequest{ false };
