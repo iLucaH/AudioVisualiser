@@ -18,6 +18,12 @@
 /*
 */
 
+#define DEFAULT_RENDER_STATE 1
+#define MIN_WIDTH 100
+#define MAX_WIDTH 1920
+#define MIN_HEIGHT 100
+#define MAX_HEIGHT 1080
+
 class SelectorTabPanel  : public juce::Component {
 public:
     SelectorTabPanel(OpenGLComponent&);
@@ -34,6 +40,7 @@ public:
         if (component->getRenderStateID() != selectedState)
             component->setVisible(false);
         renderProfiles.push_back(component);
+        presetSelector.addItem(component->getPresetName(), component->getRenderStateID());
     }
 
     void updatePanelRenderProfile(int newState, int oldState) {
@@ -59,7 +66,8 @@ public:
 private:
     OpenGLComponent& openGLComponent;
 
-    juce::ToggleButton presetBox;
+    juce::ComboBox presetSelector;
+    juce::TextEditor setWidth, setHeight;
 
     unsigned int selectedState = 1;
     std::vector<RenderProfileComponent*> renderProfiles;

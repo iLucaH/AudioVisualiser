@@ -61,18 +61,15 @@ void OpenGLComponent::newOpenGLContextCreated() {
     if (juce::gl::glCheckFramebufferStatus(juce::gl::GL_FRAMEBUFFER) != juce::gl::GL_FRAMEBUFFER_COMPLETE) {
         DBG("FBO creation incomplete!");
     }
-
-
-    //bool ret = videoEncoder->startRecordingSession();
-    //DBG("Recording session started");
 }
 
 void OpenGLComponent::renderOpenGL() {
     time++;
     juce::OpenGLHelpers::clear(juce::Colours::black);
-    if (selectedState < 1 || selectedState > renderStates.size())
+    unsigned int currentState = selectedState.load();
+    if (currentState < 1 || currentState > renderStates.size())
         return;
-    RenderState* renderState = renderStates[selectedState - 1].get();
+    RenderState* renderState = renderStates[currentState - 1].get();
     if (renderState->isInititalised() == false) {
         DBG("Shader not initialised!");
         return;

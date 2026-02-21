@@ -14,19 +14,79 @@
 
 //==============================================================================
 SelectorTabPanel::SelectorTabPanel(OpenGLComponent& openGL) : openGLComponent(openGL) {
-    presetBox.setHelpText("Click to change render states!");
-    presetBox.setBounds(0, 0, 50, 50);
-    presetBox.onClick = [this]() {
-        int newState = 1 + ((selectedState) % (openGLComponent.getNumRenderStates()));
+    // Render state logic
+    presetSelector.setHelpText("Click here to select a render state!");
+    presetSelector.setTextWhenNothingSelected("Select Preset!");
+    presetSelector.setBounds(8, 8, 123, 25);
+    presetSelector.onChange = [this]() {
+        int newState = presetSelector.getSelectedId();
         updatePanelRenderProfile(newState, selectedState);
         selectedState = newState;
         openGLComponent.setSelectedState(selectedState);
-    };
-    addAndMakeVisible(presetBox);
-
+        };
+    addAndMakeVisible(&presetSelector);
     for (int i = 0; i < openGL.getNumRenderStates(); i++) {
         addRenderPofile(openGL.getProfileComponent(i));
     }
+    presetSelector.setSelectedId(DEFAULT_RENDER_STATE);
+
+    // Sizing logic
+    setWidth.setText("1920");
+    setWidth.setBounds(8, 58, 55, 25);
+    setWidth.onReturnKey = [this]() {
+        juce::String str = setWidth.getText();
+        int i;
+        bool err = false;
+        try {
+            i = std::stoi(str.toStdString());
+        } catch (const std::invalid_argument& e) {
+            err = true;
+            return;
+        } catch (const std::out_of_range& e) {
+            err = true;
+        }
+        if (i < MIN_WIDTH || i > MAX_WIDTH || i % 2 != 0) {
+            err = true;
+        }
+        if (err) {
+            setWidth.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::red);
+        } else {
+            setWidth.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::darkslategrey);
+            // handle dimention update here
+        }
+        repaint();
+    };
+    addAndMakeVisible(&setWidth);
+
+    setHeight.setText("1080");
+    setHeight.setBounds(76, 58, 55, 25);
+    setHeight.onReturnKey = [this]() {
+        juce::String str = setHeight.getText();
+        int i;
+        bool err = false;
+        try {
+            i = std::stoi(str.toStdString());
+        }
+        catch (const std::invalid_argument& e) {
+            err = true;
+            return;
+        }
+        catch (const std::out_of_range& e) {
+            err = true;
+        }
+        if (i < MIN_HEIGHT || i > MAX_HEIGHT || i % 2 != 0) {
+            err = true;
+        }
+        if (err) {
+            setHeight.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::red);
+        }
+        else {
+            setHeight.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::darkslategrey);
+            // handle dimention update here
+        }
+        repaint();
+        };
+    addAndMakeVisible(&setHeight);
 }
 
 SelectorTabPanel::~SelectorTabPanel(){
@@ -37,7 +97,8 @@ void SelectorTabPanel::paint (juce::Graphics& g) {
 
     g.setColour (juce::Colours::white);
     g.drawRect (getLocalBounds(), 1);
-    g.drawText(getCurrentRenderProfile()->getPresetName(), 0, 0, 100, 100, juce::Justification::topLeft, false);
+    g.drawSingleLineText("Width", 8, 53);
+    g.drawSingleLineText("Height", 76, 53);
 }
 
 void SelectorTabPanel::resized() {

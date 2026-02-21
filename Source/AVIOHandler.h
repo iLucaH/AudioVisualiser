@@ -18,7 +18,7 @@
 // would no longer be a shader literal, but a json string to be parsed.
 inline bool saveRenderStateToFile(juce::String absolutePath, juce::String shader) {
     juce::File file = juce::File(absolutePath);
-    return file.replaceWithText(shader);
+    return file.replaceWithText(shader, false, false, "\n");
 }
 
 inline juce::String getRenderStateFromFile(juce::String absolutePath) {

@@ -39,7 +39,7 @@ public:
     void resized() override;
 
     void setSelectedState(unsigned int state) {
-        selectedState = state;
+        selectedState.store(state);
     }
 
     void start() {
@@ -87,7 +87,7 @@ private:
     juce::AudioBuffer<GLfloat> readBuffer;
     GLfloat visualizationBuffer[RING_BUFFER_READ_SIZE];
 
-    unsigned int selectedState = 1;
+    std::atomic<unsigned int> selectedState{ 1 };
     unsigned int time = 0;
     std::vector<std::unique_ptr<RenderState>> renderStates;
 

@@ -16,7 +16,7 @@
 #include "StrHelper.h"
 
 // 600 x 300
-class ContentComponent : public juce::Component {
+class ContentComponent : public juce::Component, private juce::Timer {
 public:
 	ContentComponent(OpenGLComponent& openGLComponent) : glComponent(openGLComponent) {
 		addAndMakeVisible(startButton);
@@ -42,16 +42,24 @@ public:
 
 			auto* str = new juce::String(outputFile.getFullPathName());
 			glComponent.pendingEncoderFileName.store(str);
-			repaint();
+
+			recordingStartTime = juce::Time::getMillisecondCounter();
+			startTimerHz(1);
+
 			state = true;
+			repaint();
 
 		};
 		finishButton.onClick = [this] {
 			if (!state) // if we aren't already running, then we won't need to do any of this logic.
 				return;
 			glComponent.pendingStop.store(true);
-			repaint();
+
+			stopTimer();
+			elapsedTimeString = "00:00";
+
 			state = false;
+			repaint();
 		};
 
 		pathNameButton.onClick = [this] {
@@ -84,7 +92,20 @@ public:
 		g.fillAll(state ? juce::Colours::green : juce::Colours::red);
 		g.drawSingleLineText("File Name:", 160, 120, juce::Justification(0));
 		g.drawSingleLineText("Output Path:", 160, 170, juce::Justification(0));
-		g.drawSingleLineText("00:00", 310, 72, juce::Justification(0));
+		g.drawSingleLineText(elapsedTimeString, 310, 72, juce::Justification(0));
+	}
+
+	void timerCallback() override {
+		auto now = juce::Time::getMillisecondCounter();
+		auto elapsedMs = now - recordingStartTime;
+
+		int totalSeconds = static_cast<int>(elapsedMs / 1000);
+		int minutes = totalSeconds / 60;
+		int seconds = totalSeconds % 60;
+
+		elapsedTimeString = juce::String(minutes).paddedLeft('0', 2) + ":" + juce::String(seconds).paddedLeft('0', 2);
+
+		repaint();
 	}
 
 private:
@@ -96,6 +117,9 @@ private:
 	juce::FileChooser pathSelector{ "Please select the directory you want to export to...", juce::File::getSpecialLocation(juce::File::userHomeDirectory), "*.mp4" };
 	juce::TextEditor fileNameEditor{ "TypeFileName" };
 	juce::TextButton pathNameButton{ "No Path Selected!" };
+
+	juce::int64 recordingStartTime = 0;
+	juce::String elapsedTimeString = "00:00";
 };
 
 class CreateVideoComponent : public juce::DocumentWindow {

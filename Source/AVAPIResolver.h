@@ -14,16 +14,7 @@
 
 // Blocking operation.
 inline juce::String getResultText(const juce::URL& url) {
-    //juce::StringPairArray responseHeaders;
-    //int statusCode = 0;
-    //auto stream = url.createInputStream(true, nullptr, nullptr, juce::String(), 10000, &responseHeaders, &statusCode);
-    //if (stream) {
-    //    juce::String responseText = stream->readEntireStreamAsString();
-    //    DBG("API Get Request Response: " << responseText);
-    //    return responseText;
-    //}
-
-    auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress).withConnectionTimeoutMs(60000);;
+    auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress).withConnectionTimeoutMs(120000);;
     auto stream = url.createInputStream(options);
     // Stream may timeout or the service may be unreachable.
     if (stream == nullptr) {

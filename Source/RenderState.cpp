@@ -49,6 +49,8 @@ void RenderState::initAndCompileShaders() {
 }
 
 void RenderState::initNewFragmentShader(juce::String& shader) {
+    DBG("Compiling a new fragment shader:");
+    DBG(shader);
     std::atomic_store(&fragmentShader, std::make_shared<juce::String>(shader));
     initAndCompileShaders();
 }
