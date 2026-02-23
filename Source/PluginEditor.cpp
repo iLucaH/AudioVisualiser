@@ -38,7 +38,7 @@ AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioV
             DBG("Launching the recorder panel!");
             videoComponent.addToDesktop();
 
-            videoComponent.setResizable(true, true);
+            videoComponent.setResizable(false, false);
             videoComponent.setUsingNativeTitleBar(true);
         }
         juce::Rectangle<int> area(100, 100, 600, 300);

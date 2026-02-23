@@ -37,15 +37,12 @@ private:
 
     unsigned int width, height;
 
-    juce::TabbedComponent tabs{ juce::TabbedButtonBar::TabsAtTop };
     juce::ImageComponent tvComponent;
     SelectorTabPanel selectorPanel;
     CreateVideoComponent videoComponent;
 
     bool recorderSessionInitialised = false;
     juce::TextButton launchRecorder;
-
-    int tick;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioVisualiserAudioProcessorEditor)
 };

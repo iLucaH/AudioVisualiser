@@ -32,8 +32,20 @@ SelectorTabPanel::SelectorTabPanel(OpenGLComponent& openGL) : openGLComponent(op
 
     // FFT Selector logic to select fft sample rate
     fftSelector.setHelpText("Click here to change the FFT sample rate!");
-    presetSelector.setTextWhenNothingSelected("FFT Sample Rate");
-    presetSelector.setBounds(8, 120, 123, 25);
+    fftSelector.setTextWhenNothingSelected("FFT Sample Rate");
+    fftSelector.setBounds(68, 136, 64, 25);
+    fftSelector.onChange = [this]() {
+        int newSampleRate = fftSelector.getSelectedId();
+        fftSampleRate = newSampleRate;
+        };
+    fftSelector.addItem("1024", 10); // 10 because 2^10 = 1024 and so on.
+    fftSelector.addItem("2048", 11);
+    fftSelector.addItem("4096", 12);
+    fftSelector.addItem("8192", 13);
+    fftSelector.addItem("16384", 14);
+    fftSelector.addItem("32768", 15);
+    fftSelector.setSelectedId(11);
+    addAndMakeVisible(&fftSelector);
 
     // Sizing logic
     setWidth.setText("1920");

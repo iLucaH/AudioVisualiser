@@ -126,7 +126,6 @@ class CreateVideoComponent : public juce::DocumentWindow {
 public:
 	CreateVideoComponent(OpenGLComponent& openGLComponent) : DocumentWindow("recorder!", juce::Colours::white, 5), openGLComponent(openGLComponent) {
 		setUsingNativeTitleBar(true);
-		setResizable(true, true);
 
 		setContentOwned(new ContentComponent(openGLComponent), true);
 	}

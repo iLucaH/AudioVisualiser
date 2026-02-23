@@ -71,6 +71,7 @@ private:
 
     unsigned int selectedState = 1;
     std::vector<RenderProfileComponent*> renderProfiles;
+    unsigned int fftSampleRate = 11;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SelectorTabPanel)
 };
