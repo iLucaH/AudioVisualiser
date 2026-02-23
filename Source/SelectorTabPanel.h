@@ -66,7 +66,7 @@ public:
 private:
     OpenGLComponent& openGLComponent;
 
-    juce::ComboBox presetSelector;
+    juce::ComboBox presetSelector, fftSelector;
     juce::TextEditor setWidth, setHeight;
 
     unsigned int selectedState = 1;

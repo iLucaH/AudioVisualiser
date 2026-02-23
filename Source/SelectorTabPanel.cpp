@@ -16,7 +16,7 @@
 SelectorTabPanel::SelectorTabPanel(OpenGLComponent& openGL) : openGLComponent(openGL) {
     // Render state logic
     presetSelector.setHelpText("Click here to select a render state!");
-    presetSelector.setTextWhenNothingSelected("Select Preset!");
+    presetSelector.setTextWhenNothingSelected("Select Preset");
     presetSelector.setBounds(8, 8, 123, 25);
     presetSelector.onChange = [this]() {
         int newState = presetSelector.getSelectedId();
@@ -26,9 +26,14 @@ SelectorTabPanel::SelectorTabPanel(OpenGLComponent& openGL) : openGLComponent(op
         };
     addAndMakeVisible(&presetSelector);
     for (int i = 0; i < openGL.getNumRenderStates(); i++) {
-        addRenderPofile(openGL.getProfileComponent(i));
+        addRenderPofile(openGL.getProfileComponent(i)); // Here they will be added to the presetSelector.
     }
     presetSelector.setSelectedId(DEFAULT_RENDER_STATE);
+
+    // FFT Selector logic to select fft sample rate
+    fftSelector.setHelpText("Click here to change the FFT sample rate!");
+    presetSelector.setTextWhenNothingSelected("FFT Sample Rate");
+    presetSelector.setBounds(8, 120, 123, 25);
 
     // Sizing logic
     setWidth.setText("1920");

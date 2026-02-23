@@ -12,6 +12,8 @@
     * https://github.com/filmstro/filmstro_ffmpeg/blob/master/modules/filmstro_ffmpeg/filmstro_ffmpeg_FFmpegVideoWriter.cpp
     * https://docs.nvidia.com/video-technologies/video-codec-sdk/13.0/ffmpeg-with-nvidia-gpu/index.html
     * https://developer.nvidia.com/video-codec-sdk/download
+    * https://www.youtube.com/watch?v=MddlYm3EsjM // static compilation of ffmpeg
+    * https://github.com/ShiftMediaProject/FFmpeg/releases // precompiled static ffmpeg
 
   ==============================================================================
 */
