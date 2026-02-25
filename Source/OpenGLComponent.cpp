@@ -51,7 +51,14 @@ void OpenGLComponent::newOpenGLContextCreated() {
     }
 
     // Video encoder initialised in this function because it creates an GLTexture which we need to use for the render target.
-    videoEncoder = std::make_unique<VideoEncoder>(getWidth(), getHeight());
+    videoEncoderWidth.store(getWidth());
+    videoEncoderHeight.store(getHeight());
+    DBG("Loading Video Encoder Sizing:");
+    DBG("getWidth(): " << getWidth());
+    DBG("getHeight(): " << getHeight());
+    DBG("videoEncoderWidth: " << (int) videoEncoderWidth.load());
+    DBG("videoEncoderHeight: " << (int) videoEncoderHeight.load());
+    videoEncoder = std::make_unique<VideoEncoder>((int) videoEncoderWidth.load(), (int) videoEncoderHeight.load());
     
     juce::gl::glGenFramebuffers(1, &fbo);
     juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, fbo);
@@ -111,17 +118,42 @@ void OpenGLComponent::renderOpenGL() {
     }
     if (pendingStop.exchange(false)) {
         videoEncoder->finishRecordingSession();
+        if (videoEncoder->getWidth() != (int) videoEncoderWidth.load() || videoEncoder->getHeight() != (int) videoEncoderHeight.load()) {
+            DBG("Resetting video encoder now!");
+            videoEncoder.reset(); // Calls delete on the old videoEncoder object.
+            videoEncoder = std::make_unique<VideoEncoder>((int) videoEncoderWidth.load(), (int) videoEncoderHeight.load()); // Create the new videoEncoder object.
+            DBG("New encoder initialised!");
+
+            // Handle removing the old frame buffer object with the old texture attached and then creating a new one with the correct texture ID.
+            juce::gl::glDeleteFramebuffers(1, &fbo);
+            juce::gl::glGenFramebuffers(1, &fbo);
+            juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, fbo);
+            juce::gl::glFramebufferTexture2D(juce::gl::GL_FRAMEBUFFER, juce::gl::GL_COLOR_ATTACHMENT0, juce::gl::GL_TEXTURE_2D, videoEncoder->getTextureID(), 0);
+            juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0); // Always good to unbind the frame buffer even though we are just going to bind it again straight away anyway.
+            DBG("Frame buffer has been re-created!");
+        }
     }
     if (videoEncoder->isActive()) {
         juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, fbo);
-        juce::gl::glViewport(0, 0, getWidth(), getHeight());
+        juce::gl::glViewport(0, 0, (int) videoEncoderWidth.load(), (int) videoEncoderHeight.load());
         renderState->render();
         videoEncoder->addVideoFrame();
     }
 
     juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
+    juce::gl::glViewport(0, 0, getWidth(), getHeight());
     renderState->render();
 
+}
+
+void OpenGLComponent::resetVideoRecorder(int width, int height) {
+    videoEncoderWidth.store(width);
+    videoEncoderHeight.store(height);
+    // Tell the render loop on the OpenGL Thread that the recording should be stopped.
+    // After each time the recording is stopped, it will check if the sizing has changed and if so, reset the encoder.
+    // The VideoEncoder object needs to be handled on the GLThread because it deals with a GL Texture Reference.
+    DBG("Resetting video encoder call has been made!");
+    pendingStop.store(true);
 }
 
 void OpenGLComponent::openGLContextClosing() {

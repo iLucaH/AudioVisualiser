@@ -74,11 +74,19 @@ public:
         return active;
     }
 
+    int getWidth() {
+        return width;
+    }
+
+    int getHeight() {
+        return height;
+    }
+
 private:
 
     bool initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec);
     void openVideo(AVFormatContext* oc, const AVCodec* codec, OutputStream* ost, AVDictionary* opt_arg);
-    AVFrame* allocFrame(enum AVPixelFormat pix_fmt, int width, int height);
+    AVFrame* allocFrame(enum AVPixelFormat pix_fmt, int width, unsigned int height);
     
     int getDeviceName(juce::String& gpuName) {
         //Setup the cuda context for hardware encoding with ffmpeg

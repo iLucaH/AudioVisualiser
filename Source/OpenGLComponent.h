@@ -51,6 +51,8 @@ public:
         pushBounds();
     }
 
+    void resetVideoRecorder(int width, int height);
+
     juce::OpenGLContext openGLContext;
     juce::Rectangle<int> cacheBounds;
     bool openGLViewportActive = true;
@@ -92,6 +94,7 @@ private:
     std::vector<std::unique_ptr<RenderState>> renderStates;
 
     std::unique_ptr<VideoEncoder> videoEncoder;
+    std::atomic<unsigned int> videoEncoderWidth{ 2 }, videoEncoderHeight{ 2 }; // 2 is just the minimum encoding size. The value is changed when the OpenGL Context is initialised.
 
     GLuint fbo;
     uint8_t* pixelBuffer;

@@ -158,7 +158,7 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
     return true;
 }
 
-AVFrame* VideoEncoder::allocFrame(enum AVPixelFormat pix_fmt, int width, int height) {
+AVFrame* VideoEncoder::allocFrame(enum AVPixelFormat pix_fmt, int width, unsigned int height) {
     AVFrame* frame;
     int ret;
 

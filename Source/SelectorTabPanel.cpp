@@ -61,15 +61,16 @@ SelectorTabPanel::SelectorTabPanel(OpenGLComponent& openGL) : openGLComponent(op
             return;
         } catch (const std::out_of_range& e) {
             err = true;
-        }
-        if (i < MIN_WIDTH || i > MAX_WIDTH || i % 2 != 0) {
+        } if (i < MIN_WIDTH || i > MAX_WIDTH || i % 2 != 0) {
             err = true;
-        }
-        if (err) {
+        } if (err) {
             setWidth.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::red);
         } else {
             setWidth.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::darkslategrey);
             // handle dimention update here
+            pendingWidth = i;
+            if (pendingHeight)
+                pushPendingWidthHeightChange();
         }
         repaint();
     };
@@ -83,12 +84,10 @@ SelectorTabPanel::SelectorTabPanel(OpenGLComponent& openGL) : openGLComponent(op
         bool err = false;
         try {
             i = std::stoi(str.toStdString());
-        }
-        catch (const std::invalid_argument& e) {
+        } catch (const std::invalid_argument& e) {
             err = true;
             return;
-        }
-        catch (const std::out_of_range& e) {
+        } catch (const std::out_of_range& e) {
             err = true;
         }
         if (i < MIN_HEIGHT || i > MAX_HEIGHT || i % 2 != 0) {
@@ -96,10 +95,12 @@ SelectorTabPanel::SelectorTabPanel(OpenGLComponent& openGL) : openGLComponent(op
         }
         if (err) {
             setHeight.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::red);
-        }
-        else {
+        } else {
             setHeight.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::darkslategrey);
             // handle dimention update here
+            pendingHeight = i;
+            if (pendingWidth)
+                pushPendingWidthHeightChange();
         }
         repaint();
         };

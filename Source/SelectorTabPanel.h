@@ -63,11 +63,26 @@ public:
         return renderProfiles[selectedState - 1];
     }
 
+    bool pushPendingWidthHeightChange() {
+        if (pendingWidth != 0 && pendingHeight != 0) {
+            openGLComponent.resetVideoRecorder(pendingWidth, pendingHeight);
+            pendingWidth = 0;
+            pendingHeight = 0;
+            // Make the buttons green to signal the changes have been made.
+            setWidth.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::lightgreen);
+            setHeight.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::lightgreen);
+            return true;
+        }
+        return false;
+    }
+
 private:
     OpenGLComponent& openGLComponent;
 
     juce::ComboBox presetSelector, fftSelector;
     juce::TextEditor setWidth, setHeight;
+    int pendingWidth = 0;
+    int pendingHeight = 0;
 
     unsigned int selectedState = 1;
     std::vector<RenderProfileComponent*> renderProfiles;
