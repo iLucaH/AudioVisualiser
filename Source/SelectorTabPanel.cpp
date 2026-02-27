@@ -13,7 +13,8 @@
 #include "RenderState2D.h"
 
 //==============================================================================
-SelectorTabPanel::SelectorTabPanel(OpenGLComponent& openGL) : openGLComponent(openGL) {
+SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLComponent& openGL) : pluginProcessor(p), openGLComponent(openGL),
+    openChooser("Choose a Wav or AIFF File", juce::File::getSpecialLocation(juce::File::userDesktopDirectory), "*.wav; *.mp3") {
     // Render state logic
     presetSelector.setHelpText("Click here to select a render state!");
     presetSelector.setTextWhenNothingSelected("Select Preset");
@@ -105,6 +106,34 @@ SelectorTabPanel::SelectorTabPanel(OpenGLComponent& openGL) : openGLComponent(op
         repaint();
         };
     addAndMakeVisible(&setHeight);
+
+    open.setButtonText("Open");
+    open.setBounds(6, 100, 45, 25);
+    open.onClick = [this] {
+        auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
+        openChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
+            juce::File file = chooser.getResult();
+            DBG("File selected for playback!");
+            pluginProcessor.setNewTransportSource(file);
+            });
+        };
+    addAndMakeVisible(open);
+
+    play.setButtonText("Play");
+    play.setBounds(53, 100, 45, 25);
+    play.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
+    play.onClick = [this] {
+        pluginProcessor.transportStateChanged(AudioVisualiserAudioProcessor::TransportState::Playing);
+        };
+    addAndMakeVisible(play);
+
+    stop.setButtonText("Stop");
+    stop.setBounds(100, 100, 45, 25);
+    stop.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::palevioletred);
+    stop.onClick = [this] {
+        pluginProcessor.transportStateChanged(AudioVisualiserAudioProcessor::TransportState::Stopping);
+        };
+    addAndMakeVisible(stop);
 }
 
 SelectorTabPanel::~SelectorTabPanel(){

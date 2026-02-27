@@ -23,10 +23,22 @@ AudioVisualiserAudioProcessor::AudioVisualiserAudioProcessor()
 #endif
 {
     ringBuffer = std::make_unique<RingBuffer<float>>(2, 32768); // 32768 covers hopefully all sample sizes;
+    formatManager.registerBasicFormats();
+    transport.addChangeListener(this);
 }
 
 AudioVisualiserAudioProcessor::~AudioVisualiserAudioProcessor()
 {
+}
+
+void AudioVisualiserAudioProcessor::changeListenerCallback(juce::ChangeBroadcaster* source) {
+    if (source == &transport) {
+        if (transport.isPlaying()) {
+            transportStateChanged(Playing);
+        } else {
+            transportStateChanged(Stopped);
+        }
+    }
 }
 
 //==============================================================================
@@ -98,11 +110,13 @@ void AudioVisualiserAudioProcessor::prepareToPlay (double sampleRate, int sample
     // Can no longer initialise ringBuffer here because of a race condition that occurs when ringBuffer is changing sizes due to a new audio source,
     // but the other threads are still trying to take from the ring buffer.
     // ringBuffer = std::make_unique<RingBuffer<float>>(2, samplesPerBlock * 10); // multiply by 10 to allow extra room. SamplesPerBlock is not a guarenteed number.
+    transport.prepareToPlay(samplesPerBlock, sampleRate);
 }
 
 void AudioVisualiserAudioProcessor::releaseResources() {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
+    transport.releaseResources();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -131,29 +145,30 @@ bool AudioVisualiserAudioProcessor::isBusesLayoutSupported (const BusesLayout& l
 }
 #endif
 
-void AudioVisualiserAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
-{
+void AudioVisualiserAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
+    auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+        buffer.clear(i, 0, buffer.getNumSamples());
 
-    //for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    //{
-    //    auto* channelData = buffer.getWritePointer (channel);
-    //    // ..do something to the data...
-    //    auto* inBuffer = buffer.getReadPointer(channel);
-    //    for (int sample = 0; sample < buffer.getNumSamples(); sample++) {
-    //        float data = inBuffer[sample];
-    //    }
-    //    DBG(*channelData);
-    //}
-    leftRMS = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-    rightRMS = buffer.getRMSLevel(1, 0, buffer.getNumSamples());
-    // write the samples in the time domain (amplitude over time)
-    ringBuffer->writeSamples(buffer, 0, buffer.getNumSamples());
+    if (isRawInput) {
+        leftRMS = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
+        rightRMS = buffer.getNumChannels() > 1 ? buffer.getRMSLevel(1, 0, buffer.getNumSamples()) : leftRMS;
+
+        ringBuffer->writeSamples(buffer, 0, buffer.getNumSamples());
+    } else {
+        // Wrap the buffer
+        juce::AudioSourceChannelInfo bufferToFill(&buffer, 0, buffer.getNumSamples());
+
+        transport.getNextAudioBlock(bufferToFill);
+
+        leftRMS = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
+        rightRMS = buffer.getNumChannels() > 1 ? buffer.getRMSLevel(1, 0, buffer.getNumSamples()) : leftRMS;
+
+        ringBuffer->writeSamples(buffer, 0, buffer.getNumSamples());
+    }
 }
 
 //==============================================================================

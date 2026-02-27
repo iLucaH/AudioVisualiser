@@ -86,7 +86,7 @@ public:
         load.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightcoral);
         load.onClick = [this]() {
             auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
-            saveChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
+            loadChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
                 juce::String filePath = chooser.getResult().getFullPathName();
                 if (filePath.isEmpty())
                     return;

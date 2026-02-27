@@ -13,6 +13,7 @@
 #include <JuceHeader.h>
 #include "OpenGLComponent.h"
 #include "RenderProfileComponent.h"
+#include "PluginProcessor.h"
 
 //==============================================================================
 /*
@@ -26,7 +27,7 @@
 
 class SelectorTabPanel  : public juce::Component {
 public:
-    SelectorTabPanel(OpenGLComponent&);
+    SelectorTabPanel(AudioVisualiserAudioProcessor&, OpenGLComponent&);
     
     ~SelectorTabPanel() override;
 
@@ -77,10 +78,13 @@ public:
     }
 
 private:
+    AudioVisualiserAudioProcessor& pluginProcessor;
     OpenGLComponent& openGLComponent;
 
     juce::ComboBox presetSelector, fftSelector;
     juce::TextEditor setWidth, setHeight;
+    juce::TextButton open, play, stop;
+    juce::FileChooser openChooser;
     int pendingWidth = 0;
     int pendingHeight = 0;
 
