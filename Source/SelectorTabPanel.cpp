@@ -117,6 +117,7 @@ void SelectorTabPanel::paint (juce::Graphics& g) {
     g.drawRect (getLocalBounds(), 1);
     g.drawSingleLineText("Width", 8, 53);
     g.drawSingleLineText("Height", 76, 53);
+    g.drawSingleLineText("FFT Size", 8, 154);
 }
 
 void SelectorTabPanel::resized() {

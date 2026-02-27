@@ -31,6 +31,8 @@ extern "C" {
 #define STREAM_PIX_FMT_DEFAULT AV_PIX_FMT_YUV420P
 #define STREAM_FRAME_RATE 30
 
+#define MAX_RECORDING_LENGTH 1200000
+
 #define SCALE_FLAGS SWS_BICUBIC
 
 class VideoEncoder {
@@ -86,7 +88,7 @@ private:
 
     bool initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec);
     void openVideo(AVFormatContext* oc, const AVCodec* codec, OutputStream* ost, AVDictionary* opt_arg);
-    AVFrame* allocFrame(enum AVPixelFormat pix_fmt, int width, unsigned int height);
+    AVFrame* allocFrame(enum AVPixelFormat pix_fmt, int width, int height);
     
     int getDeviceName(juce::String& gpuName) {
         //Setup the cuda context for hardware encoding with ffmpeg

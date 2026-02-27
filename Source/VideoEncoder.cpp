@@ -23,6 +23,7 @@
 #include "Texture.h"
 
 VideoEncoder::VideoEncoder(int width, int height) : width(width), height(height), memcopyStruct({0}) {
+    DBG("New VideoEncoder instance created. Width " << width << " Height " << height << ".");
     active = false;
     texture_id = create_gl_texture_id(width, height);
 }
@@ -158,7 +159,7 @@ bool VideoEncoder::initialiseVideo(OutputStream* ost, AVFormatContext* oc, const
     return true;
 }
 
-AVFrame* VideoEncoder::allocFrame(enum AVPixelFormat pix_fmt, int width, unsigned int height) {
+AVFrame* VideoEncoder::allocFrame(enum AVPixelFormat pix_fmt, int width, int height) {
     AVFrame* frame;
     int ret;
 
