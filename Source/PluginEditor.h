@@ -14,6 +14,7 @@
 #include "SelectorTabPanel.h"
 #include "TVImageOverlay.h"
 #include "CreateVideoComponent.h"
+#include "LoginComponent.h"
 
 //==============================================================================
 /**
@@ -40,9 +41,10 @@ private:
     juce::ImageComponent tvComponent;
     SelectorTabPanel selectorPanel;
     CreateVideoComponent videoComponent;
+    LoginComponent loginComponent;
 
-    bool recorderSessionInitialised = false;
-    juce::TextButton launchRecorder;
+    bool recorderSessionInitialised = false, loginSessionInitialised = false;
+    juce::TextButton launchRecorder, login;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioVisualiserAudioProcessorEditor)
 };

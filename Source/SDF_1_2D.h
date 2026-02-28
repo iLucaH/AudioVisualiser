@@ -46,5 +46,6 @@ public:
         outColour = vec4(color, 1.0);
     }
 )")) {
+        renderProfile.setPresetName("SDF 1");
     }
 };

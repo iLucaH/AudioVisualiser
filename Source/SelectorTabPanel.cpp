@@ -108,7 +108,7 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     addAndMakeVisible(&setHeight);
 
     open.setButtonText("Open");
-    open.setBounds(6, 100, 45, 25);
+    open.setBounds(6, 97, 40, 25);
     open.onClick = [this] {
         auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
         openChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
@@ -120,17 +120,19 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     addAndMakeVisible(open);
 
     play.setButtonText("Play");
-    play.setBounds(53, 100, 45, 25);
+    play.setBounds(50, 97, 40, 25);
     play.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
     play.onClick = [this] {
-        pluginProcessor.transportStateChanged(AudioVisualiserAudioProcessor::TransportState::Playing);
+        DBG("Audio Transport State is being changed to Playing by the play button in selector tab panel.");
+        pluginProcessor.transportStateChanged(AudioVisualiserAudioProcessor::TransportState::Starting);
         };
     addAndMakeVisible(play);
 
     stop.setButtonText("Stop");
-    stop.setBounds(100, 100, 45, 25);
+    stop.setBounds(94, 97, 40, 25);
     stop.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::palevioletred);
     stop.onClick = [this] {
+        DBG("Audio Transport State is being changed to Stopping by the stop button in selector tab panel.");
         pluginProcessor.transportStateChanged(AudioVisualiserAudioProcessor::TransportState::Stopping);
         };
     addAndMakeVisible(stop);

@@ -34,7 +34,7 @@ public:
     }
 )")), saveChooser("Save Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs"),
       loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs") {
-        renderProfile.setPresetName("AskAI");
+        renderProfile.setPresetName("AI Generator");
 
         // Submit prompt button logic here.
         submit.setButtonText("Click to submit prompt!");

@@ -49,7 +49,19 @@ public:
     void setCurrentProgram (int index) override;
     const juce::String getProgramName (int index) override;
     void changeProgramName (int index, const juce::String& newName) override;
-    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+
+    void juce::ChangeListener::changeListenerCallback(juce::ChangeBroadcaster* source) {
+        DBG("Change listener callback called. Validating source.");
+        if (source == &transport) {
+            DBG("Change listener callback called validated as correct &transport.");
+            if (transport.isPlaying()) {
+                transportStateChanged(Playing);
+            }
+            else {
+                transportStateChanged(Stopped);
+            }
+        }
+    }
 
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
@@ -65,49 +77,59 @@ public:
     void setNewTransportSource(juce::File& file) {
         // Make sure that this executes safely on the audio thread.
         juce::ScopedLock lock(getCallbackLock());
+        DBG("A new transport source is being added. Scoped Lock Aquired.");
 
         // Prepare the transport.
         transport.stop();
         transport.setSource(nullptr);
         playSource.reset();
+        DBG("Transprot and play source is ready for new transport reader source.");
 
         juce:: AudioFormatReader* reader = formatManager.createReaderFor(file);
         if (reader != nullptr) {
             // Get the file ready to play.
             std::unique_ptr<juce::AudioFormatReaderSource> tempSource(new juce::AudioFormatReaderSource(reader, true));
 
-            transport.setSource(tempSource.get(), 0, nullptr, reader->sampleRate);
+            transport.setSource(tempSource.get());
+            DBG("Transport source has changed!");
             transportStateChanged(Stopped);
 
             playSource.reset(tempSource.release());
-
-            transportStateChanged(Stopped);
+            DBG("Play source has been set!");
+        } else {
+            DBG("The Audio Format Reader for the new transport audio source is null!");
         }
     }
 
     void transportStateChanged(TransportState newState) {
         // Make sure that this executes safely on the audio thread.
         juce::ScopedLock lock(getCallbackLock());
+        DBG("The state is being changed and a scoped lock has been aquired!");
 
         if (newState != state) {
+            DBG("The new state that is being changed is identified as:");
             state = newState;
 
             switch (state) {
             case Stopped:
+                DBG("State: Stopped");
                 isRawInput = true;
                 transport.setPosition(0.0);
                 break;
 
             case Playing:
+                DBG("State: Playing");
                 isRawInput = false;
                 break;
 
             case Starting:
+                DBG("State: Starting");
                 isRawInput = false;
                 transport.start();
                 break;
 
             case Stopping:
+                DBG("State: Stopping");
                 isRawInput = false;
                 transport.stop();
                 break;

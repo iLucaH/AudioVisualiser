@@ -39,6 +39,6 @@ public:
         outColour = vec4(0.0f, uv.x * (leftRMS * rightRMS) * 1000.0f, uv.y * (leftRMS * rightRMS) * 1000.0f, 1.0f);
     }
 )")) {
-        renderProfile.setPresetName("Classic1");
+        renderProfile.setPresetName("Classic4");
     }
 };

@@ -112,8 +112,7 @@ public:
 
 		uploadVideoButton.setBounds(50, 170, 100, 55);
 		uploadVideoButton.onClick = [this] {
-			isTryingToUpload = true;
-			showYoutubeButtons(isTryingToUpload);
+			showYoutubeButtons(true);
 			uploadVideoButton.setVisible(true); // this button is the exception for this use case.
 			};
 
@@ -128,7 +127,6 @@ public:
 		cancelButton.setBounds(450, 240, 100, 30);
 		cancelButton.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::palevioletred);
 		cancelButton.onClick = [this] {
-			isTryingToUpload = false;
 			showYoutubeButtons(false);
 			uploadVideoButton.setVisible(true);
 			uploadingState.store(UPLOAD_NO_STATE);
@@ -152,7 +150,7 @@ public:
 		g.drawSingleLineText("File Name:", 160, 90, juce::Justification(0));
 		g.drawSingleLineText("Output Path:", 160, 140, juce::Justification(0));
 		g.drawSingleLineText(elapsedTimeString, 310, 42, juce::Justification(0));
-		if (isTryingToUpload)
+		if (isPublicButton.isVisible()) // Only draw if the button it is describing is actually visible
 			g.drawSingleLineText("Private:", 100, 260, juce::Justification(0));
 		if (uploadingState.load() != UPLOAD_NO_STATE) // If there is an uploading state that is not the idle state, then we should display it as a message.
 			g.drawSingleLineText("Status: " + getYTUploadStatusMessage(uploadingState.load()), 560, 236, juce::Justification(0));
@@ -193,7 +191,7 @@ public:
 private:
 	OpenGLComponent& glComponent;
 
-	bool state = false, filePathFound = false, fileNameFound = false, isTryingToUpload = false;
+	bool state = false, filePathFound = false, fileNameFound = false;
 	std::atomic<int> uploadingState{ 0 }; // The status of trying to upload to youtube.
 	
 	// Recording Buttons

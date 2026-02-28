@@ -31,16 +31,6 @@ AudioVisualiserAudioProcessor::~AudioVisualiserAudioProcessor()
 {
 }
 
-void AudioVisualiserAudioProcessor::changeListenerCallback(juce::ChangeBroadcaster* source) {
-    if (source == &transport) {
-        if (transport.isPlaying()) {
-            transportStateChanged(Playing);
-        } else {
-            transportStateChanged(Stopped);
-        }
-    }
-}
-
 //==============================================================================
 const juce::String AudioVisualiserAudioProcessor::getName() const
 {

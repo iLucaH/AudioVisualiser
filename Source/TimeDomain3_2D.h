@@ -54,6 +54,6 @@ public:
     }
         
 )")) {
-        renderProfile.setPresetName("TD1");
+        renderProfile.setPresetName("TD3");
     }
 };

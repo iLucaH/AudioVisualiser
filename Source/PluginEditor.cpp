@@ -11,7 +11,7 @@
 
 //==============================================================================
 AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioVisualiserAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p), openGLComponent(p), selectorPanel(p, openGLComponent), tvOverlayComponent(openGLComponent), launchRecorder("Launch Recorder"), videoComponent(openGLComponent) {
+    : AudioProcessorEditor(&p), audioProcessor(p), openGLComponent(p), selectorPanel(p, openGLComponent), tvOverlayComponent(openGLComponent), launchRecorder("Export"), login("Login"), videoComponent(openGLComponent) {
     width = 1080;
     height = 544;
     setSize (width, height);
@@ -31,8 +31,7 @@ AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioV
     selectorPanel.setBounds(903, 28, 140, 498);
     addAndMakeVisible(selectorPanel);
 
-    addAndMakeVisible(launchRecorder);
-    launchRecorder.setBounds(933, 494, 80, 31);
+    launchRecorder.setBounds(907, 496, 70, 28);
     launchRecorder.onClick = [this] {
         if (!recorderSessionInitialised) {
             DBG("Launching the recorder panel!");
@@ -46,6 +45,26 @@ AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioV
         videoComponent.setVisible(true);
         videoComponent.toFront(true);
     };
+    addAndMakeVisible(launchRecorder);
+
+    login.setBounds(981, 496, 58, 28);
+    login.onClick = [this] {
+        // Access HTTP Server
+        // Get QR Code for Server Port from HTTP Server
+        // Display QR Code In Login Session Component
+        if (!loginSessionInitialised) {
+            DBG("Launching the login panel!");
+            loginComponent.addToDesktop();
+
+            loginComponent.setResizable(false, false);
+            loginComponent.setUsingNativeTitleBar(true);
+        }
+        juce::Rectangle<int> area(100, 100, 600, 600);
+        loginComponent.setBounds(area);
+        loginComponent.setVisible(true);
+        loginComponent.toFront(true);
+        };
+    addAndMakeVisible(login);
 }
 
 AudioVisualiserAudioProcessorEditor::~AudioVisualiserAudioProcessorEditor() {

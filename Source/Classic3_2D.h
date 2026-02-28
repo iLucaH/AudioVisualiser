@@ -62,15 +62,15 @@ public:
 
 void render() override {
         GLuint modeUniform = openGLContext.extensions.glGetUniformLocation(getShaderProgramID(), "mode");
-        openGLContext.extensions.glUniform1i(modeUniform, mode);
+        openGLContext.extensions.glUniform1i(modeUniform, mode.load());
         RenderState2D::render();
  }
 
 void setMode(int m) {
-    mode = m;
+    mode.store(m);
 }
 
 private:
-    unsigned int mode = 0;
+    std::atomic<unsigned int> mode{ 0 };
     juce::ToggleButton button;
 };

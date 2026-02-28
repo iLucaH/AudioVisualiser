@@ -47,5 +47,6 @@ public:
         outColour = vec4(c, min((sin(time / 30.0f) + 1) / 2, 0.3), min((sin((time + 180.0f) / 60.0f) + 1) / 2, 0.7), 1);
     }
 )")) {
+        renderProfile.setPresetName("Classic2");
     }
 };
