@@ -9,6 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "Settings.h"
 #include "PluginProcessor.h"
 #include "OpenGLComponent.h"
 #include "SelectorTabPanel.h"
@@ -33,6 +34,9 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     AudioVisualiserAudioProcessor& audioProcessor;
+    
+    ApplicationSettings appSettings;
+
     OpenGLComponent openGLComponent;
     TVImageOverlay tvOverlayComponent;
 

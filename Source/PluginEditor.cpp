@@ -11,7 +11,7 @@
 
 //==============================================================================
 AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioVisualiserAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p), openGLComponent(p), selectorPanel(p, openGLComponent), tvOverlayComponent(openGLComponent), launchRecorder("Export"), login("Login"), videoComponent(openGLComponent) {
+    : AudioProcessorEditor(&p), audioProcessor(p), loginComponent(appSettings), openGLComponent(p), selectorPanel(p, openGLComponent), tvOverlayComponent(openGLComponent), launchRecorder("Export"), login("Login"), videoComponent(openGLComponent) {
     width = 1080;
     height = 544;
     setSize (width, height);

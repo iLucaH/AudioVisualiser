@@ -62,3 +62,31 @@ inline juce::String getPromptResponse(const juce::String& prompt) {
     DBG("API JSON Prompt Response resolved to: " << parsedResponse);
     return parsedResponse;
 }
+
+inline juce::String api_login(const juce::String& username, const juce::String& password) {
+    juce::URL url("http://localhost:8080/auth/token");
+
+    juce::String credentials = username + ":" + password;
+    juce::String encoded = juce::Base64::toBase64(credentials.toRawUTF8(),
+        credentials.getNumBytesAsUTF8());
+
+    juce::String headers = "Authorization: Basic " + encoded + "\r\n";
+
+    int statusCode = 0;
+
+    auto options = juce::URL::InputStreamOptions(
+        juce::URL::ParameterHandling::inAddress)
+        .withHttpRequestCmd("POST")
+        .withExtraHeaders(headers)
+        .withStatusCode(&statusCode);
+
+    auto stream = url.createInputStream(options);
+    // Stream may timeout or the service may be unreachable.
+    if (stream == nullptr) {
+        DBG("URL stream is null trying to input api login payload!");
+        return "";
+    }
+    DBG("login payload complete. Status code: " << statusCode);
+
+    return stream->readEntireStreamAsString();
+}
