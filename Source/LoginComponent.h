@@ -24,6 +24,11 @@
 #define UPLOAD_CONFIRMED 2
 #define UPLOAD_FAILED 3
 
+#define LOGIN_ATTEMPT_ARGS_OK 10
+#define LOGIN_ATTEMPT_NOT_ENOUGH_ARGS 11
+#define LOGIN_ATTEMPT_INVALID_USERNAME 12
+#define LOGIN_ATTEMPT_INVALID_PASSWORD 13
+
 // 600 x 300
 class LoginContentComponent : public juce::Component, private juce::Timer {
 public:
@@ -34,31 +39,11 @@ public:
 			.withWinWebView2Options(juce::WebBrowserComponent::Options::WinWebView2{} // Change the Webview component from Explorer to the more modern and working Edge.
 				.withUserDataFolder(juce::File::getSpecialLocation(juce::File::tempDirectory))  // May get weird permission errors if no user data folder defined.
 				.withBackgroundColour(juce::Colours::white))
-			.withResourceProvider([this](const auto& url) {
-				return getResource(url);
-			}) } {
-	//	username.setBounds(0, 0, 200, 25);
-	//	username.setText("Username");
-	//	addAndMakeVisible(username);
-
-
-	//	password.setBounds(0, 100, 200, 25);
-	//	password.setText("Password");
-	//	addAndMakeVisible(password);
-
-	//	login.setBounds(0, 200, 355, 355);
-	//	login.onClick = [this] {
-	//		juce::String token = api_login(username.getText(), password.getText());
-	//		// Validate token here.
-	//		if (token.length() == 0) {
-	//			login.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::indianred);
-	//			DBG("Failed to validate api login JWT!");
-	//			return;
-	//		}
-	//		login.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lawngreen);
-	//		settings.setAuthJWT(token);
-	//		};
-	//	addAndMakeVisible(login);
+			.withResourceProvider([this](const auto& url) { return getResource(url); })
+			.withNativeIntegrationEnabled()
+			.withNativeFunction(juce::Identifier{"nativeFunctionLogin"}, [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
+				nativeFunctionLogin(args, std::move(completion));
+				})} {
 
 		webView.goToURL(webView.getResourceProviderRoot()); // Ask c++ backend for the resource.
 		DBG("WebView Location set to Root: " << webView.getResourceProviderRoot());
@@ -79,9 +64,51 @@ private:
 
 	juce::WebBrowserComponent webView;
 
+	std::atomic<bool> isAttemptingLogin{ false };
+
 	//juce::TextEditor username{ "Username" };
 	//juce::TextEditor password{ "Passowrd" };
 	//juce::TextButton login{ "Login" };
+
+	void nativeFunctionLogin(const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
+		bool currentlyLoggingIn = isAttemptingLogin.load();
+		if (currentlyLoggingIn) // If there is already a login attempt present, no need to continue with it.
+			return;
+		if (args.size() != 2) {
+			completion(LOGIN_ATTEMPT_NOT_ENOUGH_ARGS);
+			return;
+		}
+		juce::String username = args[0];
+		if (username.length() <= 0) {
+			completion(LOGIN_ATTEMPT_INVALID_USERNAME);
+			return;
+		}
+		juce::String password = args[1];
+		if (password.length() <= 0) {
+			completion(LOGIN_ATTEMPT_INVALID_PASSWORD);
+			return;
+		}
+		juce::String concatenatedArgs;
+		for (const auto& arg : args) {
+			concatenatedArgs += arg.toString();
+		}
+		DBG("Native Login Function called from front end to back end. Args: " << concatenatedArgs);
+		completion(LOGIN_ATTEMPT_ARGS_OK);
+		isAttemptingLogin.store(true);
+		juce::String token = api_login(username, password);
+		isAttemptingLogin.store(false);
+		// Validate token here.
+		if (token.length() == 0) {
+			// Failed to validate login credentials.
+			DBG("Failed to validate api login JWT!");
+			webView.emitEventIfBrowserIsVisible(juce::Identifier{ "onLoginEvent" }, false); // Example function for later implementation
+			return;
+		}
+		// Successfully validated login credentials.
+		settings.setAuthJWT(token);
+		DBG("Successfully validated api login JWT!");
+		webView.emitEventIfBrowserIsVisible(juce::Identifier{ "onLoginEvent" }, true); // Example function for later implementation
+	}
 
 };
 
