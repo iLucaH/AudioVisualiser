@@ -48,7 +48,8 @@ inline const char* getMimeForExtension(const juce::String& extension) {
 }
 
 inline auto getResource(const juce::String& url) -> std::optional<juce::WebBrowserComponent::Resource> {
-    static const auto resourceFileRoot = juce::File{R"(C:\Users\lucas\Documents\JuceProjects\AudioVisualiser\ui\public)"}; // juce::File::getCurrentWorkingDirectory()
+    juce::String workingDirectory = juce::File::getCurrentWorkingDirectory().getParentDirectory().getParentDirectory().getFullPathName(); // Move from the VS build folder back up to the Juce project folder where the UI folder is.
+    static const auto resourceFileRoot = juce::File{workingDirectory + R"(\ui\public)"};
     const auto resourceToRetrieve = url == "/" ? "index.html" : url.fromFirstOccurrenceOf("/", false, false);
     const auto resource = resourceFileRoot.getChildFile(resourceToRetrieve).createInputStream();
     DBG("Loading WebView resource: " << resourceFileRoot.getChildFile(resourceToRetrieve).getFullPathName());

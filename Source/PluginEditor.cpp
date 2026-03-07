@@ -55,12 +55,7 @@ AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioV
         if (!loginSessionInitialised) {
             DBG("Launching the login panel!");
             loginComponent.addToDesktop();
-
-            loginComponent.setResizable(false, false);
-            loginComponent.setUsingNativeTitleBar(true);
         }
-        juce::Rectangle<int> area(100, 100, 600, 600);
-        loginComponent.setBounds(area);
         loginComponent.setVisible(true);
         loginComponent.toFront(true);
         };

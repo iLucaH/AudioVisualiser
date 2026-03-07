@@ -29,7 +29,6 @@
 #define LOGIN_ATTEMPT_INVALID_USERNAME 12
 #define LOGIN_ATTEMPT_INVALID_PASSWORD 13
 
-// 600 x 300
 class LoginContentComponent : public juce::Component, private juce::Timer {
 public:
 	LoginContentComponent(ApplicationSettings& appSettings) : 
@@ -66,15 +65,16 @@ private:
 
 	std::atomic<bool> isAttemptingLogin{ false };
 
-	//juce::TextEditor username{ "Username" };
-	//juce::TextEditor password{ "Passowrd" };
-	//juce::TextButton login{ "Login" };
 
 	void nativeFunctionLogin(const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
-		bool currentlyLoggingIn = isAttemptingLogin.load();
-		if (currentlyLoggingIn) // If there is already a login attempt present, no need to continue with it.
+		bool currentlyLoggingIn = isAttemptingLogin.exchange(true);
+		if (currentlyLoggingIn) { // If there is already a login attempt present, no need to continue with it.
+			// If there is already a login attempt, we can assume that there has already been args successfully passed through.
+			DBG("A login attempt has been called while another login attempt was already in session!");
+			completion(LOGIN_ATTEMPT_ARGS_OK);
 			return;
-		if (args.size() != 2) {
+		}
+		if (args.size() != 2) { // We can ignore any args greater than two, although with a promise there shouldn't be any.
 			completion(LOGIN_ATTEMPT_NOT_ENOUGH_ARGS);
 			return;
 		}
@@ -88,26 +88,23 @@ private:
 			completion(LOGIN_ATTEMPT_INVALID_PASSWORD);
 			return;
 		}
-		juce::String concatenatedArgs;
-		for (const auto& arg : args) {
-			concatenatedArgs += arg.toString();
-		}
-		DBG("Native Login Function called from front end to back end. Args: " << concatenatedArgs);
-		completion(LOGIN_ATTEMPT_ARGS_OK);
-		isAttemptingLogin.store(true);
-		juce::String token = api_login(username, password);
-		isAttemptingLogin.store(false);
-		// Validate token here.
-		if (token.length() == 0) {
-			// Failed to validate login credentials.
-			DBG("Failed to validate api login JWT!");
-			webView.emitEventIfBrowserIsVisible(juce::Identifier{ "onLoginEvent" }, false); // Example function for later implementation
-			return;
-		}
-		// Successfully validated login credentials.
-		settings.setAuthJWT(token);
-		DBG("Successfully validated api login JWT!");
-		webView.emitEventIfBrowserIsVisible(juce::Identifier{ "onLoginEvent" }, true); // Example function for later implementation
+		DBG("Native Login Function called from front end to back end. Username: " << args[0].toString() << ", Password: " << args[1].toString() << ".");
+		juce::Thread::launch([this, username, password]() {
+			juce::String token = api_login(username, password);
+			// Validate token here.
+			bool success = token.length() > 0; // A successful token get would have substance to the string.
+			if (!success) {
+				DBG("Failed to validate api login JWT!");
+			} else {
+				settings.setAuthJWT(token);
+				DBG("Successfully validated api login JWT! Token: " << token);
+			}
+			juce::MessageManager::callAsync([this, success]() {
+				isAttemptingLogin.store(false);
+				webView.emitEventIfBrowserIsVisible(juce::Identifier{ "onLoginEvent" }, success);
+				}); // Post the login update back to the GUI thread.
+			});
+		completion(LOGIN_ATTEMPT_ARGS_OK); // Completion is sent back to the javascript frontend to have the result evaluated.
 	}
 
 };
@@ -116,8 +113,9 @@ class LoginComponent : public juce::DocumentWindow {
 public:
 	LoginComponent(ApplicationSettings& appSettings) : DocumentWindow("Accounts and Login", juce::Colours::white, 5) {
 		setUsingNativeTitleBar(true);
-
+		setResizable(true, true);
 		setContentOwned(new LoginContentComponent(appSettings), true);
+		centreWithSize(600, 600);
 	}
 
 	void closeButtonPressed() override {

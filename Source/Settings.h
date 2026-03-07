@@ -18,6 +18,9 @@ public:
 
     }
 
+    /*
+        Only to be updated on the message thread for now.
+    */
     void setAuthJWT(juce::String jwt) {
         authJWT = jwt;
     }
