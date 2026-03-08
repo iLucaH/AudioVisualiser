@@ -13,7 +13,7 @@
 #include "RenderHeaders.h"
 
 //==============================================================================
-OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p) : processor(p), ringBuffer(p.getRingBuffer()), readBuffer(2, RING_BUFFER_READ_SIZE) {
+OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p, ApplicationSettings& appSettings) : processor(p), appSettings(appSettings), ringBuffer(p.getRingBuffer()), readBuffer(2, RING_BUFFER_READ_SIZE) {
     addRenderState(std::make_unique<Classic1_2D>(1, openGLContext));
     addRenderState(std::make_unique<Classic2_2D>(2, openGLContext));
     addRenderState(std::make_unique<Classic3_2D>(3, openGLContext));
@@ -22,7 +22,7 @@ OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p) : processor(p
     addRenderState(std::make_unique<TimeDomain2_2D>(6, openGLContext));
     addRenderState(std::make_unique<TimeDomain3_2D>(7, openGLContext));
     addRenderState(std::make_unique<SDF_1_2D>(8, openGLContext));
-    addRenderState(std::make_unique<AskAI>(9, openGLContext));
+    addRenderState(std::make_unique<AskAI>(9, openGLContext, appSettings));
     
     setOpaque(true); // Indicates that no part of this Component is transparent
     openGLContext.setRenderer(this); // Set this instance as the renderer for the context

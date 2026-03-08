@@ -18,6 +18,7 @@
 #include "PluginProcessor.h"
 #include "VideoEncoder.h"
 #include "RingBuffer.h"
+#include "Settings.h"
 
 //==============================================================================
 /*
@@ -32,7 +33,7 @@ class OpenGLComponent : public juce::Component, public juce::OpenGLRenderer {
     void openGLContextClosing() override;
 
 public:
-    OpenGLComponent(AudioVisualiserAudioProcessor&);
+    OpenGLComponent(AudioVisualiserAudioProcessor&, ApplicationSettings& appSettings);
     ~OpenGLComponent() override;
 
     void paint (juce::Graphics&) override;
@@ -85,6 +86,8 @@ public:
 
 private:
     AudioVisualiserAudioProcessor& processor;
+    ApplicationSettings& appSettings;
+
     RingBuffer<float>& ringBuffer;
     juce::AudioBuffer<GLfloat> readBuffer;
     GLfloat visualizationBuffer[RING_BUFFER_READ_SIZE];

@@ -14,10 +14,11 @@
 #include "RenderState2D.h"
 #include "AVAPIResolver.h"
 #include "AVIOHandler.h"
+#include "Settings.h"
 
 class AskAI : public RenderState2D, public juce::AsyncUpdater {
 public:
-    AskAI(int id, juce::OpenGLContext& context) : RenderState2D(id, context, juce::String(R"(
+    AskAI(int id, juce::OpenGLContext& context, ApplicationSettings& applSettings) : RenderState2D(id, context, juce::String(R"(
     #version 330 core
     layout(location = 0) in vec4 position;
 
@@ -32,7 +33,8 @@ public:
     void main() {
         outColour = vec4(0.0f, 0.0f, 0.0f, 1.0);
     }
-)")), saveChooser("Save Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs"),
+)")), appSettings(applSettings),
+      saveChooser("Save Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs"),
       loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs") {
         renderProfile.setPresetName("AI Generator");
 
@@ -44,12 +46,16 @@ public:
             if (pendingAPIRequest.load())
                 return;
 
+            // If the user is not logged in and authorised, then they are unable to go any further with submitting a response.
+            if (!appSettings.isAuth())
+                return;
+
             const juce::String promptText = prompt.getText();
             // Launch the API request on a seperate thread because it is a blocking operation.
             juce::Thread::launch([this, promptText]() {
                 pendingAPIRequest.store(true); 
                 // Request the Fragment Shader from the API.
-                juce::String response = getPromptResponse(promptText);
+                juce::String response = postPromptResponse(appSettings.getAuthJWT(), promptText);
                 // No response will be received if something goes wrong on the get request end.
                 if (response.length() > 0) {
                     auto* fragShader = new juce::String(response); // The fragShader will be freed once exchanged in the render loop.
@@ -116,6 +122,11 @@ public:
     // Handle updating component entities on the messange thread. You can only update on the messange thread
     // and aquiring a MessageManagerLock on the render loop will block the GL thread until it aquires the lock.
     void handleAsyncUpdate() override {
+        if (!appSettings.isAuth()) {
+            statusText.setColour(juce::Label::textColourId, juce::Colours::red);
+            statusText.setText("You must be logged-in in order to use this feature", juce::dontSendNotification);
+            return;
+        }
         if (pendingAPIRequest.load()) {
             statusText.setColour(juce::Label::textColourId, juce::Colours::green);
             statusText.setText("Loading new shader...", juce::dontSendNotification);
@@ -154,6 +165,8 @@ public:
 
 
 private:
+    ApplicationSettings& appSettings;
+
     juce::Label statusText;
     juce::TextButton submit, save, load;
     juce::TextEditor prompt;

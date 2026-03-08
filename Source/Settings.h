@@ -25,6 +25,14 @@ public:
         authJWT = jwt;
     }
 
+    bool isAuth() const {
+        return authJWT != "";
+    }
+
+    juce::String getAuthJWT() const {
+        return authJWT;
+    }
+
 private:
     juce::String authJWT = "";
 };
