@@ -29,6 +29,11 @@
 #define LOGIN_ATTEMPT_INVALID_USERNAME 12
 #define LOGIN_ATTEMPT_INVALID_PASSWORD 13
 
+#define REGISTER_ATTEMPT_ARGS_OK 20
+#define REGISTER_ATTEMPT_NOT_ENOUGH_ARGS 21
+#define REGISTER_ATTEMPT_INVALID_USERNAME 22
+#define REGISTER_ATTEMPT_INVALID_PASSWORD 23
+
 class LoginContentComponent : public juce::Component, private juce::Timer {
 public:
 	LoginContentComponent(ApplicationSettings& appSettings) : 
@@ -42,6 +47,9 @@ public:
 			.withNativeIntegrationEnabled()
 			.withNativeFunction(juce::Identifier{"nativeFunctionLogin"}, [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
 				nativeFunctionLogin(args, std::move(completion));
+				})
+			.withNativeFunction(juce::Identifier{"nativeFunctionRegister"}, [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
+				nativeFunctionRegister(args, std::move(completion));
 				})} {
 
 		webView.goToURL(webView.getResourceProviderRoot()); // Ask c++ backend for the resource.
@@ -64,10 +72,11 @@ private:
 	juce::WebBrowserComponent webView;
 
 	std::atomic<bool> isAttemptingLogin{ false };
+	std::atomic<bool> isAttemptingRegister{ false };
 
 
 	void nativeFunctionLogin(const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
-		bool currentlyLoggingIn = isAttemptingLogin.exchange(true);
+		bool currentlyLoggingIn = isAttemptingLogin.load();
 		if (currentlyLoggingIn) { // If there is already a login attempt present, no need to continue with it.
 			// If there is already a login attempt, we can assume that there has already been args successfully passed through.
 			DBG("A login attempt has been called while another login attempt was already in session!");
@@ -90,6 +99,7 @@ private:
 		}
 		DBG("Native Login Function called from front end to back end. Username: " << args[0].toString() << ", Password: " << args[1].toString() << ".");
 		juce::Thread::launch([this, username, password]() {
+			isAttemptingLogin.store(true);
 			juce::String token = api_login(username, password);
 			// Validate token here.
 			bool success = token.length() > 0; // A successful token get would have substance to the string.
@@ -107,6 +117,41 @@ private:
 		completion(LOGIN_ATTEMPT_ARGS_OK); // Completion is sent back to the javascript frontend to have the result evaluated.
 	}
 
+	void nativeFunctionRegister(const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
+		bool currentlyRegistering = isAttemptingRegister.load();
+		if (currentlyRegistering) { // If there is already a login attempt present, no need to continue with it.
+			// If there is already a login attempt, we can assume that there has already been args successfully passed through.
+			DBG("A login attempt has been called while another login attempt was already in session!");
+			completion(LOGIN_ATTEMPT_ARGS_OK);
+			return;
+		}
+		if (args.size() != 2) { // We can ignore any args greater than two, although with a promise there shouldn't be any.
+			completion(REGISTER_ATTEMPT_NOT_ENOUGH_ARGS);
+			return;
+		}
+		juce::String username = args[0];
+		if (username.length() <= 0) {
+			completion(REGISTER_ATTEMPT_INVALID_USERNAME);
+			return;
+		}
+		juce::String password = args[1];
+		if (password.length() <= 0) {
+			completion(REGISTER_ATTEMPT_INVALID_PASSWORD);
+			return;
+		}
+		DBG("Native Register Function called from front end to back end. Username: " << args[0].toString() << ", Password: " << args[1].toString() << ".");
+		juce::Thread::launch([this, username, password]() {
+			isAttemptingRegister.store(true);
+			int register_status = api_register(username, password);
+			// Validate status here.
+
+			juce::MessageManager::callAsync([this, register_status]() {
+				isAttemptingRegister.store(false);
+				webView.emitEventIfBrowserIsVisible(juce::Identifier{ "onRegisterEvent" }, register_status);
+				});
+			});
+		completion(LOGIN_ATTEMPT_ARGS_OK);
+	}
 };
 
 class LoginComponent : public juce::DocumentWindow {

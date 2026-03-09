@@ -93,3 +93,54 @@ inline juce::String api_login(const juce::String& username, const juce::String& 
 
     return stream->readEntireStreamAsString();
 }
+
+inline int api_register(const juce::String& username, const juce::String& password) {
+    juce::URL url("http://localhost:8080/auth/register");
+
+    juce::String credentials = "username=" + juce::URL::addEscapeChars(username, true) + "&password=" + juce::URL::addEscapeChars(password, true);
+
+    url = url.withPOSTData(credentials);
+
+    juce::String headers = "Content-Type: application/x-www-form-urlencoded\r\n";
+
+    int statusCode = 0;
+
+    auto options = juce::URL::InputStreamOptions(
+        juce::URL::ParameterHandling::inPostData)
+        .withHttpRequestCmd("POST")
+        .withExtraHeaders(headers)
+        .withStatusCode(&statusCode);
+
+    auto stream = url.createInputStream(options);
+
+    if (stream == nullptr) {
+        DBG("Register request failed: stream is null");
+        return -1;
+    }
+
+    juce::String response = stream->readEntireStreamAsString();
+    DBG(response);
+
+    if (response.length() == 0) {
+        DBG("Failed to receive an API JSON Prompt Response! Status code: " << statusCode);
+        return -1;
+    }
+
+    juce::var parsed = juce::JSON::parse(response);
+    if (parsed.isVoid()) {
+        DBG("Failed to parse API JSON Prompt Response! Status code: " << statusCode);
+        return -1;
+    }
+    juce::DynamicObject* obj = parsed.getDynamicObject();
+    if (obj == nullptr) {
+        DBG("API JSON Prompt Response is a nullptr! Status code: " << statusCode);
+        return -1;
+    }
+    if (obj->getProperty("success").isVoid()) {
+        DBG("No success status could be resolved from API JSON Prompt Response! Status code: " << statusCode);
+        return -1;
+    }
+    int parsedResponse = obj->getProperty("prompt").toString(); // need to convert this to int and return the int
+
+    return parsedResponse;
+}

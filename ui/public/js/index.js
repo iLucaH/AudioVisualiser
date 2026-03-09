@@ -24,4 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
 			}
 		});
 	});
+	var registerButton = document.getElementById("registerButton");
+	registerButton.addEventListener("click", () => {
+		console.log("Register button clicked");
+		window.location.href = "register.html";
+	});
 });
