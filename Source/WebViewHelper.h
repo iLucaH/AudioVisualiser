@@ -14,6 +14,13 @@
 
 #include <ranges>
 
+/*
+    Normalise paths to user the / file seperator convention. 
+*/
+inline juce::String normalizePath(const juce::String& path) {
+    return path.replaceCharacter('\\', '/').toLowerCase();
+}
+
 inline std::vector<std::byte> streamToVector(juce::InputStream& stream) {
     using namespace juce;
     const auto sizeInBytes = static_cast<size_t>(stream.getTotalLength());
@@ -56,7 +63,8 @@ inline std::vector<std::byte> getWebViewFilesAsBytes(const juce::String resource
     for (const auto i : std::views::iota(0, zipFile.getNumEntries())) {
         const auto* zipEntry = zipFile.getEntry(i);
 
-        if (zipEntry->filename.endsWith(resourceToRetrieve)) {
+        if (normalizePath(zipEntry->filename) == normalizePath(resourceToRetrieve)) {
+            DBG("The path " << normalizePath(zipEntry->filename) << " was found when trying to retrieve " << resourceToRetrieve);
             const std::unique_ptr<juce::InputStream> entryStream{ zipFile.createStreamForEntry(*zipEntry) };
             return streamToVector(*entryStream);
         }
@@ -65,8 +73,7 @@ inline std::vector<std::byte> getWebViewFilesAsBytes(const juce::String resource
 }
 
 inline auto getResource(const juce::String& url) -> std::optional<juce::WebBrowserComponent::Resource> {
-    juce::String workingDirectory = juce::File::getCurrentWorkingDirectory().getParentDirectory().getParentDirectory().getFullPathName(); // Move from the VS build folder back up to the Juce project folder where the UI folder is.
-    static const auto resourceFileRoot = juce::File{workingDirectory + R"(\ui\public)"};
+
     const auto resourceToRetrieve = url == "/" ? "index.html" : url.fromFirstOccurrenceOf("/", false, false);
 
     const auto resource = getWebViewFilesAsBytes(resourceToRetrieve);
