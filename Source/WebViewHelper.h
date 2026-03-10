@@ -12,6 +12,8 @@
 
 #include <JuceHeader.h>
 
+#include <ranges>
+
 inline std::vector<std::byte> streamToVector(juce::InputStream& stream) {
     using namespace juce;
     const auto sizeInBytes = static_cast<size_t>(stream.getTotalLength());
@@ -47,15 +49,30 @@ inline const char* getMimeForExtension(const juce::String& extension) {
     return "";
 }
 
+inline std::vector<std::byte> getWebViewFilesAsBytes(const juce::String resourceToRetrieve) {
+    juce::MemoryInputStream zipStream{ webview_files::ui_zip, webview_files::ui_zipSize, false };
+    juce::ZipFile zipFile{ zipStream };
+
+    for (const auto i : std::views::iota(0, zipFile.getNumEntries())) {
+        const auto* zipEntry = zipFile.getEntry(i);
+
+        if (zipEntry->filename.endsWith(resourceToRetrieve)) {
+            const std::unique_ptr<juce::InputStream> entryStream{ zipFile.createStreamForEntry(*zipEntry) };
+            return streamToVector(*entryStream);
+        }
+    }
+    return {};
+}
+
 inline auto getResource(const juce::String& url) -> std::optional<juce::WebBrowserComponent::Resource> {
     juce::String workingDirectory = juce::File::getCurrentWorkingDirectory().getParentDirectory().getParentDirectory().getFullPathName(); // Move from the VS build folder back up to the Juce project folder where the UI folder is.
     static const auto resourceFileRoot = juce::File{workingDirectory + R"(\ui\public)"};
     const auto resourceToRetrieve = url == "/" ? "index.html" : url.fromFirstOccurrenceOf("/", false, false);
-    const auto resource = resourceFileRoot.getChildFile(resourceToRetrieve).createInputStream();
-    DBG("Loading WebView resource: " << resourceFileRoot.getChildFile(resourceToRetrieve).getFullPathName());
-    if (resource) {
+
+    const auto resource = getWebViewFilesAsBytes(resourceToRetrieve);
+    if (!resource.empty()) {
         const auto extension = resourceToRetrieve.fromLastOccurrenceOf(".", false, false);
-        return juce::WebBrowserComponent::Resource{streamToVector(*resource), getMimeForExtension(extension)};
+        return juce::WebBrowserComponent::Resource{std::move(resource), getMimeForExtension(extension)};
     }
     return std::nullopt;
 }

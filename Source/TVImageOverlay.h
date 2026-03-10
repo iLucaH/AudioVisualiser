@@ -16,7 +16,7 @@ class TVImageOverlay : public juce::Component
 {
 public:
     TVImageOverlay(OpenGLComponent& c) {
-        tvImage = juce::ImageCache::getFromMemory(BinaryData::tv_png, BinaryData::tv_pngSize);
+        tvImage = juce::ImageCache::getFromMemory(webview_files::tv_png, webview_files::tv_pngSize);
     }
 
     void paint(juce::Graphics& g) override
