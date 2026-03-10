@@ -76,8 +76,7 @@ private:
 
 
 	void nativeFunctionLogin(const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
-		bool currentlyLoggingIn = isAttemptingLogin.load();
-		if (currentlyLoggingIn) { // If there is already a login attempt present, no need to continue with it.
+		if (isAttemptingLogin.load()) { // If there is already a login attempt present, no need to continue with it.
 			// If there is already a login attempt, we can assume that there has already been args successfully passed through.
 			DBG("A login attempt has been called while another login attempt was already in session!");
 			completion(LOGIN_ATTEMPT_ARGS_OK);
@@ -118,14 +117,12 @@ private:
 	}
 
 	void nativeFunctionRegister(const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
-		bool currentlyRegistering = isAttemptingRegister.load();
-		if (currentlyRegistering) { // If there is already a login attempt present, no need to continue with it.
-			// If there is already a login attempt, we can assume that there has already been args successfully passed through.
-			DBG("A login attempt has been called while another login attempt was already in session!");
-			completion(LOGIN_ATTEMPT_ARGS_OK);
+		if (isAttemptingRegister.load()) {
+			DBG("A register attempt has been called while another register attempt was already in session!");
+			completion(REGISTER_ATTEMPT_ARGS_OK);
 			return;
 		}
-		if (args.size() != 2) { // We can ignore any args greater than two, although with a promise there shouldn't be any.
+		if (args.size() != 2) {
 			completion(REGISTER_ATTEMPT_NOT_ENOUGH_ARGS);
 			return;
 		}
@@ -143,14 +140,12 @@ private:
 		juce::Thread::launch([this, username, password]() {
 			isAttemptingRegister.store(true);
 			int register_status = api_register(username, password);
-			// Validate status here.
-
 			juce::MessageManager::callAsync([this, register_status]() {
 				isAttemptingRegister.store(false);
 				webView.emitEventIfBrowserIsVisible(juce::Identifier{ "onRegisterEvent" }, register_status);
 				});
 			});
-		completion(LOGIN_ATTEMPT_ARGS_OK);
+		completion(REGISTER_ATTEMPT_ARGS_OK);
 	}
 };
 

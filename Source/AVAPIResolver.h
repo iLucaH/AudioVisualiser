@@ -12,6 +12,15 @@
 
 #include <JuceHeader.h>
 
+#define REGISTER_API_ERROR -1
+#define REGISTER_SUCCESS 0
+#define REGISTER_INVALID_USERNAME_NULL 1
+#define REGISTER_INVALID_USERNAME_MIN_CHARS 2
+#define REGISTER_INVALID_USERNAME_MAX_CHARS 3
+#define REGISTER_INVALID_PASSWORD_NULL 4
+#define REGISTER_USERNAME_TAKEN 5
+#define REGISTER_PASSWORD_UNSAFE 6
+
 // Blocking operation.
 inline juce::String postPromptResponse(const juce::String& jwt, const juce::String& prompt) {
     juce::URL url("http://localhost:8080/prompt");
@@ -94,6 +103,10 @@ inline juce::String api_login(const juce::String& username, const juce::String& 
     return stream->readEntireStreamAsString();
 }
 
+/*
+    Returns:
+        REGISTER_API_ERROR if error with API call or validation.
+*/
 inline int api_register(const juce::String& username, const juce::String& password) {
     juce::URL url("http://localhost:8080/auth/register");
 
@@ -115,7 +128,7 @@ inline int api_register(const juce::String& username, const juce::String& passwo
 
     if (stream == nullptr) {
         DBG("Register request failed: stream is null");
-        return -1;
+        return REGISTER_API_ERROR;
     }
 
     juce::String response = stream->readEntireStreamAsString();
@@ -123,24 +136,29 @@ inline int api_register(const juce::String& username, const juce::String& passwo
 
     if (response.length() == 0) {
         DBG("Failed to receive an API JSON Prompt Response! Status code: " << statusCode);
-        return -1;
+        return REGISTER_API_ERROR;
     }
 
     juce::var parsed = juce::JSON::parse(response);
     if (parsed.isVoid()) {
         DBG("Failed to parse API JSON Prompt Response! Status code: " << statusCode);
-        return -1;
+        return REGISTER_API_ERROR;
     }
     juce::DynamicObject* obj = parsed.getDynamicObject();
     if (obj == nullptr) {
         DBG("API JSON Prompt Response is a nullptr! Status code: " << statusCode);
-        return -1;
+        return REGISTER_API_ERROR;
     }
     if (obj->getProperty("success").isVoid()) {
         DBG("No success status could be resolved from API JSON Prompt Response! Status code: " << statusCode);
-        return -1;
+        return REGISTER_API_ERROR;
     }
-    int parsedResponse = obj->getProperty("prompt").toString(); // need to convert this to int and return the int
+    juce::var parsedResponse = obj->getProperty("success");
+    if (!parsedResponse.isInt()) {
+        DBG("No success status could be resolved from API JSON Prompt Response! Status code: " << statusCode);
+        return REGISTER_API_ERROR;
+    }
+    int success = std::atoi(parsedResponse.toString().toRawUTF8());
 
-    return parsedResponse;
+    return success;
 }

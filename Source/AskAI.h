@@ -38,6 +38,11 @@ public:
       loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs") {
         renderProfile.setPresetName("AI Generator");
 
+        statusText.setText("", juce::dontSendNotification);
+        statusText.setBorderSize(juce::BorderSize<int>(2));
+        statusText.setBounds(8, 184, 125, 125);
+        renderProfile.addComponent(&statusText);
+
         // Submit prompt button logic here.
         submit.setButtonText("Click to submit prompt!");
         submit.setBounds(7, 199, 125, 25);
@@ -112,11 +117,6 @@ public:
         prompt.setScrollbarsShown(true);
         prompt.setBounds(7, 7, 125, 187);
         renderProfile.addComponent(&prompt);
-
-        statusText.setText("", juce::dontSendNotification);
-        statusText.setBorderSize(juce::BorderSize<int>(2));
-        statusText.setBounds(8, 234, 125, 25);
-        renderProfile.addComponent(&statusText);
     }
 
     // Handle updating component entities on the messange thread. You can only update on the messange thread

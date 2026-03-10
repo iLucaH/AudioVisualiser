@@ -7,16 +7,19 @@
         <title>Login to AudioVisualiser Service</title>
     </head>
     <body>
-		<div class="login">
-			<h1>Log in to your account:</h1>
+		<div class="login" id="loginClass">
+			<h1 id="titleMessage">Account login:</h1>
+			<div id="loginMessageHolder">
+				<p id="loginMessage">Invalid login credentials!</p>
+			</div>
 			<form id="loginForm">
-				<input type="text" name="username">
-				<input type="text" name="password">
+				<input type="text" name="username" id="usernameField" placeholder="Username">
+				<input type="password" name="password" id="passwordField" placeholder="Password">
 				<button id="nativeFunctionLoginButton" type="button">Login</button>
 			</form>
-		</div>
-		<div class="register">
+			<div class="register">
 				<button id="registerButton" type="button">Register</button>
+			</div>
 		</div>
     </body>
 </html>

@@ -3,17 +3,24 @@
     <head>
         <meta charset="utf-8">
 		<script type="module" src="js/register.js"></script>
+		<link rel='stylesheet' type='text/css' href='style.css'>
         <title>Register to AudioVisualiser Service</title>
     </head>
     <body>
-		<div class="register">
-			<h1>Enter your details:</h1>
-			<form id="registerForm">
-				<input type="text" name="username">
-				<input type="password" name="password">
-				<input type="password" name="confirm password">
+		<div class="login" id="loginClass">
+			<h1 id="titleMessage">Register:</h1>
+			<div id="loginMessageHolder">
+				<p id="loginMessage">Invalid register credentials!</p>
+			</div>
+			<form id="loginForm">
+				<input type="text" name="username" id="usernameField" placeholder="Username">
+				<input type="password" name="password" id="passwordField" placeholder="Password">
+				<input type="password" name="confirm password" id="confirmPasswordField" placeholder="Confirm Password">
 				<button id="nativeFunctionRegisterButton" type="button">Register</button>
 			</form>
+			<div class="register">
+				<button id="returnButton" type="button">Return to login</button>
+			</div>
 		</div>
     </body>
 </html>
