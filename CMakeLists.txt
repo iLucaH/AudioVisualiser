@@ -140,6 +140,9 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 		"${CMAKE_CURRENT_SOURCE_DIR}/build/${PROJECT_NAME}_artefacts/JuceLibraryCode"
+		${CMAKE_CURRENT_SOURCE_DIR}/build/juce_binarydata_WebViewFiles/JuceLibraryCode
+	PRIVATE
+		"${CMAKE_CURRENT_SOURCE_DIR}/packages/Microsoft.Web.WebView2.1.0.1901.177/build/native/include"
 )
 
 # Package web UI sources as binary data
@@ -171,34 +174,19 @@ target_link_directories(${PROJECT_NAME}
 # JUCE libraries to bring into our project
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
-        juce::juce_analytics
-        juce::juce_audio_basics
-        juce::juce_audio_devices
-        juce::juce_core
-        juce::juce_data_structures
-        juce::juce_graphics
-        juce::juce_gui_basics
-        juce::juce_gui_extra
-        juce::juce_audio_utils
-        juce::juce_dsp
-        juce::juce_recommended_config_flags
-        juce::juce_recommended_lto_flags
-        juce::juce_recommended_warning_flags
-		juce::juce_video
+		juce::juce_audio_utils
+		juce::juce_dsp
 		juce::juce_opengl
-		juce::juce_events
 		juce::juce_audio_processors
-		juce::juce_audio_processors_headless
-		juce::juce_audio_plugin_client
-		juce::juce_audio_formats
 	PRIVATE
         WebViewFiles
-		libswresample
-		libavcodec
-		libavformat
-		libavutil
-		libswscale
-		cuda
+		${CMAKE_CURRENT_SOURCE_DIR}/lib/libswresample.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/lib/libavcodec.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/lib/libavformat.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/lib/libavutil.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/lib/libswscale.lib
+		${CMAKE_CURRENT_SOURCE_DIR}/lib/cuda.lib
+		"${CMAKE_CURRENT_SOURCE_DIR}/packages/Microsoft.Web.WebView2.1.0.1901.177/build/native/x64/WebView2LoaderStatic.lib"
 )
 
 juce_generate_juce_header(${PROJECT_NAME})
