@@ -16,6 +16,7 @@
 #include "TVImageOverlay.h"
 #include "CreateVideoComponent.h"
 #include "LoginComponent.h"
+#include "GlobalSocketHandler.h"
 
 //==============================================================================
 /**
@@ -49,6 +50,8 @@ private:
 
     bool recorderSessionInitialised = false, loginSessionInitialised = false;
     juce::TextButton launchRecorder, login;
+
+    GlobalSocketHandler globalSocketHandler;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioVisualiserAudioProcessorEditor)
 };

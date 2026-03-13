@@ -13,7 +13,7 @@
 #include "RenderState2D.h"
 
 //==============================================================================
-SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLComponent& openGL) : pluginProcessor(p), openGLComponent(openGL),
+SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLComponent& openGL, ApplicationSettings& appSettings) : pluginProcessor(p), openGLComponent(openGL), settingsComponent(appSettings),
     openChooser("Choose a Wav or AIFF File", juce::File::getSpecialLocation(juce::File::userDesktopDirectory), "*.wav; *.mp3") {
     // Render state logic
     presetSelector.setHelpText("Click here to select a render state!");
@@ -32,21 +32,21 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     presetSelector.setSelectedId(DEFAULT_RENDER_STATE);
 
     // FFT Selector logic to select fft sample rate
-    fftSelector.setHelpText("Click here to change the FFT sample rate!");
-    fftSelector.setTextWhenNothingSelected("FFT Sample Rate");
-    fftSelector.setBounds(68, 136, 64, 25);
-    fftSelector.onChange = [this]() {
-        int newSampleRate = fftSelector.getSelectedId();
-        fftSampleRate = newSampleRate;
-        };
-    fftSelector.addItem("1024", 10); // 10 because 2^10 = 1024 and so on.
-    fftSelector.addItem("2048", 11);
-    fftSelector.addItem("4096", 12);
-    fftSelector.addItem("8192", 13);
-    fftSelector.addItem("16384", 14);
-    fftSelector.addItem("32768", 15);
-    fftSelector.setSelectedId(11);
-    addAndMakeVisible(&fftSelector);
+    //fftSelector.setHelpText("Click here to change the FFT sample rate!");
+    //fftSelector.setTextWhenNothingSelected("FFT Sample Rate");
+    //fftSelector.setBounds(68, 136, 64, 25);
+    //fftSelector.onChange = [this]() {
+    //    int newSampleRate = fftSelector.getSelectedId();
+    //    fftSampleRate = newSampleRate;
+    //    };
+    //fftSelector.addItem("1024", 10); // 10 because 2^10 = 1024 and so on.
+    //fftSelector.addItem("2048", 11);
+    //fftSelector.addItem("4096", 12);
+    //fftSelector.addItem("8192", 13);
+    //fftSelector.addItem("16384", 14);
+    //fftSelector.addItem("32768", 15);
+    //fftSelector.setSelectedId(11);
+    //addAndMakeVisible(&fftSelector);
 
     // Sizing logic
     setWidth.setText("1920");
@@ -136,6 +136,16 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
         pluginProcessor.transportStateChanged(AudioVisualiserAudioProcessor::TransportState::Stopping);
         };
     addAndMakeVisible(stop);
+
+    settings.setButtonText("Settings");
+    settings.setBounds(6, 133, 128, 25);
+    settings.onClick = [this] {
+        DBG("Launching the login panel!");
+        settingsComponent.addToDesktop();
+        settingsComponent.setVisible(true);
+        settingsComponent.toFront(true);
+        };
+    addAndMakeVisible(settings);
 }
 
 SelectorTabPanel::~SelectorTabPanel(){
@@ -148,7 +158,7 @@ void SelectorTabPanel::paint (juce::Graphics& g) {
     g.drawRect (getLocalBounds(), 1);
     g.drawSingleLineText("Width", 8, 53);
     g.drawSingleLineText("Height", 76, 53);
-    g.drawSingleLineText("FFT Size", 8, 154);
+    //g.drawSingleLineText("FFT Size", 8, 154);
 }
 
 void SelectorTabPanel::resized() {

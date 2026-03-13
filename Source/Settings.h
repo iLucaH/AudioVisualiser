@@ -33,6 +33,31 @@ public:
         return authJWT;
     }
 
+    void setDimensions(int w, int h) {
+        width = w;
+        height = h;
+    }
+
+    int getWidth() {
+        return width;
+    }
+
+    int getHeight() {
+        return height;
+    }
+
+    int getFFTSize() {
+        return fftSize;
+    }
+
+    void setFFTSize(int size) {
+        fftSize = size;
+    }
+
 private:
     juce::String authJWT = "";
+
+    int width = 1920, height = 1080;
+    int fftSize = 2048;
+    bool fullScreen = false;
 };

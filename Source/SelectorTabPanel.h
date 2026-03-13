@@ -14,20 +14,18 @@
 #include "OpenGLComponent.h"
 #include "RenderProfileComponent.h"
 #include "PluginProcessor.h"
+#include "SettingsComponent.h"
+#include "Settings.h"
 
 //==============================================================================
 /*
 */
 
 #define DEFAULT_RENDER_STATE 1
-#define MIN_WIDTH 100
-#define MAX_WIDTH 1920
-#define MIN_HEIGHT 100
-#define MAX_HEIGHT 1080
 
 class SelectorTabPanel  : public juce::Component {
 public:
-    SelectorTabPanel(AudioVisualiserAudioProcessor&, OpenGLComponent&);
+    SelectorTabPanel(AudioVisualiserAudioProcessor&, OpenGLComponent&, ApplicationSettings&);
     
     ~SelectorTabPanel() override;
 
@@ -81,9 +79,11 @@ private:
     AudioVisualiserAudioProcessor& pluginProcessor;
     OpenGLComponent& openGLComponent;
 
-    juce::ComboBox presetSelector, fftSelector;
+    SettingsComponent settingsComponent;
+
+    juce::ComboBox presetSelector; //, fftSelector;
     juce::TextEditor setWidth, setHeight;
-    juce::TextButton open, play, stop;
+    juce::TextButton open, play, stop, settings;
     juce::FileChooser openChooser;
     int pendingWidth = 0;
     int pendingHeight = 0;

@@ -34,7 +34,7 @@
 #define REGISTER_ATTEMPT_INVALID_USERNAME 22
 #define REGISTER_ATTEMPT_INVALID_PASSWORD 23
 
-class LoginContentComponent : public juce::Component, private juce::Timer {
+class LoginContentComponent : public juce::Component {
 public:
 	LoginContentComponent(ApplicationSettings& appSettings) : 
 		settings(appSettings), 
@@ -60,9 +60,6 @@ public:
 
 	void resized() override {
 		webView.setBounds(getLocalBounds()); // Make the web view fit the entire window on resize.
-	}
-
-	void timerCallback() override {
 	}
 
 private:
