@@ -11,6 +11,26 @@ A Standalone and VST3-compatible real-time audio visualisation SaaS application 
 * OpenAI API is integrated to generate procedural visual outputs that react with audio input.
 * A maintained Agile workflow through GitHub Issues and a Github Project in this repository.
 
+## Build
+This project uses **CMake** and **CPM** (CMake Package Manager) to automatically handle dependencies.
+### Prerequisites
+* **Nvenc and CUDA compatible GPU** (Required for encoding frames to video)
+* **Visual Studio 2022**
+* **CMake 3.24+**
+
+### Build with CMake
+1. **Clone the repository**
+   ```powershell
+   git clone [https://github.com/iLucaH/AudioVisualiser.git](https://github.com/iLucaH/AudioVisualiser.git)
+   cd AudioVisualiser
+2. **Run the build script**
+   ```powershell
+   cmake -B build -G "Visual Studio 17 2022"
+3. **Open the Visual Studio solution**
+   ```powershell
+   build/AudioVisualiser.sln
+4. **Build from Visual Studio in release mode**
+
 ## Gallery
 ![Fractal Generated Design](Images/Fractal.png)
 ![NCS Generated Design](Images/NCS.png)
