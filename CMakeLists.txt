@@ -40,6 +40,23 @@ if (MSVC)
   endif()
 endif()
 
+# Get ffmpeg static lib
+include(FetchContent)
+
+set(FFMPEG_URL 
+	https://github.com/ShiftMediaProject/FFmpeg/releases/download/7.1/libffmpeg_7.1_msvc17_x64.zip
+)
+
+FetchContent_Declare(
+    ffmpeg
+    URL ${FFMPEG_URL}
+)
+
+FetchContent_MakeAvailable(ffmpeg)
+
+set(FFMPEG_INCLUDE_DIR "${ffmpeg_SOURCE_DIR}/include")
+set(FFMPEG_LIB_DIR "${ffmpeg_SOURCE_DIR}/lib/x64")
+
 # Make sure you include any new source files here
 set(SourceFiles
 	Source/AskAI.h
@@ -92,21 +109,21 @@ set(WEBVIEW_FILES_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ui/public")
 
 set(WEBVIEW_FILES_ZIP_NAME "ui.zip")
 set(TARGET_WEBVIEW_FILES_ZIP_PATH "${CMAKE_BINARY_DIR}/${WEBVIEW_FILES_ZIP_NAME}")
-cmake_path(ABSOLUTE_PATH WEBVIEW_FILES_SOURCE_DIR NORMALIZE OUTPUT_VARIABLE PUBLIC_PATH )
-cmake_path(GET PUBLIC_PATH PARENT_PATH WORKING_DIRECTORY)
+
+cmake_path(ABSOLUTE_PATH WEBVIEW_FILES_SOURCE_DIR NORMALIZE OUTPUT_VARIABLE PUBLIC_PATH)
 
 add_custom_target(ZipWebViewFiles
-	COMMAND
-	${CMAKE_COMMAND} -E tar cvf
-	"${TARGET_WEBVIEW_FILES_ZIP_PATH}"
-	--format=zip
-	"${PUBLIC_PATH}"
-	BYPRODUCTS
-	"${TARGET_WEBVIEW_FILES_ZIP_PATH}"
-	WORKING_DIRECTORY
-	"${WORKING_DIRECTORY}"
-	COMMENT "Zipping WebView files..."
-	VERBATIM
+    COMMAND
+        ${CMAKE_COMMAND} -E tar cvf
+        "${TARGET_WEBVIEW_FILES_ZIP_PATH}"
+        --format=zip
+        "."
+    BYPRODUCTS
+        "${TARGET_WEBVIEW_FILES_ZIP_PATH}"
+    WORKING_DIRECTORY
+        "${PUBLIC_PATH}"
+    COMMENT "Zipping WebView files..."
+    VERBATIM
 )
 
 # Change these to your own preferences
@@ -143,6 +160,7 @@ target_include_directories(${PROJECT_NAME}
 		${CMAKE_CURRENT_SOURCE_DIR}/build/juce_binarydata_WebViewFiles/JuceLibraryCode
 	PRIVATE
 		"${CMAKE_CURRENT_SOURCE_DIR}/packages/Microsoft.Web.WebView2.1.0.1901.177/build/native/include"
+		${FFMPEG_INCLUDE_DIR}
 )
 
 # Package web UI sources as binary data
@@ -169,6 +187,7 @@ target_compile_definitions(${PROJECT_NAME}
 target_link_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/lib
+		${FFMPEG_LIB_DIR}
 )
 
 # JUCE libraries to bring into our project
@@ -180,15 +199,22 @@ target_link_libraries(${PROJECT_NAME}
 		juce::juce_audio_processors
 	PRIVATE
         WebViewFiles
-		${CMAKE_CURRENT_SOURCE_DIR}/lib/libswresample.lib
-		${CMAKE_CURRENT_SOURCE_DIR}/lib/libavcodec.lib
-		${CMAKE_CURRENT_SOURCE_DIR}/lib/libavformat.lib
-		${CMAKE_CURRENT_SOURCE_DIR}/lib/libavutil.lib
-		${CMAKE_CURRENT_SOURCE_DIR}/lib/libswscale.lib
+		${FFMPEG_LIB_DIR}/libswresample.lib
+		${FFMPEG_LIB_DIR}/libavcodec.lib
+		${FFMPEG_LIB_DIR}/libavformat.lib
+		${FFMPEG_LIB_DIR}/libavutil.lib
+		${FFMPEG_LIB_DIR}/libswscale.lib
 		${CMAKE_CURRENT_SOURCE_DIR}/lib/cuda.lib
 		"${CMAKE_CURRENT_SOURCE_DIR}/packages/Microsoft.Web.WebView2.1.0.1901.177/build/native/x64/WebView2LoaderStatic.lib"
 )
 
 juce_generate_juce_header(${PROJECT_NAME})
+
+if (MSVC)
+    # Generate PDB files in Release mode
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
+    set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
+endif()
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT AudioVisualiser_Standalone)
