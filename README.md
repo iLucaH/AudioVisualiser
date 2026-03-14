@@ -1,6 +1,8 @@
 # AudioVisualiser
 A Standalone and VST3-compatible real-time audio visualisation SaaS application to visualize audio in real time as 2D and 3D graphical animations.
 
+![Alt](https://repobeats.axiom.co/api/embed/927502022183993d9094239bc5f198af5cb85a94.svg "Repobeats analytics image")
+
 ## Features
 * Real-time rendering pipeline using the JUCE C++ framework and OpenGL.
 * Created a WebView HTML, CSS, JavaScript UI layer integrated with the native C++ application backend.
@@ -21,7 +23,7 @@ This project uses **CMake** and **CPM** (CMake Package Manager) to automatically
 ### Build with CMake
 1. **Clone the repository**
    ```powershell
-   git clone [https://github.com/iLucaH/AudioVisualiser.git](https://github.com/iLucaH/AudioVisualiser.git)
+   git clone https://github.com/iLucaH/AudioVisualiser.git
    cd AudioVisualiser
 2. **Run the build script**
    ```powershell
@@ -30,6 +32,13 @@ This project uses **CMake** and **CPM** (CMake Package Manager) to automatically
    ```powershell
    build/AudioVisualiser.sln
 4. **Build from Visual Studio in release mode**
+### Build with Projucer
+1. **Clone the repository**
+   ```powershell
+   git clone https://github.com/iLucaH/AudioVisualiser.git
+   cd AudioVisualiser
+2. **Change exporter settings in Projucer to match your system**
+3. **Save and run in projucer**
 
 ## Gallery
 ![Fractal Generated Design](Images/Fractal.png)
