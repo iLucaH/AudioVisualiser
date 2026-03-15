@@ -1,8 +1,9 @@
-$packageSourceName = "nugetRepository"
+$ErrorActionPreference = "Stop"
+$nugetUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+$nugetPath = "$PSScriptRoot/nuget.exe"
 
-# Ignore errors: they are meaningless
-$ErrorActionPreference = "SilentlyContinue"
+if (-not (Test-Path $nugetPath)) {
+    Invoke-WebRequest -Uri $nugetUrl -OutFile $nugetPath
+}
 
-Register-PackageSource -Provider NuGet -Name $packageSourceName -Location https://api.nuget.org/v3/index.json -Force
-Install-Package Microsoft.Web.WebView2 -Scope CurrentUser -RequiredVersion 1.0.1901.177 -Source $packageSourceName -Force
-
+& $nugetPath install Microsoft.Web.WebView2 -Version 1.0.1901.177 -OutputDirectory "$PSScriptRoot/../packages"

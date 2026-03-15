@@ -30,14 +30,18 @@ CPMAddPackage(
 
 # Install Microsoft.Web.WebView2 NuGet package to allow WebViews on Windows
 if (MSVC)
-  message(STATUS "Setting up WebView dependencies")
-  execute_process(COMMAND powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/DownloadWebView2.ps1
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  RESULT_VARIABLE DOWNLOAD_WEBVIEW2_RESULT)
+    find_program(NUGET_EXE NAMES nuget)
+    if(NOT NUGET_EXE)
+        message(FATAL_ERROR "NUGET.EXE not found. Please install NuGet.")
+    endif()
+	message(STATUS "Setting up WebView dependencies")
+	execute_process(COMMAND powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/DownloadWebView2.ps1
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	RESULT_VARIABLE DOWNLOAD_WEBVIEW2_RESULT)
 
-  if (NOT DOWNLOAD_WEBVIEW2_RESULT EQUAL 0)
-      message(FATAL_ERROR "Failed to download Microsoft.Web.WebView2 NuGet package. Result: ${DOWNLOAD_WEBVIEW2_RESULT}")
-  endif()
+	if (NOT DOWNLOAD_WEBVIEW2_RESULT EQUAL 0)
+		message(FATAL_ERROR "Failed to download Microsoft.Web.WebView2 NuGet package. Result: ${DOWNLOAD_WEBVIEW2_RESULT}")
+	endif()
 endif()
 
 # Get ffmpeg static lib
@@ -56,6 +60,10 @@ FetchContent_MakeAvailable(ffmpeg)
 
 set(FFMPEG_INCLUDE_DIR "${ffmpeg_SOURCE_DIR}/include")
 set(FFMPEG_LIB_DIR "${ffmpeg_SOURCE_DIR}/lib/x64")
+
+# winget install -e --id Nvidia.CUDA
+# choco install cuda -y
+find_package(CUDAToolkit REQUIRED)
 
 # Make sure you include any new source files here
 set(SourceFiles
@@ -158,6 +166,7 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 		"${CMAKE_CURRENT_SOURCE_DIR}/build/${PROJECT_NAME}_artefacts/JuceLibraryCode"
 		${CMAKE_CURRENT_SOURCE_DIR}/build/juce_binarydata_WebViewFiles/JuceLibraryCode
+		${CUDA_INCLUDE_DIRS}
 	PRIVATE
 		"${CMAKE_CURRENT_SOURCE_DIR}/packages/Microsoft.Web.WebView2.1.0.1901.177/build/native/include"
 		${FFMPEG_INCLUDE_DIR}
@@ -204,7 +213,7 @@ target_link_libraries(${PROJECT_NAME}
 		${FFMPEG_LIB_DIR}/libavformat.lib
 		${FFMPEG_LIB_DIR}/libavutil.lib
 		${FFMPEG_LIB_DIR}/libswscale.lib
-		${CMAKE_CURRENT_SOURCE_DIR}/lib/cuda.lib
+		CUDA::cuda_driver
 		"${CMAKE_CURRENT_SOURCE_DIR}/packages/Microsoft.Web.WebView2.1.0.1901.177/build/native/x64/WebView2LoaderStatic.lib"
 )
 

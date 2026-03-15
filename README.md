@@ -19,6 +19,7 @@ This project uses **CMake** and **CPM** (CMake Package Manager) to automatically
 * **Nvenc and CUDA compatible GPU** (Required for encoding frames to video)
 * **Visual Studio 2022**
 * **CMake 3.24+**
+* **NuGet**
 
 ### Build with CMake
 1. **Clone the repository**
@@ -27,10 +28,10 @@ This project uses **CMake** and **CPM** (CMake Package Manager) to automatically
    cd AudioVisualiser
 2. **Run the build script**
    ```powershell
-   cmake -B build -G "Visual Studio 17 2022"
+   cmake -B build -G "Visual Studio 18 2026"
 3. **Open the Visual Studio solution**
    ```powershell
-   build/AudioVisualiser.sln
+   build/AudioVisualiser.slnx
 4. **Build from Visual Studio in release mode**
 ### Build with Projucer
 1. **Clone the repository**
