@@ -24,6 +24,8 @@ This project uses **CMake** and **CPM** (CMake Package Manager) to automatically
 ### Prerequisites
 * **Nvenc and CUDA compatible GPU** (Required for encoding frames to video)
 * **NVIDIA GPU Computing Toolkit**
+  ```powershell
+  winget install -e --id Nvidia.CUDA OR choco install cuda
 * **Visual Studio 2026**
 * **CMake 3.24+**
 
