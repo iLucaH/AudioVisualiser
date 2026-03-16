@@ -16,6 +16,8 @@ A Standalone and VST3-compatible real-time audio visualisation SaaS application 
 ## System
 ### Context Diagram
 ![Context Diagram](Images/Context_Diagram.png)
+### Architecture Diagram
+![Architecture Diagram](Images/Architecture.png)
 
 ## Build
 This project uses **CMake** and **CPM** (CMake Package Manager) to automatically handle dependencies.
