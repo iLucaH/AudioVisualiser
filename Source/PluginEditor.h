@@ -9,7 +9,6 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "Settings.h"
 #include "PluginProcessor.h"
 #include "OpenGLComponent.h"
 #include "SelectorTabPanel.h"
@@ -18,6 +17,8 @@
 #include "LoginComponent.h"
 #include "GlobalSocketHandler.h"
 #include "SocketCueResolver.h"
+
+class ApplicationSettings;
 
 //==============================================================================
 /**
@@ -34,6 +35,10 @@ public:
 
     SocketCueResolver getSocketCueResolver() {
         return socketCueResolver;
+    }
+
+    OpenGLComponent& getOpenGLComponent() {
+        return openGLComponent;
     }
 
 private:

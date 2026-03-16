@@ -43,15 +43,6 @@ public:
         selectedState.store(state);
     }
 
-    void start() {
-        openGLContext.setContinuousRepainting(true);
-        popBounds();
-    }
-    void stop() {
-        openGLContext.setContinuousRepainting(false);
-        pushBounds();
-    }
-
     void resetVideoRecorder(int width, int height);
 
     juce::OpenGLContext openGLContext;
@@ -84,6 +75,22 @@ public:
         return videoEncoder.get(); 
     }
 
+    void setFullScreen(bool state) {
+        juce::String s = state == true ? "true" : "false";
+        DBG("OpenGLComponent full screen mode set to " << s << ".");
+        fullScreenMode = state;
+        getPeer()->setFullScreen(state);
+        if (state) {
+            pushBounds();
+        } else {
+            popBounds();
+        }
+    }
+
+    bool isFullScreen() {
+        return fullScreenMode;
+    }
+
 private:
     AudioVisualiserAudioProcessor& processor;
     ApplicationSettings& appSettings;
@@ -102,6 +109,8 @@ private:
     GLuint fbo;
     uint8_t* pixelBuffer;
 
+    bool fullScreenMode = false;
+
     void addRenderState(std::unique_ptr<RenderState> state) {
         renderStates.push_back(std::move(state));
     }
@@ -112,7 +121,12 @@ private:
 
     void pushBounds() {
         cacheBounds = getBounds();
-        setTopLeftPosition(-10000, -10000);
+        const juce::Displays::Display* mainDisplay = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
+        if (mainDisplay != nullptr) {
+            setBounds(mainDisplay->userArea);
+            setTopLeftPosition(mainDisplay->topLeftPhysical);
+        }
+        // setTopLeftPosition(-10000, -10000);
     }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OpenGLComponent)

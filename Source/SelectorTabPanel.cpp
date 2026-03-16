@@ -31,67 +31,22 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     }
     presetSelector.setSelectedId(DEFAULT_RENDER_STATE);
 
-    // Sizing logic
-    setWidth.setText("1920");
-    setWidth.setBounds(8, 58, 55, 25);
-    setWidth.onReturnKey = [this]() {
-        juce::String str = setWidth.getText();
-        int i;
-        bool err = false;
-        try {
-            i = std::stoi(str.toStdString());
-        } catch (const std::invalid_argument& e) {
-            err = true;
-            return;
-        } catch (const std::out_of_range& e) {
-            err = true;
-        } if (i < MIN_WIDTH || i > MAX_WIDTH || i % 2 != 0) {
-            err = true;
-        } if (err) {
-            setWidth.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::red);
-        } else {
-            setWidth.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::darkslategrey);
-            // handle dimention update here
-            pendingWidth = i;
-            if (pendingHeight)
-                pushPendingWidthHeightChange();
-        }
-        repaint();
-    };
-    addAndMakeVisible(&setWidth);
-
-    setHeight.setText("1080");
-    setHeight.setBounds(76, 58, 55, 25);
-    setHeight.onReturnKey = [this]() {
-        juce::String str = setHeight.getText();
-        int i;
-        bool err = false;
-        try {
-            i = std::stoi(str.toStdString());
-        } catch (const std::invalid_argument& e) {
-            err = true;
-            return;
-        } catch (const std::out_of_range& e) {
-            err = true;
-        }
-        if (i < MIN_HEIGHT || i > MAX_HEIGHT || i % 2 != 0) {
-            err = true;
-        }
-        if (err) {
-            setHeight.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::red);
-        } else {
-            setHeight.setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::darkslategrey);
-            // handle dimention update here
-            pendingHeight = i;
-            if (pendingWidth)
-                pushPendingWidthHeightChange();
-        }
-        repaint();
+    openInApp.setButtonText("Open In App");
+    openInApp.setBounds(8, 40, 123, 25);
+    openInApp.onClick = [this] {
+        // open qr code document window
         };
-    addAndMakeVisible(&setHeight);
+    addAndMakeVisible(openInApp);
+
+    fullscreen.setButtonText("Fullscreen");
+    fullscreen.setBounds(8, 72, 123, 25);
+    fullscreen.onClick = [this] {
+        openGLComponent.setFullScreen(true);
+        };
+    addAndMakeVisible(fullscreen);
 
     open.setButtonText("Open");
-    open.setBounds(6, 97, 40, 25);
+    open.setBounds(6, 104, 40, 25);
     open.onClick = [this] {
         auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
         openChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
@@ -103,7 +58,7 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     addAndMakeVisible(open);
 
     play.setButtonText("Play");
-    play.setBounds(50, 97, 40, 25);
+    play.setBounds(50, 104, 40, 25);
     play.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
     play.onClick = [this] {
         processPlay();
@@ -111,7 +66,7 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     addAndMakeVisible(play);
 
     stop.setButtonText("Stop");
-    stop.setBounds(94, 97, 40, 25);
+    stop.setBounds(94, 104, 40, 25);
     stop.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::palevioletred);
     stop.onClick = [this] {
         processStop();
@@ -119,7 +74,7 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     addAndMakeVisible(stop);
 
     settings.setButtonText("Settings");
-    settings.setBounds(6, 133, 128, 25);
+    settings.setBounds(8, 136, 123, 25);
     settings.onClick = [this] {
         DBG("Launching the login panel!");
         settingsComponent.addToDesktop();
@@ -137,9 +92,6 @@ void SelectorTabPanel::paint (juce::Graphics& g) {
 
     g.setColour (juce::Colours::white);
     g.drawRect (getLocalBounds(), 1);
-    g.drawSingleLineText("Width", 8, 53);
-    g.drawSingleLineText("Height", 76, 53);
-    //g.drawSingleLineText("FFT Size", 8, 154);
 }
 
 void SelectorTabPanel::resized() {

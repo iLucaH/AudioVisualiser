@@ -8,10 +8,11 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "Settings.h"
 
 //==============================================================================
 AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioVisualiserAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p), loginComponent(appSettings), openGLComponent(p, appSettings), selectorPanel(p, openGLComponent, appSettings), tvOverlayComponent(openGLComponent), launchRecorder("Export"), login("Login"), videoComponent(openGLComponent), socketCueResolver(selectorPanel), globalSocketHandler(socketCueResolver) {
+    : AudioProcessorEditor(&p), audioProcessor(p), appSettings(this), loginComponent(appSettings), openGLComponent(p, appSettings), selectorPanel(p, openGLComponent, appSettings), tvOverlayComponent(openGLComponent), launchRecorder("Export"), login("Login"), videoComponent(openGLComponent), socketCueResolver(selectorPanel), globalSocketHandler(socketCueResolver) {
     width = 1080;
     height = 544;
     setSize (width, height);

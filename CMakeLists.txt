@@ -94,6 +94,7 @@ set(SourceFiles
 	Source/SDF_1_2D.h
 	Source/SelectorTabPanel.cpp
 	Source/SelectorTabPanel.h
+	Source/Settings.cpp
 	Source/Settings.h
 	Source/SettingsComponent.h
 	Source/StrHelper.h

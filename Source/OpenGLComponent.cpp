@@ -42,6 +42,7 @@ void OpenGLComponent::resized() {
 }
 
 void OpenGLComponent::newOpenGLContextCreated() {
+    DBG("New OpenGL Context is being created.");
     juce::gl::glDebugMessageControl(juce::gl::GL_DONT_CARE, juce::gl::GL_DONT_CARE, juce::gl::GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, juce::gl::GL_FALSE);
     for (int i = 0; i < renderStates.size(); i++) {
         RenderState* renderState = renderStates[i].get();

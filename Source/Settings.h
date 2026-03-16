@@ -12,12 +12,11 @@
 
 #include <JuceHeader.h>
 
+class AudioVisualiserAudioProcessorEditor;
+
 class ApplicationSettings {
 public:
-    ApplicationSettings() {
-
-    }
-
+    ApplicationSettings(AudioVisualiserAudioProcessorEditor* editor);
     /*
         Only to be updated on the message thread for now.
     */
@@ -36,6 +35,7 @@ public:
     void setDimensions(int w, int h) {
         width = w;
         height = h;
+        sendDimensionUpdate(w, h);
     }
 
     int getWidth() {
@@ -55,6 +55,10 @@ public:
     }
 
 private:
+    AudioVisualiserAudioProcessorEditor* root;
+
+    void sendDimensionUpdate(int w, int h);
+
     juce::String authJWT = "";
 
     int width = 1920, height = 1080;
