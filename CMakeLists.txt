@@ -107,6 +107,7 @@ set(SourceFiles
 	Source/VideoEncoder.cpp
 	Source/VideoEncoder.h
 	Source/WebViewHelper.h
+	Source/SocketCueResolver.h
 )
 
 set(WEBVIEW_FILES_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ui/public")

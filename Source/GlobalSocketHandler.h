@@ -12,9 +12,12 @@
 
 #include <JuceHeader.h>
 
+#include "PluginEditor.h"
+#include "SocketCueResolver.h"
+
 class GlobalSocketHandler {
 public:
-    GlobalSocketHandler() {
+    GlobalSocketHandler(SocketCueResolver& socketCueResolver) : socketCueResolver(socketCueResolver) {
         if (serverSocket.createListener(0)) {
             port = serverSocket.getBoundPort();
             DBG("Global server socket listening on port " << juce::String(port) << ".");
@@ -27,14 +30,13 @@ public:
     void startListening() {
         juce::Thread::launch([this]() {
             running.store(true);
-            while (true) {
-                if (!running.exchange(true)) {
-                    break;
-                }
-                std::unique_ptr<juce::StreamingSocket> clientSocket(serverSocket.waitForNextConnection());
-                if (clientSocket) {
-                    DBG("Client connected! " << clientSocket->getRawSocketHandle());
-                    clients.push_back(std::move(clientSocket));
+            while (running.load()) {
+                if (serverSocket.waitUntilReady(true, 1) > 0) {
+                    std::unique_ptr<juce::StreamingSocket> clientSocket(serverSocket.waitForNextConnection());
+                    if (clientSocket) {
+                        DBG("Client connected! " << clientSocket->getRawSocketHandle());
+                        clients.push_back(std::move(clientSocket));
+                    }
                 }
 
                 for (auto& client : clients) {
@@ -65,7 +67,9 @@ public:
         serverSocket.close();
         for (auto& client : clients) {
             client.get()->close();
+            client.release();
         }
+        clients.clear();
     }
 
     juce::String getConnectionHandle() {
@@ -76,6 +80,8 @@ public:
     }
 
 private:
+    SocketCueResolver& socketCueResolver;
+
     int port = -1;
 
     std::atomic<bool> running{ false };
@@ -126,7 +132,9 @@ private:
             return;
         }
         juce::MessageManager::callAsync([this, post, body]() {
+            DBG("Global Socket Handler resolved a response as post: " << post << " body: " << body);
             // plugin editor can handle the request from here on the message thread.
+            socketCueResolver.postCue(post, body);
         });
     }
 };

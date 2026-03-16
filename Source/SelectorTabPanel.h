@@ -23,7 +23,7 @@
 
 #define DEFAULT_RENDER_STATE 1
 
-class SelectorTabPanel  : public juce::Component {
+class SelectorTabPanel : public juce::Component{
 public:
     SelectorTabPanel(AudioVisualiserAudioProcessor&, OpenGLComponent&, ApplicationSettings&);
     
@@ -31,6 +31,11 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override;
+
+    void processPlay();
+    void processStop();
+    void processRenderStateIncrement();
+    void processRenderStateDecrement();
 
     void addRenderPofile(RenderProfileComponent* component) {
         const int index = renderProfiles.size();

@@ -17,6 +17,7 @@
 #include "CreateVideoComponent.h"
 #include "LoginComponent.h"
 #include "GlobalSocketHandler.h"
+#include "SocketCueResolver.h"
 
 //==============================================================================
 /**
@@ -30,6 +31,10 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+
+    SocketCueResolver getSocketCueResolver() {
+        return socketCueResolver;
+    }
 
 private:
     // This reference is provided as a quick way for your editor to
@@ -51,6 +56,7 @@ private:
     bool recorderSessionInitialised = false, loginSessionInitialised = false;
     juce::TextButton launchRecorder, login;
 
+    SocketCueResolver socketCueResolver;
     GlobalSocketHandler globalSocketHandler;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioVisualiserAudioProcessorEditor)

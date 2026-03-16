@@ -11,7 +11,7 @@
 
 //==============================================================================
 AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioVisualiserAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p), loginComponent(appSettings), openGLComponent(p, appSettings), selectorPanel(p, openGLComponent, appSettings), tvOverlayComponent(openGLComponent), launchRecorder("Export"), login("Login"), videoComponent(openGLComponent) {
+    : AudioProcessorEditor(&p), audioProcessor(p), loginComponent(appSettings), openGLComponent(p, appSettings), selectorPanel(p, openGLComponent, appSettings), tvOverlayComponent(openGLComponent), launchRecorder("Export"), login("Login"), videoComponent(openGLComponent), socketCueResolver(selectorPanel), globalSocketHandler(socketCueResolver) {
     width = 1080;
     height = 544;
     setSize (width, height);
@@ -49,9 +49,6 @@ AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioV
 
     login.setBounds(981, 496, 58, 28);
     login.onClick = [this] {
-        // Access HTTP Server
-        // Get QR Code for Server Port from HTTP Server
-        // Display QR Code In Login Session Component
         if (!loginSessionInitialised) {
             DBG("Launching the login panel!");
             loginComponent.addToDesktop();

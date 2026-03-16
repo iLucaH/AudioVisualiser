@@ -24,7 +24,6 @@
 #define MIN_HEIGHT 100
 #define MAX_HEIGHT 1080
 
-
 class SettingsContentComponent : public juce::Component{
 public:
 	SettingsContentComponent(ApplicationSettings& appSettings) : 

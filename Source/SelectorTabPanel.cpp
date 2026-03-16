@@ -31,23 +31,6 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     }
     presetSelector.setSelectedId(DEFAULT_RENDER_STATE);
 
-    // FFT Selector logic to select fft sample rate
-    //fftSelector.setHelpText("Click here to change the FFT sample rate!");
-    //fftSelector.setTextWhenNothingSelected("FFT Sample Rate");
-    //fftSelector.setBounds(68, 136, 64, 25);
-    //fftSelector.onChange = [this]() {
-    //    int newSampleRate = fftSelector.getSelectedId();
-    //    fftSampleRate = newSampleRate;
-    //    };
-    //fftSelector.addItem("1024", 10); // 10 because 2^10 = 1024 and so on.
-    //fftSelector.addItem("2048", 11);
-    //fftSelector.addItem("4096", 12);
-    //fftSelector.addItem("8192", 13);
-    //fftSelector.addItem("16384", 14);
-    //fftSelector.addItem("32768", 15);
-    //fftSelector.setSelectedId(11);
-    //addAndMakeVisible(&fftSelector);
-
     // Sizing logic
     setWidth.setText("1920");
     setWidth.setBounds(8, 58, 55, 25);
@@ -123,8 +106,7 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     play.setBounds(50, 97, 40, 25);
     play.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
     play.onClick = [this] {
-        DBG("Audio Transport State is being changed to Playing by the play button in selector tab panel.");
-        pluginProcessor.transportStateChanged(AudioVisualiserAudioProcessor::TransportState::Starting);
+        processPlay();
         };
     addAndMakeVisible(play);
 
@@ -132,8 +114,7 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     stop.setBounds(94, 97, 40, 25);
     stop.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::palevioletred);
     stop.onClick = [this] {
-        DBG("Audio Transport State is being changed to Stopping by the stop button in selector tab panel.");
-        pluginProcessor.transportStateChanged(AudioVisualiserAudioProcessor::TransportState::Stopping);
+        processStop();
         };
     addAndMakeVisible(stop);
 
@@ -165,4 +146,32 @@ void SelectorTabPanel::resized() {
     auto area = getLocalBounds();
     for (auto* profile : renderProfiles)
         profile->setBounds(juce::Rectangle(0, 168, 140, 298));
+}
+
+void SelectorTabPanel::processPlay() {
+    DBG("Audio Transport State is being changed to Playing by the play button in selector tab panel.");
+    pluginProcessor.transportStateChanged(AudioVisualiserAudioProcessor::TransportState::Starting);
+}
+
+void SelectorTabPanel::processStop() {
+    DBG("Audio Transport State is being changed to Stopping by the stop button in selector tab panel.");
+    pluginProcessor.transportStateChanged(AudioVisualiserAudioProcessor::TransportState::Stopping);
+}
+
+void SelectorTabPanel::processRenderStateIncrement() {
+    int newState = 1 + (presetSelector.getSelectedId() + 1 % presetSelector.getNumItems());
+    presetSelector.setSelectedId(newState);
+    updatePanelRenderProfile(newState, selectedState);
+    selectedState = newState;
+    openGLComponent.setSelectedState(selectedState);
+}
+
+void SelectorTabPanel::processRenderStateDecrement() {
+    int newState = presetSelector.getSelectedId() - 1;
+    if (newState < 1)
+        newState = presetSelector.getNumItems();
+    presetSelector.setSelectedId(newState);
+    updatePanelRenderProfile(newState, selectedState);
+    selectedState = newState;
+    openGLComponent.setSelectedState(selectedState);
 }
