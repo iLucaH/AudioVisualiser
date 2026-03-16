@@ -13,6 +13,10 @@ A Standalone and VST3-compatible real-time audio visualisation SaaS application 
 * OpenAI API is integrated to generate procedural visual outputs that react with audio input.
 * A maintained Agile workflow through GitHub Issues and a Github Project in this repository.
 
+## System
+### Context Diagram
+![Context Diagram](Images/Context_Diagram.png)
+
 ## Build
 This project uses **CMake** and **CPM** (CMake Package Manager) to automatically handle dependencies.
 ### Prerequisites
