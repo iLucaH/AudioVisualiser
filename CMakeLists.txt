@@ -30,10 +30,6 @@ CPMAddPackage(
 
 # Install Microsoft.Web.WebView2 NuGet package to allow WebViews on Windows
 if (MSVC)
-    find_program(NUGET_EXE NAMES nuget)
-    if(NOT NUGET_EXE)
-        message(FATAL_ERROR "NUGET.EXE not found. Please install NuGet.")
-    endif()
 	message(STATUS "Setting up WebView dependencies")
 	execute_process(COMMAND powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/DownloadWebView2.ps1
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

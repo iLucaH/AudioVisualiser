@@ -17,9 +17,9 @@ A Standalone and VST3-compatible real-time audio visualisation SaaS application 
 This project uses **CMake** and **CPM** (CMake Package Manager) to automatically handle dependencies.
 ### Prerequisites
 * **Nvenc and CUDA compatible GPU** (Required for encoding frames to video)
-* **Visual Studio 2022**
+* **NVIDIA GPU Computing Toolkit**
+* **Visual Studio 2026**
 * **CMake 3.24+**
-* **NuGet**
 
 ### Build with CMake
 1. **Clone the repository**

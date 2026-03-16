@@ -24,7 +24,6 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-#include <nvEncodeAPI.h>
 #include <cuda.h>
 #include <cudaGL.h>
 
@@ -92,7 +91,6 @@ private:
     
     int getDeviceName(juce::String& gpuName) {
         //Setup the cuda context for hardware encoding with ffmpeg
-        NV_ENC_BUFFER_FORMAT eFormat = NV_ENC_BUFFER_FORMAT_IYUV;
         int iGpu = 0;
         CUresult ret;
         int driverVersion;

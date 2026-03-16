@@ -14,6 +14,8 @@
 
 #include <ranges>
 
+#include "WebViewFiles.h"
+
 /*
     Normalise paths to user the / file seperator convention. 
 */
