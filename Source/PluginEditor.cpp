@@ -17,10 +17,7 @@ AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor (AudioV
     height = 544;
     setSize (width, height);
 
-    setResizable(true, true);
-    const float ratio = 1.98529411f;
-    getConstrainer()->setFixedAspectRatio(ratio);
-    setResizeLimits(300, 250, 10000, 10000);
+    setResizable(false, false);
     centreWithSize(getWidth(), getHeight());
     
     addAndMakeVisible(openGLComponent);

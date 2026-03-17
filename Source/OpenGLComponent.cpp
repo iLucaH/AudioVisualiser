@@ -28,10 +28,16 @@ OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p, ApplicationSe
     openGLContext.setRenderer(this); // Set this instance as the renderer for the context
     openGLContext.setContinuousRepainting(true); // Tell the context to repaint on a loop
     openGLContext.attachTo(*this); // Finally - we attach the context to this Component.
+    juce::Desktop::getInstance().addGlobalMouseListener(this);
 }
 
 OpenGLComponent::~OpenGLComponent() {
     openGLContext.detach();
+}
+
+void OpenGLComponent::mouseUp(const juce::MouseEvent & event) {
+    if (fullScreenMode.load() && event.mods.isShiftDown())
+        setFullScreen(false);
 }
 
 void OpenGLComponent::paint(juce::Graphics& g) {
@@ -148,7 +154,7 @@ void OpenGLComponent::renderOpenGL() {
     openGLContext.extensions.glUniform1f(yFlipUniform, -1.0f);
 
     juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
-    juce::gl::glViewport(0, 0, getWidth(), getHeight());
+    juce::gl::glViewport(0, 0, getWidth() * openGLContext.getRenderingScale(), getHeight() * openGLContext.getRenderingScale());
     renderState->render();
 }
 

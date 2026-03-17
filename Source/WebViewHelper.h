@@ -13,8 +13,7 @@
 #include <JuceHeader.h>
 
 #include <ranges>
-
-//#include "WebviewFiles.h"
+#include <WebViewFiles.h>
 
 /*
     Normalise paths to user the / file seperator convention. 

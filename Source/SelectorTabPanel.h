@@ -71,6 +71,8 @@ private:
     AudioVisualiserAudioProcessor& pluginProcessor;
     OpenGLComponent& openGLComponent;
 
+    ApplicationSettings& appSettings;
+
     SettingsComponent settingsComponent;
 
     juce::ComboBox presetSelector; //, fftSelector;

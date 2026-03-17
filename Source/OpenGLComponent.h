@@ -38,6 +38,7 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override;
+    void mouseUp(const juce::MouseEvent& event) override;
 
     void setSelectedState(unsigned int state) {
         selectedState.store(state);
@@ -78,7 +79,7 @@ public:
     void setFullScreen(bool state) {
         juce::String s = state == true ? "true" : "false";
         DBG("OpenGLComponent full screen mode set to " << s << ".");
-        fullScreenMode = state;
+        fullScreenMode.store(state);
         getPeer()->setFullScreen(state);
         if (state) {
             pushBounds();
@@ -88,7 +89,7 @@ public:
     }
 
     bool isFullScreen() {
-        return fullScreenMode;
+        return fullScreenMode.load();
     }
 
 private:
@@ -109,7 +110,7 @@ private:
     GLuint fbo;
     uint8_t* pixelBuffer;
 
-    bool fullScreenMode = false;
+    std::atomic<bool> fullScreenMode = { false };
 
     void addRenderState(std::unique_ptr<RenderState> state) {
         renderStates.push_back(std::move(state));

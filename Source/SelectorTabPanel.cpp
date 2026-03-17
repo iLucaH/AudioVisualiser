@@ -13,13 +13,15 @@
 #include "RenderState2D.h"
 
 //==============================================================================
-SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLComponent& openGL, ApplicationSettings& appSettings) : pluginProcessor(p), openGLComponent(openGL), settingsComponent(appSettings),
+SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLComponent& openGL, ApplicationSettings& applSettings) : pluginProcessor(p), openGLComponent(openGL), appSettings(applSettings), settingsComponent(applSettings), 
     openChooser("Choose a Wav or AIFF File", juce::File::getSpecialLocation(juce::File::userDesktopDirectory), "*.wav; *.mp3") {
     // Render state logic
     presetSelector.setHelpText("Click here to select a render state!");
     presetSelector.setTextWhenNothingSelected("Select Preset");
     presetSelector.setBounds(8, 8, 123, 25);
     presetSelector.onChange = [this]() {
+        if (openGLComponent.isFullScreen())
+            return;
         int newState = presetSelector.getSelectedId();
         updatePanelRenderProfile(newState, selectedState);
         selectedState = newState;
@@ -34,6 +36,8 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     openInApp.setButtonText("Open In App");
     openInApp.setBounds(8, 40, 123, 25);
     openInApp.onClick = [this] {
+        if (openGLComponent.isFullScreen())
+            return;
         // open qr code document window
         };
     addAndMakeVisible(openInApp);
@@ -41,13 +45,17 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     fullscreen.setButtonText("Fullscreen");
     fullscreen.setBounds(8, 72, 123, 25);
     fullscreen.onClick = [this] {
-        openGLComponent.setFullScreen(true);
+        if (openGLComponent.isFullScreen())
+            return;
+        appSettings.setFullScreen(true);
         };
     addAndMakeVisible(fullscreen);
 
     open.setButtonText("Open");
     open.setBounds(6, 104, 40, 25);
     open.onClick = [this] {
+        if (openGLComponent.isFullScreen())
+            return;
         auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
         openChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
             juce::File file = chooser.getResult();
@@ -61,6 +69,8 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     play.setBounds(50, 104, 40, 25);
     play.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
     play.onClick = [this] {
+        if (openGLComponent.isFullScreen())
+            return;
         processPlay();
         };
     addAndMakeVisible(play);
@@ -69,6 +79,8 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     stop.setBounds(94, 104, 40, 25);
     stop.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::palevioletred);
     stop.onClick = [this] {
+        if (openGLComponent.isFullScreen())
+            return;
         processStop();
         };
     addAndMakeVisible(stop);
@@ -76,6 +88,8 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     settings.setButtonText("Settings");
     settings.setBounds(8, 136, 123, 25);
     settings.onClick = [this] {
+        if (openGLComponent.isFullScreen())
+            return;
         DBG("Launching the login panel!");
         settingsComponent.addToDesktop();
         settingsComponent.setVisible(true);

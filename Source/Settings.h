@@ -54,6 +54,8 @@ public:
         fftSize = size;
     }
 
+    void setFullScreen(bool val);
+
 private:
     AudioVisualiserAudioProcessorEditor* root;
 
