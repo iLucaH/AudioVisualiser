@@ -22,8 +22,11 @@ public:
     #version 330 core
     layout(location = 0) in vec4 position;
 
+    uniform float yFlip;
+
     void main() {
         gl_Position = position;
+        gl_Position.x *= yFlip;
     }
 )"), juce::String(R"(
     #version 330 core

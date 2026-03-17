@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <chrono>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -28,7 +29,7 @@ extern "C" {
 #include <cudaGL.h>
 
 #define STREAM_PIX_FMT_DEFAULT AV_PIX_FMT_YUV420P
-#define STREAM_FRAME_RATE 30
+#define STREAM_FRAME_RATE 60
 
 #define MAX_RECORDING_LENGTH 1200000
 
@@ -88,6 +89,7 @@ private:
     bool initialiseVideo(OutputStream* ost, AVFormatContext* oc, const AVCodec** codec);
     void openVideo(AVFormatContext* oc, const AVCodec* codec, OutputStream* ost, AVDictionary* opt_arg);
     AVFrame* allocFrame(enum AVPixelFormat pix_fmt, int width, int height);
+    void printFfmpegErr(int ret);
     
     int getDeviceName(juce::String& gpuName) {
         //Setup the cuda context for hardware encoding with ffmpeg
@@ -133,6 +135,13 @@ private:
     int width, height;
     int have_video = 0, have_audio = 0;
     int encode_video = 0, encode_audio = 0;
+
+    // Frame handling
+    double timePerTick = (double) 1000000000 / STREAM_FRAME_RATE;
+    double delta = 0;
+    long now = 0;
+    long lastTime = 0;
+    long timer = 0;
 
     OutputStream video_st = { 0 };
     const AVOutputFormat* fmt;

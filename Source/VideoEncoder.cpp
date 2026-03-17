@@ -195,16 +195,13 @@ void VideoEncoder::openVideo(AVFormatContext* oc, const AVCodec* codec, OutputSt
 
     // Add NVENC-specific options
     av_dict_set(&opt, "preset", "slow", 0);  // or "slow", "medium", "fast"
-    av_dict_set(&opt, "profile", "high", 0);
     av_dict_set(&opt, "tune", "hq", 0);
     av_dict_set(&opt, "rc", "vbr", 0);
 
     // Open the codec.
     ret = avcodec_open2(c, codec, &opt);
     if (ret < 0) {
-        char errbuf[AV_ERROR_MAX_STRING_SIZE];
-        av_strerror(ret, errbuf, sizeof(errbuf));
-        DBG("Could not open the video codec: " << errbuf << " (error code: " << ret << ")");
+        printFfmpegErr(ret);
         av_dict_free(&opt);
         return;
     }
@@ -236,7 +233,7 @@ bool VideoEncoder::startRecordingSession(const juce::String& file_name) {
     if (!file_name.toRawUTF8())
         return false;
     DBG("Starting Recording Session!");
-    int ret, i;
+    int ret{}, i;
     AVDictionary* opt = NULL;
     
     // Set options here. AVDictionary is a key value data structure for ffmpeg. 
@@ -266,8 +263,10 @@ bool VideoEncoder::startRecordingSession(const juce::String& file_name) {
     if (have_video)
         openVideo(oc, video_codec, &video_st, opt);
     // Confirm the video context actually opened.
-    if (!video_st.enc || !avcodec_is_open(video_st.enc)) {
+    ret = avcodec_is_open(video_st.enc);
+    if (!video_st.enc || !ret) {
         DBG("Failed to open video openVideo(oc, video_codec, &video_st, opt);.");
+        printFfmpegErr(ret);
         cleanup();
         return false;
     }
@@ -291,12 +290,26 @@ bool VideoEncoder::startRecordingSession(const juce::String& file_name) {
         DBG("Could not write a header to the output file.\n");
         return false;
     }
+
+    // Setup framerate control handling variables
+    delta = 0;
+    now = 0;
+    lastTime = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    timer = 0;
+
     active = true;
     return true;
 }
 
 void VideoEncoder::addVideoFrame() {
     if (!active) return;
+    now = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    delta += (now - lastTime) / timePerTick;
+    timer += now - lastTime;
+    lastTime = now;
+    if (delta < 1)
+        return;
+    delta--;
 
     OutputStream* ost = &video_st;
 
@@ -420,4 +433,10 @@ void VideoEncoder::cleanup() {
 
     // Free the stream attached to the output context.
     avformat_free_context(oc);
+}
+
+void VideoEncoder::printFfmpegErr(int ret) {
+    char errbuf[AV_ERROR_MAX_STRING_SIZE];
+    av_strerror(ret, errbuf, sizeof(errbuf));
+    DBG("ffmpeg err printout: " << errbuf << " (error code: " << ret << ")");
 }

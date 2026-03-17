@@ -89,6 +89,9 @@ void OpenGLComponent::renderOpenGL() {
     }
     openGLContext.extensions.glUseProgram(progID);
 
+    GLuint yFlipUniform = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "yFlip");
+    openGLContext.extensions.glUniform1f(yFlipUniform, -1.0f);
+
     GLuint timeUniform = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "time");
     openGLContext.extensions.glUniform1i(timeUniform, time);
 
@@ -141,10 +144,12 @@ void OpenGLComponent::renderOpenGL() {
         videoEncoder->addVideoFrame();
     }
 
+    // Make sure that the projection is set to the normal projection for normal rendering.
+    openGLContext.extensions.glUniform1f(yFlipUniform, -1.0f);
+
     juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
     juce::gl::glViewport(0, 0, getWidth(), getHeight());
     renderState->render();
-
 }
 
 void OpenGLComponent::resetVideoRecorder(int width, int height) {
