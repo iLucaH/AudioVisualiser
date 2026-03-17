@@ -26,3 +26,7 @@ void ApplicationSettings::setFullScreen(bool val) {
         root->centreWithSize(1080, 544);
     }
 }
+
+juce::String ApplicationSettings::getSocketConnectionHandle() {
+	return root->getGlobalSocketHandler().getConnectionHandle();
+}

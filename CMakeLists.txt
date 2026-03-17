@@ -61,8 +61,14 @@ set(FFMPEG_LIB_DIR "${ffmpeg_SOURCE_DIR}/lib/x64")
 # choco install cuda -y
 find_package(CUDAToolkit REQUIRED)
 
+# Include qrcode.js in the ui source
+file(DOWNLOAD
+    https://raw.githubusercontent.com/kazuhikoarase/qrcode-generator/refs/heads/master/js/dist/qrcode.js
+    ${CMAKE_SOURCE_DIR}/ui/public/js/qrcode.js)
+
 # Make sure you include any new source files here
 set(SourceFiles
+	Source/AppQRComponent.h
 	Source/AskAI.h
 	Source/AVAPIResolver.h
 	Source/AVIOHandler.h

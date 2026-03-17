@@ -13,7 +13,7 @@
 #include "RenderState2D.h"
 
 //==============================================================================
-SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLComponent& openGL, ApplicationSettings& applSettings) : pluginProcessor(p), openGLComponent(openGL), appSettings(applSettings), settingsComponent(applSettings), 
+SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLComponent& openGL, ApplicationSettings& applSettings) : pluginProcessor(p), openGLComponent(openGL), appSettings(applSettings), settingsComponent(applSettings), appQRComponent(applSettings),
     openChooser("Choose a Wav or AIFF File", juce::File::getSpecialLocation(juce::File::userDesktopDirectory), "*.wav; *.mp3") {
     // Render state logic
     presetSelector.setHelpText("Click here to select a render state!");
@@ -38,7 +38,12 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     openInApp.onClick = [this] {
         if (openGLComponent.isFullScreen())
             return;
-        // open qr code document window
+        if (openGLComponent.isFullScreen())
+            return;
+        DBG("Launching the open in app panel!");
+        appQRComponent.addToDesktop();
+        appQRComponent.setVisible(true);
+        appQRComponent.toFront(true);
         };
     addAndMakeVisible(openInApp);
 

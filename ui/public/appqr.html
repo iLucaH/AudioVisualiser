@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+		<script type="text/javascript" src="js/qrcode.js"></script>
+		<link rel='stylesheet' type='text/css' href='settings.css'>
+        <title>Connect with app</title>
+    </head>
+    <body>
+		<h1>Scan in app to connect</h1>
+		<div id="qrplaceholder"></div>
+		<script type="module">
+			import * as Juce from "/js/juce/index.js";
+			
+			const nativeFunctionGetSocketHandle = Juce.getNativeFunction("nativeFunctionGetSocketHandle");
+			nativeFunctionGetSocketHandle().then((result) => {
+				var typeNumber = 4;
+				var errorCorrectionLevel = 'L';
+				var qr = qrcode(typeNumber, errorCorrectionLevel);
+				qr.addData(result);
+				qr.make();
+				document.getElementById('qrplaceholder').innerHTML = qr.createImgTag(8);
+			});
+		</script>
+		<a href="https://github.com/iLucaH/audiovisualiser-socket-client">Click to download app</a>
+    </body>
+</html>

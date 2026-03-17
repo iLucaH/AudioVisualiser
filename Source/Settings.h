@@ -56,6 +56,8 @@ public:
 
     void setFullScreen(bool val);
 
+    juce::String getSocketConnectionHandle();
+
 private:
     AudioVisualiserAudioProcessorEditor* root;
 

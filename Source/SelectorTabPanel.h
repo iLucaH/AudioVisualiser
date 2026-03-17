@@ -16,6 +16,7 @@
 #include "PluginProcessor.h"
 #include "SettingsComponent.h"
 #include "Settings.h"
+#include "AppQRComponent.h"
 
 //==============================================================================
 /*
@@ -73,6 +74,7 @@ private:
 
     ApplicationSettings& appSettings;
 
+    AppQRComponent appQRComponent;
     SettingsComponent settingsComponent;
 
     juce::ComboBox presetSelector; //, fftSelector;

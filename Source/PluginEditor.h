@@ -41,6 +41,10 @@ public:
         return openGLComponent;
     }
 
+    GlobalSocketHandler& getGlobalSocketHandler() {
+        return globalSocketHandler;
+	}
+
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
