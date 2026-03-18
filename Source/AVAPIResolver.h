@@ -22,7 +22,7 @@
 #define REGISTER_USERNAME_TAKEN 5
 #define REGISTER_PASSWORD_UNSAFE 6
 
-struct RenderState {
+struct RenderStateStruct {
     int id;
     juce::String name;
     juce::String renderState;
@@ -202,7 +202,7 @@ inline juce::String postAddRenderState(const juce::String& jwt, const juce::Stri
 }
 
 // Blocking operation.
-inline std::vector<struct RenderState> getGetAllRenderStates(const juce::String& jwt) {
+inline std::vector<struct RenderStateStruct> getGetAllRenderStates(const juce::String& jwt) {
     juce::URL url("http://localhost:8080/renderState/getAll");
 
     int statusCode = 0;
@@ -232,7 +232,7 @@ inline std::vector<struct RenderState> getGetAllRenderStates(const juce::String&
         DBG("Failed to parse API JSON Prompt Response! Status code: " << statusCode);
         return {};
     }
-	std::vector<struct RenderState> renderStates;
+	std::vector<struct RenderStateStruct> renderStates;
     for (int i = 0; i < parsed.getArray()->size(); i++) {
         juce::var rs = parsed.getArray()[i];
         int id_parsed;
@@ -279,7 +279,7 @@ inline std::vector<struct RenderState> getGetAllRenderStates(const juce::String&
 }
 
 // Blocking operation.
-inline struct RenderState getGetRenderState(const juce::String& jwt, int renderStateId) {
+inline struct RenderStateStruct getGetRenderState(const juce::String& jwt, int renderStateId) {
     juce::URL url("http://localhost:8080/renderState/get");
     url = url.withPOSTData("id=" + renderStateId);
 
