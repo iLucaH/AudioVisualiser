@@ -22,11 +22,8 @@ public:
     #version 330 core
     layout(location = 0) in vec4 position;
 
-    uniform float yFlip;
-
     void main() {
         gl_Position = position;
-        gl_Position.x *= yFlip;
     }
 )"), juce::String(R"(
     #version 330 core
@@ -34,7 +31,7 @@ public:
     out vec4 outColour;
 
     void main() {
-        outColour = vec4(0.0f, 0.0f, 0.0f, 1.0);
+        outColour = vec4(0.1f, 0.1f, 0.1f, 1.0) * gl_FragCoord;
     }
 )")), appSettings(applSettings),
       saveChooser("Save Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs"),
@@ -46,15 +43,12 @@ public:
         statusText.setBounds(8, 184, 125, 125);
         renderProfile.addComponent(&statusText);
 
-        // Submit prompt button logic here.
         submit.setButtonText("Click to submit prompt!");
         submit.setBounds(7, 199, 125, 25);
         submit.onClick = [this]() {
             // If we are already making a prompt submit request, then we should not continue with this one.
             if (pendingAPIRequest.load())
                 return;
-
-            // If the user is not logged in and authorised, then they are unable to go any further with submitting a response.
             if (!appSettings.isAuth())
                 return;
 
@@ -62,9 +56,7 @@ public:
             // Launch the API request on a seperate thread because it is a blocking operation.
             juce::Thread::launch([this, promptText]() {
                 pendingAPIRequest.store(true); 
-                // Request the Fragment Shader from the API.
                 juce::String response = postPromptResponse(appSettings.getAuthJWT(), promptText);
-                // No response will be received if something goes wrong on the get request end.
                 if (response.length() > 0) {
                     auto* fragShader = new juce::String(response); // The fragShader will be freed once exchanged in the render loop.
                     pendingFragShader.store(fragShader);
@@ -78,27 +70,10 @@ public:
         };
         renderProfile.addComponent(&submit);
 
-        save.setButtonText("Save");
-        save.setBounds(5, 270, 63, 20);
-        save.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
-        save.onClick = [this]() {
-            auto flags = juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting;
-            saveChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
-                juce::String filePath = chooser.getResult().getFullPathName();
-                if (filePath.isEmpty())
-                    return;
-                DBG("Saving render state to: " << filePath);
-                auto shaderPtr = std::atomic_load(&fragmentShader);
-                if (shaderPtr)
-                    saveRenderStateToFile(filePath, *shaderPtr);
-                });
-            };
-        renderProfile.addComponent(&save);
-
-        load.setButtonText("Load");
-        load.setBounds(73, 270, 63, 20);
-        load.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightcoral);
-        load.onClick = [this]() {
+        loadFromFile.setButtonText("File");
+        loadFromFile.setBounds(5, 270, 41, 20);
+        loadFromFile.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::darkgreen);
+        loadFromFile.onClick = [this]() {
             auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
             loadChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
                 juce::String filePath = chooser.getResult().getFullPathName();
@@ -110,6 +85,96 @@ public:
                 pendingFragShader.store(fragShader);
                 pendingSubmit.store(true);
                 });
+            };
+        renderProfile.addComponent(&loadFromFile);
+        loadFromFile.setVisible(false);
+
+        loadFromBackend.setButtonText("Cloud");
+        loadFromBackend.setBounds(50, 270, 41, 20);
+        loadFromBackend.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::darkgreen);
+        loadFromBackend.onClick = [this]() {
+            };
+        renderProfile.addComponent(&loadFromBackend);
+        loadFromBackend.setVisible(false);
+
+        cancelLoad.setButtonText("Cancel");
+        cancelLoad.setBounds(94, 270, 41, 20);
+        cancelLoad.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightcoral);
+        cancelLoad.onClick = [this]() {
+            loadFromFile.setVisible(false);
+            loadFromBackend.setVisible(false);
+            cancelLoad.setVisible(false);
+            save.setVisible(true);
+            load.setVisible(true);
+            };
+        renderProfile.addComponent(&cancelLoad);
+        cancelLoad.setVisible(false);
+
+        saveToFile.setButtonText("File");
+        saveToFile.setBounds(5, 270, 41, 20);
+        saveToFile.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
+        saveToFile.onClick = [this]() {
+            auto flags = juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting;
+            saveChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
+                juce::String filePath = chooser.getResult().getFullPathName();
+                if (filePath.isEmpty())
+                    return;
+                DBG("Saving render state to: " << filePath);
+                auto shaderPtr = std::atomic_load(&fragmentShader);
+                if (shaderPtr)
+                    saveRenderStateToFile(filePath, *shaderPtr);
+                });
+            };
+        renderProfile.addComponent(&saveToFile);
+        saveToFile.setVisible(false);
+
+        saveToBackend.setButtonText("Cloud");
+        saveToBackend.setBounds(50, 270, 41, 20);
+        saveToBackend.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
+        saveToBackend.onClick = [this]() {
+            auto shaderPtr = std::atomic_load(&fragmentShader);
+            if (shaderPtr) {
+                // Save to backened here.
+                //saveRenderStateToFile(filePath, *shaderPtr);
+            }
+            };
+        renderProfile.addComponent(&saveToBackend);
+        saveToBackend.setVisible(false);
+
+        cancelSave.setButtonText("Cancel");
+        cancelSave.setBounds(94, 270, 41, 20);
+        cancelSave.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightcoral);
+        cancelSave.onClick = [this]() {
+            saveToFile.setVisible(false);
+            saveToBackend.setVisible(false);
+            cancelSave.setVisible(false);
+            save.setVisible(true);
+            load.setVisible(true);
+            };
+        renderProfile.addComponent(&cancelSave);
+        cancelSave.setVisible(false);
+
+        save.setButtonText("Save");
+        save.setBounds(5, 270, 63, 20);
+        save.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
+        save.onClick = [this]() {
+            saveToFile.setVisible(true);
+            saveToBackend.setVisible(true);
+            cancelSave.setVisible(true);
+            save.setVisible(false);
+            load.setVisible(false);
+            };
+        renderProfile.addComponent(&save);
+
+        load.setButtonText("Load");
+        load.setBounds(73, 270, 63, 20);
+        load.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::darkgreen);
+        load.onClick = [this]() {
+			loadFromBackend.setVisible(true);
+			loadFromFile.setVisible(true);
+			cancelLoad.setVisible(true);
+            save.setVisible(false);
+            load.setVisible(false);
             };
         renderProfile.addComponent(&load);
 
@@ -169,6 +234,14 @@ public:
 
 private:
     ApplicationSettings& appSettings;
+
+    juce::TextButton loadFromFile;
+    juce::TextButton loadFromBackend;
+    juce::TextButton cancelLoad;
+
+    juce::TextButton saveToFile;
+    juce::TextButton saveToBackend;
+    juce::TextButton cancelSave;
 
     juce::Label statusText;
     juce::TextButton submit, save, load;

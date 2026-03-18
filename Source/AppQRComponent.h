@@ -60,7 +60,4 @@ public:
 	void closeButtonPressed() override {
 		setVisible(false);
 	}
-
-private:
-
 };
