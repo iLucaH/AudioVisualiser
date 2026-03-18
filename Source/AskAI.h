@@ -93,6 +93,13 @@ public:
         loadFromBackend.setBounds(50, 270, 41, 20);
         loadFromBackend.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::darkgreen);
         loadFromBackend.onClick = [this]() {
+            if (!appSettings.isAuth()) {
+                saveToBackend.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightcoral);
+                delayColourChangeToComponent(&saveToBackend, juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
+                return;
+            }
+            backenedListComboBox.setVisible(true);
+            statusText.setVisible(false);
             };
         renderProfile.addComponent(&loadFromBackend);
         loadFromBackend.setVisible(false);
@@ -104,8 +111,10 @@ public:
             loadFromFile.setVisible(false);
             loadFromBackend.setVisible(false);
             cancelLoad.setVisible(false);
+            backenedListComboBox.setVisible(false);
             save.setVisible(true);
             load.setVisible(true);
+            statusText.setVisible(true);
             };
         renderProfile.addComponent(&cancelLoad);
         cancelLoad.setVisible(false);
@@ -132,11 +141,13 @@ public:
         saveToBackend.setBounds(50, 270, 41, 20);
         saveToBackend.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
         saveToBackend.onClick = [this]() {
-            auto shaderPtr = std::atomic_load(&fragmentShader);
-            if (shaderPtr) {
-                // Save to backened here.
-                //saveRenderStateToFile(filePath, *shaderPtr);
+            if (!appSettings.isAuth()) {
+                saveToBackend.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightcoral);
+                delayColourChangeToComponent(&saveToBackend, juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
+                return;
             }
+            statusText.setVisible(false); // Hide status text so we can make room for the text box.
+            saveNameEditor.setVisible(true);
             };
         renderProfile.addComponent(&saveToBackend);
         saveToBackend.setVisible(false);
@@ -148,8 +159,10 @@ public:
             saveToFile.setVisible(false);
             saveToBackend.setVisible(false);
             cancelSave.setVisible(false);
+            saveNameEditor.setVisible(false);
             save.setVisible(true);
             load.setVisible(true);
+            statusText.setVisible(true);
             };
         renderProfile.addComponent(&cancelSave);
         cancelSave.setVisible(false);
@@ -175,8 +188,58 @@ public:
 			cancelLoad.setVisible(true);
             save.setVisible(false);
             load.setVisible(false);
+
+            // Update the list of loaded render states from the backend now while there is opportunity.
+            renderStatesCached.clear();
+            backenedListComboBox.clear();
+            juce::Thread::launch([this]() {
+                std::vector<struct RenderStateStruct> renderStates = getGetAllRenderStates(appSettings.getAuthJWT());
+                juce::MessageManager::callAsync([this, renderStates]() {
+                    for (auto renderState : renderStates) {
+                        backenedListComboBox.addItem(renderState.name, renderState.id);
+                        renderStatesCached.insert({ renderState.id, renderState });
+                    }
+                    });
+                });
             };
         renderProfile.addComponent(&load);
+
+        backenedListComboBox.setTextWhenNoChoicesAvailable("...");
+        backenedListComboBox.setTextWhenNothingSelected("...");
+        backenedListComboBox.setBounds(8, 240, 125, 25);
+        backenedListComboBox.onChange = [this]() {
+            auto rs = renderStatesCached.find(backenedListComboBox.getSelectedId());
+            if (rs != renderStatesCached.end()) {
+                struct RenderStateStruct renderState = rs->second;
+                auto* fragShader = new juce::String(renderState.renderState);
+                pendingFragShader.store(fragShader);
+                pendingSubmit.store(true);
+            }
+            };
+        renderProfile.addComponent(&backenedListComboBox);
+        backenedListComboBox.setVisible(false);
+
+        saveNameEditor.setText("My new visualiser...");
+        saveNameEditor.setInputRestrictions(20);
+        saveNameEditor.setBounds(8, 240, 125, 25);
+        saveNameEditor.onReturnKey = [this]() {
+            auto shaderPtr = std::atomic_load(&fragmentShader);
+            juce::Thread::launch([this, shaderPtr]() {
+                if (shaderPtr) {
+                    juce::String name = saveNameEditor.getText();
+                    juce::String newRSId = postAddRenderState(appSettings.getAuthJWT(), name, *shaderPtr);
+                    DBG("Adding new render state id resolved from cloud as: " << newRSId);
+                    juce::MessageManager::callAsync([this, name]() {
+                        saveToBackend.setColour(juce::TextButton::ColourIds::buttonColourId, name.length() == 0 ? juce::Colours::lightcoral : juce::Colours::green);
+                        });
+                    delayColourChangeToComponent(&saveToBackend, juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
+                }
+                });
+            saveNameEditor.setVisible(false);
+            statusText.setVisible(true);
+            };
+        renderProfile.addComponent(&saveNameEditor);
+        saveNameEditor.setVisible(false);
 
         // Type prompt logic here.
         prompt.setText("Type your prompt here!");
@@ -231,6 +294,16 @@ public:
         RenderState2D::render();
     }
 
+    void delayColourChangeToComponent(juce::TextButton* component, int colourId, juce::Colour colour) {
+        juce::Thread::launch([component, colourId, colour]() {
+            juce::Thread::sleep(2000);
+            juce::MessageManager::callAsync([component, colourId, colour]() {
+                if (component != nullptr)
+                    component->setColour(colourId, colour);
+                });
+            });
+    }
+
 
 private:
     ApplicationSettings& appSettings;
@@ -238,10 +311,12 @@ private:
     juce::TextButton loadFromFile;
     juce::TextButton loadFromBackend;
     juce::TextButton cancelLoad;
+    juce::ComboBox backenedListComboBox;
 
     juce::TextButton saveToFile;
     juce::TextButton saveToBackend;
     juce::TextButton cancelSave;
+    juce::TextEditor saveNameEditor;
 
     juce::Label statusText;
     juce::TextButton submit, save, load;
@@ -252,4 +327,6 @@ private:
     std::atomic<bool> pendingAPIRequest{ false };
     std::atomic<bool> pendingSubmit{ false };
     std::atomic<bool> displayStatusError{ false };
+
+    std::unordered_map<int, struct RenderStateStruct> renderStatesCached;
 };

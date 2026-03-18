@@ -172,14 +172,16 @@ inline int api_register(const juce::String& username, const juce::String& passwo
 
 // Blocking operation.
 // Returns uuid for the new render state if successful, otherwise returns an empty string.
-inline juce::String postAddRenderState(const juce::String& jwt, const juce::String& renderState) {
+inline juce::String postAddRenderState(const juce::String& jwt, const juce::String& name, const juce::String& renderState) {
     juce::URL url("http://localhost:8080/renderState/add");
-    url = url.withPOSTData("renderstate=" + renderState);
+    juce::String postData = "name=" + juce::URL::addEscapeChars(name, true) + "&renderState=" + juce::URL::addEscapeChars(renderState, true);
+
+    url = url.withPOSTData(postData);
 
     int statusCode = 0;
 
     auto options = juce::URL::InputStreamOptions(
-        juce::URL::ParameterHandling::inAddress)
+        juce::URL::ParameterHandling::inPostData)
         .withHttpRequestCmd("POST")
         .withConnectionTimeoutMs(120000)
         .withExtraHeaders("Content-Type: application/x-www-form-urlencoded\r\nAuthorization: Bearer " + jwt)
@@ -221,6 +223,7 @@ inline std::vector<struct RenderStateStruct> getGetAllRenderStates(const juce::S
     }
 
     juce::String response = stream->readEntireStreamAsString();
+    DBG("A response for getAllRenderStates has been received as stream string: " << response);
 
     if (response.length() == 0) {
         DBG("Failed to receive an API JSON Prompt Response! Status code: " << statusCode);
@@ -232,39 +235,49 @@ inline std::vector<struct RenderStateStruct> getGetAllRenderStates(const juce::S
         DBG("Failed to parse API JSON Prompt Response! Status code: " << statusCode);
         return {};
     }
+    if (!parsed.isArray()) {
+        DBG("The get all render states response was not an array!");
+        return {};
+    }
 	std::vector<struct RenderStateStruct> renderStates;
-    for (int i = 0; i < parsed.getArray()->size(); i++) {
-        juce::var rs = parsed.getArray()[i];
+    auto* arr = parsed.getArray();
+    for (auto& rs : *arr) {
+        auto* obj = rs.getDynamicObject();
+
         int id_parsed;
         juce::String name_parsed;
         juce::String renderState_parsed;
 
-        juce::DynamicObject* obj = rs.getDynamicObject();
         if (obj == nullptr) {
             DBG("API JSON get all id Response is a nullptr! Status code: " << statusCode);
-            return {};
+            DBG("parsed: " << rs.toString());
+            continue;
         }
         if (obj->getProperty("id").isVoid()) {
             DBG("No success status could be resolved from API JSON get all Response! Status code: " << statusCode);
-            return {};
+            DBG("parsed: " << rs.toString());
+            continue;
         }
         juce::var id = obj->getProperty("id");
         if (!id.isInt()) {
             DBG("No id could be resolved from API JSON get all Response! Status code: " << statusCode);
-            return {};
+            DBG("parsed: " << rs.toString());
+            continue;
         }
         id_parsed = std::atoi(id.toString().toRawUTF8());
 
         if (obj->getProperty("name").isVoid()) {
             DBG("No name could be resolved from API JSON get all Response! Status code: " << statusCode);
-            return {};
+            DBG("parsed: " << rs.toString());
+            continue;
         }
         juce::var name = obj->getProperty("name");
         name_parsed = name.toString();
 
         if (obj->getProperty("renderState").isVoid()) {
             DBG("No renderState could be resolved from API JSON get all Response! Status code: " << statusCode);
-            return {};
+            DBG("name parsed: " << name_parsed << " id parsed: " << id_parsed);
+            continue;
         }
         juce::var renderState = obj->getProperty("renderState");
         renderState_parsed = renderState.toString();
@@ -383,7 +396,7 @@ inline int deleteDeleteRenderState(const juce::String& jwt, int renderStateId) {
     return status;
 }
 
-inline void dleteDeleteAllRenderStates(const juce::String& jwt) {
+inline void deleteDeleteAllRenderStates(const juce::String& jwt) {
     juce::URL url("http://localhost:8080/renderState/deleteAll");
     int statusCode = 0;
     auto options = juce::URL::InputStreamOptions(
