@@ -11,6 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <vector>
 
 #define REGISTER_API_ERROR -1
 #define REGISTER_SUCCESS 0
@@ -20,6 +21,12 @@
 #define REGISTER_INVALID_PASSWORD_NULL 4
 #define REGISTER_USERNAME_TAKEN 5
 #define REGISTER_PASSWORD_UNSAFE 6
+
+struct RenderState {
+    int id;
+    juce::String name;
+    juce::String renderState;
+};
 
 // Blocking operation.
 inline juce::String postPromptResponse(const juce::String& jwt, const juce::String& prompt) {
@@ -161,4 +168,238 @@ inline int api_register(const juce::String& username, const juce::String& passwo
     int success = std::atoi(parsedResponse.toString().toRawUTF8());
 
     return success;
+}
+
+// Blocking operation.
+// Returns uuid for the new render state if successful, otherwise returns an empty string.
+inline juce::String postAddRenderState(const juce::String& jwt, const juce::String& renderState) {
+    juce::URL url("http://localhost:8080/renderState/add");
+    url = url.withPOSTData("renderstate=" + renderState);
+
+    int statusCode = 0;
+
+    auto options = juce::URL::InputStreamOptions(
+        juce::URL::ParameterHandling::inAddress)
+        .withHttpRequestCmd("POST")
+        .withConnectionTimeoutMs(120000)
+        .withExtraHeaders("Content-Type: application/x-www-form-urlencoded\r\nAuthorization: Bearer " + jwt)
+        .withStatusCode(&statusCode);
+
+    auto stream = url.createInputStream(options);
+    if (stream == nullptr) { // Stream may timeout or the service may be unreachable.
+        DBG("URL stream is null trying to add a renderState!");
+        return "";
+    }
+
+    juce::String response = stream->readEntireStreamAsString();
+
+    if (response.length() == 0) {
+        DBG("Failed to receive an API call render state id Response! Status code: " << statusCode);
+        return "";
+    }
+    DBG("API post add render state id response resolved to: " << response);
+    return response;
+}
+
+// Blocking operation.
+inline std::vector<struct RenderState> getGetAllRenderStates(const juce::String& jwt) {
+    juce::URL url("http://localhost:8080/renderState/getAll");
+
+    int statusCode = 0;
+
+    auto options = juce::URL::InputStreamOptions(
+        juce::URL::ParameterHandling::inAddress)
+        .withHttpRequestCmd("GET")
+        .withConnectionTimeoutMs(120000)
+        .withExtraHeaders("Content-Type: application/x-www-form-urlencoded\r\nAuthorization: Bearer " + jwt)
+        .withStatusCode(&statusCode);
+
+    auto stream = url.createInputStream(options);
+    if (stream == nullptr) { // Stream may timeout or the service may be unreachable.
+        DBG("URL stream is null trying to get all renderStates!");
+        return {};
+    }
+
+    juce::String response = stream->readEntireStreamAsString();
+
+    if (response.length() == 0) {
+        DBG("Failed to receive an API JSON Prompt Response! Status code: " << statusCode);
+        return {};
+    }
+
+    juce::var parsed = juce::JSON::parse(response);
+    if (parsed.isVoid()) {
+        DBG("Failed to parse API JSON Prompt Response! Status code: " << statusCode);
+        return {};
+    }
+	std::vector<struct RenderState> renderStates;
+    for (int i = 0; i < parsed.getArray()->size(); i++) {
+        juce::var rs = parsed.getArray()[i];
+        int id_parsed;
+        juce::String name_parsed;
+        juce::String renderState_parsed;
+
+        juce::DynamicObject* obj = rs.getDynamicObject();
+        if (obj == nullptr) {
+            DBG("API JSON get all id Response is a nullptr! Status code: " << statusCode);
+            return {};
+        }
+        if (obj->getProperty("id").isVoid()) {
+            DBG("No success status could be resolved from API JSON get all Response! Status code: " << statusCode);
+            return {};
+        }
+        juce::var id = obj->getProperty("id");
+        if (!id.isInt()) {
+            DBG("No id could be resolved from API JSON get all Response! Status code: " << statusCode);
+            return {};
+        }
+        id_parsed = std::atoi(id.toString().toRawUTF8());
+
+        if (obj->getProperty("name").isVoid()) {
+            DBG("No name could be resolved from API JSON get all Response! Status code: " << statusCode);
+            return {};
+        }
+        juce::var name = obj->getProperty("name");
+        name_parsed = name.toString();
+
+        if (obj->getProperty("renderState").isVoid()) {
+            DBG("No renderState could be resolved from API JSON get all Response! Status code: " << statusCode);
+            return {};
+        }
+        juce::var renderState = obj->getProperty("renderState");
+        renderState_parsed = renderState.toString();
+
+        renderStates.push_back({
+            .id = id_parsed,
+            .name = name_parsed,
+            .renderState = renderState_parsed
+            });
+    }
+    return renderStates;
+}
+
+// Blocking operation.
+inline struct RenderState getGetRenderState(const juce::String& jwt, int renderStateId) {
+    juce::URL url("http://localhost:8080/renderState/get");
+    url = url.withPOSTData("id=" + renderStateId);
+
+    int statusCode = 0;
+
+    auto options = juce::URL::InputStreamOptions(
+        juce::URL::ParameterHandling::inAddress)
+        .withHttpRequestCmd("GET")
+        .withConnectionTimeoutMs(120000)
+        .withExtraHeaders("Content-Type: application/x-www-form-urlencoded\r\nAuthorization: Bearer " + jwt)
+        .withStatusCode(&statusCode);
+
+    auto stream = url.createInputStream(options);
+    if (stream == nullptr) { // Stream may timeout or the service may be unreachable.
+        DBG("URL stream is null trying to get a renderState with id: " << renderStateId);
+        return {};
+    }
+
+    juce::String response = stream->readEntireStreamAsString();
+
+    if (response.length() == 0) {
+        DBG("Failed to receive an API JSON Prompt Response! Status code: " << statusCode);
+        return {};
+    }
+
+    juce::var parsed = juce::JSON::parse(response);
+    if (parsed.isVoid()) {
+        DBG("Failed to parse API JSON Prompt Response! Status code: " << statusCode);
+        return {};
+    }
+    int id_parsed;
+    juce::String name_parsed;
+    juce::String renderState_parsed;
+
+    juce::DynamicObject* obj = parsed.getDynamicObject();
+    if (obj == nullptr) {
+        DBG("API JSON get rs Response is a nullptr! Status code: " << statusCode);
+        return {};
+    }
+    if (obj->getProperty("id").isVoid()) {
+        DBG("No success status could be resolved from API JSON get rs Response! Status code: " << statusCode);
+        return {};
+    }
+    juce::var id = obj->getProperty("id");
+    if (!id.isInt()) {
+        DBG("No id could be resolved from API JSON get rs Response! Status code: " << statusCode);
+        return {};
+    }
+    id_parsed = std::atoi(id.toString().toRawUTF8());
+
+    if (obj->getProperty("name").isVoid()) {
+        DBG("No name could be resolved from API JSON get rs Response! Status code: " << statusCode);
+        return {};
+    }
+    juce::var name = obj->getProperty("name");
+    name_parsed = name.toString();
+
+    if (obj->getProperty("renderState").isVoid()) {
+        DBG("No renderState could be resolved from API JSON get rs Response! Status code: " << statusCode);
+        return {};
+    }
+    juce::var renderState = obj->getProperty("renderState");
+    renderState_parsed = renderState.toString();
+
+    return {
+        .id = id_parsed,
+        .name = name_parsed,
+        .renderState = renderState_parsed
+        };
+}
+
+// Blocking operation.
+inline int deleteDeleteRenderState(const juce::String& jwt, int renderStateId) {
+    juce::URL url("http://localhost:8080/renderState/delete");
+    url = url.withPOSTData("id=" + renderStateId);
+
+    int statusCode = 0;
+
+    auto options = juce::URL::InputStreamOptions(
+        juce::URL::ParameterHandling::inAddress)
+        .withHttpRequestCmd("DELETE")
+        .withConnectionTimeoutMs(120000)
+        .withExtraHeaders("Content-Type: application/x-www-form-urlencoded\r\nAuthorization: Bearer " + jwt)
+        .withStatusCode(&statusCode);
+
+    auto stream = url.createInputStream(options);
+    if (stream == nullptr) { // Stream may timeout or the service may be unreachable.
+        DBG("URL stream is null trying to delete a renderState with id: " << renderStateId);
+        return {};
+    }
+
+    juce::String response = stream->readEntireStreamAsString();
+
+    if (response.length() == 0) {
+        DBG("Failed to receive an API JSON Prompt Response! Status code: " << statusCode);
+        return {};
+    }
+
+    int status = std::atoi(response.toRawUTF8());
+
+    return status;
+}
+
+inline void dleteDeleteAllRenderStates(const juce::String& jwt) {
+    juce::URL url("http://localhost:8080/renderState/deleteAll");
+    int statusCode = 0;
+    auto options = juce::URL::InputStreamOptions(
+        juce::URL::ParameterHandling::inAddress)
+        .withHttpRequestCmd("DELETE")
+        .withConnectionTimeoutMs(120000)
+        .withExtraHeaders("Content-Type: application/x-www-form-urlencoded\r\nAuthorization: Bearer " + jwt)
+        .withStatusCode(&statusCode);
+    auto stream = url.createInputStream(options);
+    if (stream == nullptr) { // Stream may timeout or the service may be unreachable.
+        DBG("URL stream is null trying to delete all renderStates!");
+        return;
+    }
+    juce::String response = stream->readEntireStreamAsString();
+    if (response.length() == 0) {
+        DBG("Failed to receive an API JSON Prompt Response! Status code: " << statusCode);
+        return;
+    }
 }
