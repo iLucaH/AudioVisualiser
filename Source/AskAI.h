@@ -31,12 +31,24 @@ public:
     out vec4 outColour;
 
     void main() {
-        outColour = vec4(0.1f, 0.1f, 0.1f, 1.0) * gl_FragCoord;
+        outColour = vec4(0.0f, 0.0f, 0.0f, 1.0);
     }
 )")), appSettings(applSettings),
       saveChooser("Save Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs"),
       loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs") {
         renderProfile.setPresetName("AI Generator");
+
+        saveEnterTitleText.setText("Enter name:", juce::dontSendNotification);
+        saveEnterTitleText.setBorderSize(juce::BorderSize<int>(2));
+        saveEnterTitleText.setBounds(6, 147, 125, 125);
+        renderProfile.addComponent(&saveEnterTitleText);
+        saveEnterTitleText.setVisible(false);
+
+        selectBackenedRenderStateText.setText("Select from cloud:", juce::dontSendNotification);
+        selectBackenedRenderStateText.setBorderSize(juce::BorderSize<int>(2));
+        selectBackenedRenderStateText.setBounds(6, 167, 125, 125);
+        renderProfile.addComponent(&selectBackenedRenderStateText);
+        selectBackenedRenderStateText.setVisible(false);
 
         statusText.setText("", juce::dontSendNotification);
         statusText.setBorderSize(juce::BorderSize<int>(2));
@@ -94,12 +106,14 @@ public:
         loadFromBackend.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::darkgreen);
         loadFromBackend.onClick = [this]() {
             if (!appSettings.isAuth()) {
-                saveToBackend.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightcoral);
-                delayColourChangeToComponent(&saveToBackend, juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
+                loadFromBackend.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightcoral);
+                delayColourChangeToComponent(&loadFromBackend, juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
                 return;
             }
             backenedListComboBox.setVisible(true);
+            selectBackenedRenderStateText.setVisible(true);
             statusText.setVisible(false);
+            submit.setVisible(false);
             };
         renderProfile.addComponent(&loadFromBackend);
         loadFromBackend.setVisible(false);
@@ -112,9 +126,11 @@ public:
             loadFromBackend.setVisible(false);
             cancelLoad.setVisible(false);
             backenedListComboBox.setVisible(false);
+            selectBackenedRenderStateText.setVisible(false);
             save.setVisible(true);
             load.setVisible(true);
             statusText.setVisible(true);
+            submit.setVisible(true);
             };
         renderProfile.addComponent(&cancelLoad);
         cancelLoad.setVisible(false);
@@ -146,8 +162,11 @@ public:
                 delayColourChangeToComponent(&saveToBackend, juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
                 return;
             }
+            submit.setVisible(false);
             statusText.setVisible(false); // Hide status text so we can make room for the text box.
             saveNameEditor.setVisible(true);
+            confirmSave.setVisible(true);
+            saveEnterTitleText.setVisible(true);
             };
         renderProfile.addComponent(&saveToBackend);
         saveToBackend.setVisible(false);
@@ -160,9 +179,12 @@ public:
             saveToBackend.setVisible(false);
             cancelSave.setVisible(false);
             saveNameEditor.setVisible(false);
+            confirmSave.setVisible(false);
+            saveEnterTitleText.setVisible(false);
             save.setVisible(true);
             load.setVisible(true);
             statusText.setVisible(true);
+            submit.setVisible(true);
             };
         renderProfile.addComponent(&cancelSave);
         cancelSave.setVisible(false);
@@ -221,25 +243,29 @@ public:
 
         saveNameEditor.setText("My new visualiser...");
         saveNameEditor.setInputRestrictions(20);
-        saveNameEditor.setBounds(8, 240, 125, 25);
+        saveNameEditor.setBounds(8, 219, 125, 25);
         saveNameEditor.onReturnKey = [this]() {
             auto shaderPtr = std::atomic_load(&fragmentShader);
-            juce::Thread::launch([this, shaderPtr]() {
-                if (shaderPtr) {
-                    juce::String name = saveNameEditor.getText();
-                    juce::String newRSId = postAddRenderState(appSettings.getAuthJWT(), name, *shaderPtr);
-                    DBG("Adding new render state id resolved from cloud as: " << newRSId);
-                    juce::MessageManager::callAsync([this, name]() {
-                        saveToBackend.setColour(juce::TextButton::ColourIds::buttonColourId, name.length() == 0 ? juce::Colours::lightcoral : juce::Colours::green);
-                        });
-                    delayColourChangeToComponent(&saveToBackend, juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
-                }
-                });
+            confirmSaveShaderToBackend();
             saveNameEditor.setVisible(false);
+            confirmSave.setVisible(false);
+            saveEnterTitleText.setVisible(false);
             statusText.setVisible(true);
             };
         renderProfile.addComponent(&saveNameEditor);
         saveNameEditor.setVisible(false);
+
+        confirmSave.setButtonText("Confirm");
+        confirmSave.setBounds(20, 246, 100, 20);
+        confirmSave.onClick = [this]() {
+            confirmSaveShaderToBackend();
+            saveNameEditor.setVisible(false);
+            confirmSave.setVisible(false);
+            saveEnterTitleText.setVisible(false);
+            statusText.setVisible(true);
+            };
+        renderProfile.addComponent(&confirmSave);
+        confirmSave.setVisible(false);
 
         // Type prompt logic here.
         prompt.setText("Type your prompt here!");
@@ -304,6 +330,23 @@ public:
             });
     }
 
+    void confirmSaveShaderToBackend() {
+        auto shaderPtr = std::atomic_load(&fragmentShader);
+        juce::Thread::launch([this, shaderPtr]() {
+            if (shaderPtr) {
+                juce::String name = saveNameEditor.getText();
+                juce::String newRSId = postAddRenderState(appSettings.getAuthJWT(), name, *shaderPtr);
+                DBG("Adding new render state id resolved from cloud as: " << newRSId);
+                juce::MessageManager::callAsync([this, name]() {
+                    saveToBackend.setColour(juce::TextButton::ColourIds::buttonColourId, name.length() == 0 ? juce::Colours::lightcoral : juce::Colours::green);
+                    });
+                delayColourChangeToComponent(&saveToBackend, juce::TextButton::ColourIds::buttonColourId, juce::Colours::lightseagreen);
+            }
+            });
+        saveNameEditor.setVisible(false);
+        statusText.setVisible(true);
+        submit.setVisible(true);
+    }
 
 private:
     ApplicationSettings& appSettings;
@@ -316,7 +359,10 @@ private:
     juce::TextButton saveToFile;
     juce::TextButton saveToBackend;
     juce::TextButton cancelSave;
+    juce::TextButton confirmSave;
     juce::TextEditor saveNameEditor;
+    juce::Label saveEnterTitleText;
+    juce::Label selectBackenedRenderStateText;
 
     juce::Label statusText;
     juce::TextButton submit, save, load;

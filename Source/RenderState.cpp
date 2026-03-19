@@ -12,7 +12,6 @@
 
 RenderState::RenderState(int id, juce::OpenGLContext& context, juce::String vert, juce::String frag)
     : renderStateID(id), openGLContext(context), fragmentShader(std::make_shared<juce::String>(frag)), vertexShader(vert), renderProfile(id) {
-    DBG(vertexShader);
 }
 
 void RenderState::initAndCompileShaders() {

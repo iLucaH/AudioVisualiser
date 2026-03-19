@@ -173,10 +173,13 @@ inline int api_register(const juce::String& username, const juce::String& passwo
 // Blocking operation.
 // Returns uuid for the new render state if successful, otherwise returns an empty string.
 inline juce::String postAddRenderState(const juce::String& jwt, const juce::String& name, const juce::String& renderState) {
-    juce::URL url("http://localhost:8080/renderState/add");
-    juce::String postData = "name=" + juce::URL::addEscapeChars(name, true) + "&renderState=" + juce::URL::addEscapeChars(renderState, true);
+    juce::var postBodyJson = new juce::DynamicObject();
+    postBodyJson.getDynamicObject()->setProperty("name", name);
+    postBodyJson.getDynamicObject()->setProperty("renderState", renderState);
 
-    url = url.withPOSTData(postData);
+    juce::URL url("http://localhost:8080/renderState/add");
+
+    url = url.withPOSTData("jsonrsbody=" + juce::URL::addEscapeChars(juce::JSON::toString(postBodyJson, true), true));
 
     int statusCode = 0;
 
