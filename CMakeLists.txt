@@ -113,6 +113,8 @@ set(SourceFiles
 	Source/ui.zip
 	Source/VideoEncoder.cpp
 	Source/VideoEncoder.h
+	Source/VisualiserCueService.h
+	Source/VisualiserCueService.cpp
 	Source/WebViewHelper.h
 	Source/SocketCueResolver.h
 )

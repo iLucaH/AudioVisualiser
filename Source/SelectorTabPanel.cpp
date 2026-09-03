@@ -25,7 +25,6 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
         int newState = presetSelector.getSelectedId();
         updatePanelRenderProfile(newState, selectedState);
         selectedState = newState;
-        openGLComponent.setSelectedState(selectedState);
         };
     addAndMakeVisible(&presetSelector);
     for (int i = 0; i < openGL.getNumRenderStates(); i++) {
@@ -36,8 +35,6 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
     openInApp.setButtonText("Open In App");
     openInApp.setBounds(8, 40, 123, 25);
     openInApp.onClick = [this] {
-        if (openGLComponent.isFullScreen())
-            return;
         if (openGLComponent.isFullScreen())
             return;
         DBG("Launching the open in app panel!");

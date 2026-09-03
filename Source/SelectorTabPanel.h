@@ -61,7 +61,19 @@ public:
         oldComponent->setVisible(false);
         newComponent->setVisible(true);
 
+        selectedState = newState;
+
+        openGLComponent.setSelectedState(selectedState);
+
         resized();
+    }
+
+    std::vector<RenderProfileComponent*> getRenderProfiles() const {
+        return renderProfiles;
+    }
+
+    unsigned int getCurrentState() {
+        return selectedState;
     }
 
     RenderProfileComponent* getCurrentRenderProfile() {

@@ -5,6 +5,17 @@
               binaryDataNamespace="webview_files" cppLanguageStandard="20">
   <MAINGROUP id="qUTN4J" name="AudioVisualiser">
     <GROUP id="{2C5C7675-649F-AAD9-2D9E-98D3A1FE4CF2}" name="Source">
+      <GROUP id="{18F6A59A-67C7-6005-7129-D813423003BA}" name="services">
+        <FILE id="aYyDgc" name="VisualiserCueService.cpp" compile="1" resource="0"
+              file="Source/VisualiserCueService.cpp"/>
+        <FILE id="tLnZg8" name="VisualiserCueService.h" compile="1" resource="0"
+              file="Source/VisualiserCueService.h"/>
+      </GROUP>
+      <FILE id="nURGKT" name="AppQRComponent.h" compile="0" resource="0"
+            file="Source/AppQRComponent.h"/>
+      <FILE id="gTPKZR" name="Settings.cpp" compile="1" resource="0" file="Source/Settings.cpp"/>
+      <FILE id="Ark5Zi" name="SocketCueResolver.h" compile="0" resource="0"
+            file="Source/SocketCueResolver.h"/>
       <FILE id="bgFQ9K" name="GlobalSocketHandler.h" compile="0" resource="0"
             file="Source/GlobalSocketHandler.h"/>
       <FILE id="L9NCKb" name="ui.zip" compile="0" resource="1" file="Source/ui.zip"/>

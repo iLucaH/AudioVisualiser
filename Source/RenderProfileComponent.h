@@ -38,7 +38,7 @@ public:
         name = n;
     }
 
-    juce::String getPresetName() {
+    juce::String getPresetName() const {
         return name;
     }
 
