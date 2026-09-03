@@ -10,21 +10,16 @@
 
 #pragma once
 
-#define SOCKET_CUE_PLAY 0
-#define SOCKET_CUE_STOP 1
-#define SOCKET_CUE_RENDER_STATE_INCREMENT 2
-#define SOCKET_CUE_RENDER_STATE_DECREMENT 3
-
 #define COMMAND_AUTH 0
 #define COMMAND_METRIC 1
 
-#define COMMAND_VISUALISER_LIST_ALL 200
-#define COMMAND_VISUALISER_LIST_NEXT 201
-#define COMMAND_VISUALISER_LIST_PREVIOUS 202
-#define COMMAND_VISUALISER_LIST_CURRENT 203
-#define COMMAND_VISUALISER_SET 204
-#define COMMAND_VISUALISER_MUTE 205
-#define COMMAND_VISUALISER_UNMUTE 206
+#define COMMAND_VISUALISER_LIST_ALL 201
+#define COMMAND_VISUALISER_LIST_NEXT 202
+#define COMMAND_VISUALISER_LIST_PREVIOUS 203
+#define COMMAND_VISUALISER_LIST_CURRENT 204
+#define COMMAND_VISUALISER_SET 205
+#define COMMAND_VISUALISER_MUTE 206
+#define COMMAND_VISUALISER_UNMUTE 207
 
 #define COMMAND_EFFECTS_DISABLE_ALL 301
 #define COMMAND_EFFECTS_ENABLE_ALL 302
@@ -55,22 +50,67 @@ public:
 
     juce::String postCue(int cueId, juce::String body) {
         switch (cueId) {
-        case SOCKET_CUE_PLAY:
-            selectorTabPanel.processPlay();
-            break;
-        case SOCKET_CUE_STOP:
+        case COMMAND_AUTH:
+            return message(RESPONSE_ERR, "You are already authenticated");
+        case COMMAND_METRIC:
+            return message(RESPONSE_OK, "some metric");
+
+        case COMMAND_VISUALISER_LIST_ALL:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_VISUALISER_LIST_NEXT:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_VISUALISER_LIST_PREVIOUS:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_VISUALISER_LIST_CURRENT:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_VISUALISER_SET:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_VISUALISER_MUTE:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_VISUALISER_UNMUTE:
+            return message(RESPONSE_OK, "Template message response.");
+
+        case COMMAND_EFFECTS_DISABLE_ALL:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_EFFECTS_ENABLE_ALL:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_EFFECTS_LIST_ALL:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_EFFECTS_DISABLE_EFFECT:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_EFFECTS_ENABLE_EFFECT:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_EFFECTS_UPDATE_EFFECT:
+            return message(RESPONSE_OK, "Template message response.");
+
+        case COMMAND_TRACK_LIST_ALL:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_TRACK_LIST_NEXT:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_TRACK_LIST_PREVIOUS:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_TRACK_LIST_CURRENT:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_TRACK_SET:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_TRACK_STOP:
             selectorTabPanel.processStop();
-            break;
-        case SOCKET_CUE_RENDER_STATE_INCREMENT:
-            selectorTabPanel.processRenderStateIncrement();
-            break;
-        case SOCKET_CUE_RENDER_STATE_DECREMENT:
-            selectorTabPanel.processRenderStateDecrement();
-            break;
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_TRACK_START:
+            selectorTabPanel.processPlay();
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_TRACK_CURRENT_STATE:
+            return message(RESPONSE_OK, "Template message response.");
+
+        case COMMAND_RECORD_START:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_RECORD_STOP:
+            return message(RESPONSE_OK, "Template message response.");
+        case COMMAND_RECORD_CURRENT_STATE:
+            return message(RESPONSE_OK, "Template message response.");
         default:
-            return RESPONSE_ERR;
+            return message(RESPONSE_ERR, "You have sent an unknown command!");
         }
-        return RESPONSE_OK;
     }
 
     juce::String getClientAuthPassword() {
@@ -78,4 +118,8 @@ public:
     }
 private:
     SelectorTabPanel& selectorTabPanel;
+
+    juce::String message(juce::String type, juce::String response) {
+        return type + juce::String(" ") + response;
+    }
 };

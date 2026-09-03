@@ -43,7 +43,7 @@ public:
                 for (auto& client : clients) {
                     if (client.socket->waitUntilReady(true, 0)) {
                         char buffer[1024];
-                        int bytesRead = client.socket->read(buffer, sizeof(buffer), true);
+                        int bytesRead = client.socket->read(buffer, sizeof(buffer), false);
                         if (bytesRead > 0) {
                             juce::String received(buffer, bytesRead);
                             DBG("Global socket handler received data: " << received << " from client: " << client.socket->getRawSocketHandle() << ".");
@@ -128,6 +128,7 @@ private:
         tokens.addTokens(response, ":", "");
         if (tokens.size() < 2) {
             DBG("Global Socket Handler tried to resolve a response but the response format was incorrect!");
+            sendMessageToClient(client, RESPONSE_ERR + juce::String(" The response format was incorrect!"));
             return;
         }
         int post;
@@ -136,6 +137,7 @@ private:
             post = std::stoi(tokens[0].toStdString());
         } catch (std::exception) {
             DBG("Global Socket Handler tried to resolve a response but the response could not be parsed as an ID and body pair!");
+            sendMessageToClient(client, RESPONSE_ERR + juce::String(" The response could not be parsed as an ID and body pair!"));
             return;
         }
         if (client.authenticated == false) {
