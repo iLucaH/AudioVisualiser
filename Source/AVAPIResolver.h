@@ -38,7 +38,7 @@ inline juce::String postPromptResponse(const juce::String& jwt, const juce::Stri
     auto options = juce::URL::InputStreamOptions(
         juce::URL::ParameterHandling::inAddress)
         .withHttpRequestCmd("POST")
-        .withConnectionTimeoutMs(120000)
+        .withConnectionTimeoutMs(1200000)
         .withExtraHeaders("Content-Type: application/x-www-form-urlencoded\r\nAuthorization: Bearer " + jwt)
         .withStatusCode(&statusCode);
 

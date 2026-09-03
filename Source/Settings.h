@@ -32,6 +32,10 @@ public:
         return authJWT;
     }
 
+    juce::String getSocketClientAuth() {
+        return socketClientAuth;
+    }
+
     void setDimensions(int w, int h) {
         width = w;
         height = h;
@@ -68,4 +72,6 @@ private:
     int width = 1920, height = 1080;
     int fftSize = 2048;
     bool fullScreen = false;
+
+    juce::String socketClientAuth = "0000";
 };

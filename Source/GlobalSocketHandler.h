@@ -11,6 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <unordered_map>
 
 #include "PluginEditor.h"
 #include "SocketCueResolver.h"
@@ -35,24 +36,24 @@ public:
                     std::unique_ptr<juce::StreamingSocket> clientSocket(serverSocket.waitForNextConnection());
                     if (clientSocket) {
                         DBG("Client connected! " << clientSocket->getRawSocketHandle());
-                        clients.push_back(std::move(clientSocket));
+                        clients.push_back({ std::move(clientSocket), false });
                     }
                 }
 
                 for (auto& client : clients) {
-                    if (client->waitUntilReady(true, 0)) {
+                    if (client.socket->waitUntilReady(true, 0)) {
                         char buffer[1024];
-                        int bytesRead = client->read(buffer, sizeof(buffer), true);
+                        int bytesRead = client.socket->read(buffer, sizeof(buffer), true);
                         if (bytesRead > 0) {
                             juce::String received(buffer, bytesRead);
-                            DBG("Global socket handler received data: " << received << " from client: " << client->getRawSocketHandle() << ".");
-                            resolveResponse(received);
+                            DBG("Global socket handler received data: " << received << " from client: " << client.socket->getRawSocketHandle() << ".");
+                            resolveResponse(client, received);
                         }
                     }
                 }
                 juce::Thread::sleep(500);
             }
-            });
+        });
     }
 
     void stopListening() {
@@ -66,8 +67,8 @@ public:
     void destroy() {
         serverSocket.close();
         for (auto& client : clients) {
-            client.get()->close();
-            client.release();
+            client.socket.get()->close();
+            client.socket.release();
         }
         clients.clear();
     }
@@ -87,7 +88,13 @@ private:
     std::atomic<bool> running{ false };
 
     juce::StreamingSocket serverSocket;
-    std::vector<std::unique_ptr<juce::StreamingSocket>> clients;
+
+    struct Client {
+        std::unique_ptr<juce::StreamingSocket> socket;
+        bool authenticated;
+    };
+
+    std::vector<Client> clients;
 
     bool isLoopback(const juce::IPAddress& addr) {
         if (!addr.isIPv6) // Only check IPv4.
@@ -116,25 +123,70 @@ private:
         return result;
     }
 
-    void resolveResponse(juce::String response) {
+    void resolveResponse(Client& client, juce::String response) {
         juce::StringArray tokens;
         tokens.addTokens(response, ":", "");
-        if (tokens.size() == 0) {
+        if (tokens.size() < 2) {
             DBG("Global Socket Handler tried to resolve a response but the response format was incorrect!");
             return;
         }
-        int post, body;
+        int post;
+        juce::String body = tokens[1];
         try {
             post = std::stoi(tokens[0].toStdString());
-            body = std::stoi(tokens[1].toStdString());
         } catch (std::exception) {
             DBG("Global Socket Handler tried to resolve a response but the response could not be parsed as an ID and body pair!");
             return;
         }
-        juce::MessageManager::callAsync([this, post, body]() {
-            DBG("Global Socket Handler resolved a response as post: " << post << " body: " << body);
-            // plugin editor can handle the request from here on the message thread.
-            socketCueResolver.postCue(post, body);
+        if (client.authenticated == false) {
+            if (post == COMMAND_AUTH) {
+                if (body == socketCueResolver.getClientAuthPassword()) {
+                    sendMessageToClient(client, RESPONSE_OK);
+                    client.authenticated = true;
+                    return;
+                } else {
+                    sendMessageToClient(client, RESPONSE_ERR);
+                    return;
+                }
+            } else {
+                DBG("User is not authenticated");
+                sendMessageToClient(client, RESPONSE_ERR);
+                return;
+            }
+        }
+        auto clientHandle = client.socket->getRawSocketHandle();
+
+        juce::MessageManager::callAsync([this, post, body, clientHandle]() {
+            juce::String finalResponse = socketCueResolver.postCue(post, body);
+
+            for (auto& client : clients) {
+                if (client.socket->getRawSocketHandle() == clientHandle) { // ensure the client still exists before trying to send off the message.
+                    sendMessageToClient(client, finalResponse);
+                    break;
+                }
+            }
         });
+    }
+
+    void sendMessageToClient(Client& client, const juce::String& message) {
+        if (client.socket == nullptr)
+            return;
+
+        if (!client.socket->isConnected()) {
+            DBG("Cannot send message: client is not connected.");
+            return;
+        }
+
+        auto messageData = message.toRawUTF8();
+        int messageSize = static_cast<int>(std::strlen(messageData));
+
+        int bytesWritten = client.socket->write(messageData, messageSize);
+
+        if (bytesWritten != messageSize) {
+            DBG("Failed to send complete message to client.");
+            return;
+        }
+
+        DBG("Sent message to client: " << message);
     }
 };

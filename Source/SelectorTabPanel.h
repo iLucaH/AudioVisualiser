@@ -68,6 +68,10 @@ public:
         return renderProfiles[selectedState - 1];
     }
 
+    ApplicationSettings& getAppSettings() {
+        return appSettings;
+    }
+
 private:
     AudioVisualiserAudioProcessor& pluginProcessor;
     OpenGLComponent& openGLComponent;
