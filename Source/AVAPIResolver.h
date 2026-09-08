@@ -30,7 +30,7 @@ struct RenderStateStruct {
 
 // Blocking operation.
 inline juce::String postPromptResponse(const juce::String& jwt, const juce::String& prompt) {
-    juce::URL url("http://localhost:8080/prompt");
+    juce::URL url("https://audiovisualiser-service.onrender.com/prompt");
     url = url.withPOSTData("prompt=" + prompt);
 
     int statusCode = 0;
@@ -83,7 +83,7 @@ inline juce::String postPromptResponse(const juce::String& jwt, const juce::Stri
 }
 
 inline juce::String api_login(const juce::String& username, const juce::String& password) {
-    juce::URL url("http://localhost:8080/auth/token");
+    juce::URL url("https://audiovisualiser-service.onrender.com/auth/token");
 
     juce::String credentials = username + ":" + password;
     juce::String encoded = juce::Base64::toBase64(credentials.toRawUTF8(),
@@ -115,7 +115,7 @@ inline juce::String api_login(const juce::String& username, const juce::String& 
         REGISTER_API_ERROR if error with API call or validation.
 */
 inline int api_register(const juce::String& username, const juce::String& password) {
-    juce::URL url("http://localhost:8080/auth/register");
+    juce::URL url("https://audiovisualiser-service.onrender.com/auth/register");
 
     juce::String credentials = "username=" + juce::URL::addEscapeChars(username, true) + "&password=" + juce::URL::addEscapeChars(password, true);
 
@@ -172,14 +172,14 @@ inline int api_register(const juce::String& username, const juce::String& passwo
 
 // Blocking operation.
 // Returns uuid for the new render state if successful, otherwise returns an empty string.
-inline juce::String postAddRenderState(const juce::String& jwt, const juce::String& name, const juce::String& renderState) {
-    juce::var postBodyJson = new juce::DynamicObject();
-    postBodyJson.getDynamicObject()->setProperty("name", name);
-    postBodyJson.getDynamicObject()->setProperty("renderState", renderState);
+inline juce::String postAddRenderState(
+    const juce::String& jwt,
+    const juce::String& name,
+    const juce::String& renderState)
+{
+    juce::URL url("https://audiovisualiser-service.onrender.com/renderState/add");
 
-    juce::URL url("http://localhost:8080/renderState/add");
-
-    url = url.withPOSTData("jsonrsbody=" + juce::URL::addEscapeChars(juce::JSON::toString(postBodyJson, true), true));
+    url = url.withPOSTData("name=" + juce::URL::addEscapeChars(name, true) + "&renderState=" + juce::URL::addEscapeChars(renderState, true));
 
     int statusCode = 0;
 
@@ -187,11 +187,14 @@ inline juce::String postAddRenderState(const juce::String& jwt, const juce::Stri
         juce::URL::ParameterHandling::inPostData)
         .withHttpRequestCmd("POST")
         .withConnectionTimeoutMs(120000)
-        .withExtraHeaders("Content-Type: application/x-www-form-urlencoded\r\nAuthorization: Bearer " + jwt)
+        .withExtraHeaders(
+            "Content-Type: application/x-www-form-urlencoded\r\n"
+            "Authorization: Bearer " + jwt)
         .withStatusCode(&statusCode);
 
     auto stream = url.createInputStream(options);
-    if (stream == nullptr) { // Stream may timeout or the service may be unreachable.
+
+    if (stream == nullptr) {
         DBG("URL stream is null trying to add a renderState!");
         return "";
     }
@@ -199,16 +202,18 @@ inline juce::String postAddRenderState(const juce::String& jwt, const juce::Stri
     juce::String response = stream->readEntireStreamAsString();
 
     if (response.length() == 0) {
-        DBG("Failed to receive an API call render state id Response! Status code: " << statusCode);
+        DBG("Failed to receive an API call render state ID response! Status code: " << statusCode);
         return "";
     }
-    DBG("API post add render state id response resolved to: " << response);
+
+    DBG("API post add render state ID response resolved to: " << response);
+
     return response;
 }
 
 // Blocking operation.
 inline std::vector<struct RenderStateStruct> getGetAllRenderStates(const juce::String& jwt) {
-    juce::URL url("http://localhost:8080/renderState/getAll");
+    juce::URL url("https://audiovisualiser-service.onrender.com/renderState/getAll");
 
     int statusCode = 0;
 
@@ -296,7 +301,7 @@ inline std::vector<struct RenderStateStruct> getGetAllRenderStates(const juce::S
 
 // Blocking operation.
 inline struct RenderStateStruct getGetRenderState(const juce::String& jwt, int renderStateId) {
-    juce::URL url("http://localhost:8080/renderState/get");
+    juce::URL url("https://audiovisualiser-service.onrender.com/renderState/get");
     url = url.withPOSTData("id=" + renderStateId);
 
     int statusCode = 0;
@@ -369,7 +374,7 @@ inline struct RenderStateStruct getGetRenderState(const juce::String& jwt, int r
 
 // Blocking operation.
 inline int deleteDeleteRenderState(const juce::String& jwt, int renderStateId) {
-    juce::URL url("http://localhost:8080/renderState/delete");
+    juce::URL url("https://audiovisualiser-service.onrender.com/renderState/delete");
     url = url.withPOSTData("id=" + renderStateId);
 
     int statusCode = 0;
@@ -400,7 +405,7 @@ inline int deleteDeleteRenderState(const juce::String& jwt, int renderStateId) {
 }
 
 inline void deleteDeleteAllRenderStates(const juce::String& jwt) {
-    juce::URL url("http://localhost:8080/renderState/deleteAll");
+    juce::URL url("https://audiovisualiser-service.onrender.com/renderState/deleteAll");
     int statusCode = 0;
     auto options = juce::URL::InputStreamOptions(
         juce::URL::ParameterHandling::inAddress)

@@ -36,7 +36,7 @@ public:
     OpenGLComponent(AudioVisualiserAudioProcessor&, ApplicationSettings& appSettings);
     ~OpenGLComponent() override;
 
-    void paint (juce::Graphics&) override;
+    void paint(juce::Graphics&) override;
     void resized() override;
     void mouseUp(const juce::MouseEvent& event) override;
 
@@ -56,7 +56,8 @@ public:
     void setBoundsScaled(juce::Rectangle<int> bounds) {
         if (openGLViewportActive) {
             setBounds(bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight());
-        } else {
+        }
+        else {
             cacheBounds.setX(bounds.getX());
             cacheBounds.setY(bounds.getY());
             cacheBounds.setWidth(bounds.getWidth());
@@ -72,8 +73,8 @@ public:
         return renderStates[id].get()->getRenderProfile();
     }
 
-    VideoEncoder* getVideoEncoder() { 
-        return videoEncoder.get(); 
+    VideoEncoder* getVideoEncoder() {
+        return videoEncoder.get();
     }
 
     void setFullScreen(bool state) {
@@ -83,13 +84,22 @@ public:
         getPeer()->setFullScreen(state);
         if (state) {
             pushBounds();
-        } else {
+        }
+        else {
             popBounds();
         }
     }
 
     bool isFullScreen() {
         return fullScreenMode.load();
+    }
+
+    void addRenderState(std::unique_ptr<RenderState> state) {
+        renderStates.push_back(std::move(state));
+    }
+
+    int getNextAvailableRenderStateID() {
+        return renderStates.size() + 1;
     }
 
 private:
@@ -111,10 +121,6 @@ private:
     uint8_t* pixelBuffer;
 
     std::atomic<bool> fullScreenMode = { false };
-
-    void addRenderState(std::unique_ptr<RenderState> state) {
-        renderStates.push_back(std::move(state));
-    }
 
     void popBounds() {
         setBounds(cacheBounds);

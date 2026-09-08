@@ -65,6 +65,13 @@ public:
 
         openGLComponent.setSelectedState(selectedState);
 
+        // Here we can also take advantage of the function call to do some additional logic
+        // in checking whether any new render profiles have been created that we need to add.
+
+        if (renderProfiles.size() != openGLComponent.getNumRenderStates()) {
+            addRenderPofile(openGLComponent.getProfileComponent(openGLComponent.getNumRenderStates() - 1)); // Here they will be added to the presetSelector.
+        }
+
         resized();
     }
 
