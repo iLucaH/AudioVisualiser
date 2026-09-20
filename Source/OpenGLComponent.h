@@ -20,11 +20,14 @@
 #include "RingBuffer.h"
 #include "Settings.h"
 
+#include "PostProcessor.h"
+
 //==============================================================================
 /*
 */
 
 #define RING_BUFFER_READ_SIZE 256
+#define FFT_BIN_SIZE 128
 
 class OpenGLComponent : public juce::Component, public juce::OpenGLRenderer {
 
@@ -36,7 +39,7 @@ public:
     OpenGLComponent(AudioVisualiserAudioProcessor&, ApplicationSettings& appSettings);
     ~OpenGLComponent() override;
 
-    void paint (juce::Graphics&) override;
+    void paint(juce::Graphics&) override;
     void resized() override;
     void mouseUp(const juce::MouseEvent& event) override;
 
@@ -92,13 +95,21 @@ public:
         return fullScreenMode.load();
     }
 
+    void addRenderState(std::unique_ptr<RenderState> state) {
+        renderStates.push_back(std::move(state));
+    }
+    
+    int getNextAvailableRenderStateID() {
+        return renderStates.size() + 1;
+    }
+
 private:
     AudioVisualiserAudioProcessor& processor;
     ApplicationSettings& appSettings;
 
     RingBuffer<float>& ringBuffer;
     juce::AudioBuffer<GLfloat> readBuffer;
-    GLfloat visualizationBuffer[RING_BUFFER_READ_SIZE];
+    GLfloat visualizationBufferTD[RING_BUFFER_READ_SIZE];
 
     std::atomic<unsigned int> selectedState{ 1 };
     unsigned int time = 0;
@@ -111,10 +122,6 @@ private:
     uint8_t* pixelBuffer;
 
     std::atomic<bool> fullScreenMode = { false };
-
-    void addRenderState(std::unique_ptr<RenderState> state) {
-        renderStates.push_back(std::move(state));
-    }
 
     void popBounds() {
         setBounds(cacheBounds);
@@ -129,6 +136,8 @@ private:
         }
         // setTopLeftPosition(-10000, -10000);
     }
+
+    PostProcessor postProcessor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OpenGLComponent)
 };

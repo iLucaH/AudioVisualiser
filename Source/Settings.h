@@ -70,7 +70,7 @@ private:
     juce::String authJWT = "";
 
     int width = 1920, height = 1080;
-    int fftSize = 2048;
+    int fftSize = 10;
     bool fullScreen = false;
 
     juce::String socketClientAuth = "0000";

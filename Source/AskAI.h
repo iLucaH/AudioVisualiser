@@ -18,7 +18,7 @@
 
 class AskAI : public RenderState2D, public juce::AsyncUpdater {
 public:
-    AskAI(int id, juce::OpenGLContext& context, ApplicationSettings& applSettings) : RenderState2D(id, context, juce::String(R"(
+    AskAI(int id, OpenGLComponent& glComponent, juce::OpenGLContext& context, ApplicationSettings& applSettings) : openGLComponent(glComponent), openGLContext(context), RenderState2D(id, context, juce::String(R"(
     #version 330 core
     layout(location = 0) in vec4 position;
 
@@ -34,8 +34,8 @@ public:
         outColour = vec4(0.0f, 0.0f, 0.0f, 1.0);
     }
 )")), appSettings(applSettings),
-      saveChooser("Save Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs"),
-      loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs") {
+saveChooser("Save Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs"),
+loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs") {
         renderProfile.setPresetName("AI Generator");
 
         saveEnterTitleText.setText("Enter name:", juce::dontSendNotification);
@@ -67,19 +67,22 @@ public:
             const juce::String promptText = prompt.getText();
             // Launch the API request on a seperate thread because it is a blocking operation.
             juce::Thread::launch([this, promptText]() {
-                pendingAPIRequest.store(true); 
+                pendingAPIRequest.store(true);
                 juce::String response = postPromptResponse(appSettings.getAuthJWT(), promptText);
                 if (response.length() > 0) {
                     auto* fragShader = new juce::String(response); // The fragShader will be freed once exchanged in the render loop.
                     pendingFragShader.store(fragShader);
+                    auto* fragShaderName = new juce::String("My New Shader");
+                    pendingFragShaderName.store(fragShaderName);
                     pendingSubmit.store(true);
-                } else {
+                }
+                else {
                     DBG("Could not resolve a prompt for the AskAI RenderState!");
                     displayStatusError.store(true);
                 }
                 pendingAPIRequest.store(false);
-            });
-        };
+                });
+            };
         renderProfile.addComponent(&submit);
 
         loadFromFile.setButtonText("File");
@@ -95,6 +98,8 @@ public:
                 juce::String renderState = getRenderStateFromFile(filePath);
                 auto* fragShader = new juce::String(renderState);
                 pendingFragShader.store(fragShader);
+                auto* fragShaderName = new juce::String(chooser.getResult().getFileName());
+                pendingFragShaderName.store(fragShaderName);
                 pendingSubmit.store(true);
                 });
             };
@@ -205,9 +210,9 @@ public:
         load.setBounds(73, 270, 63, 20);
         load.setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::darkgreen);
         load.onClick = [this]() {
-			loadFromBackend.setVisible(true);
-			loadFromFile.setVisible(true);
-			cancelLoad.setVisible(true);
+            loadFromBackend.setVisible(true);
+            loadFromFile.setVisible(true);
+            cancelLoad.setVisible(true);
             save.setVisible(false);
             load.setVisible(false);
 
@@ -235,6 +240,8 @@ public:
                 struct RenderStateStruct renderState = rs->second;
                 auto* fragShader = new juce::String(renderState.renderState);
                 pendingFragShader.store(fragShader);
+                auto* fragShaderName = new juce::String(renderState.name);
+                pendingFragShaderName.store(fragShaderName);
                 pendingSubmit.store(true);
             }
             };
@@ -287,10 +294,12 @@ public:
         if (pendingAPIRequest.load()) {
             statusText.setColour(juce::Label::textColourId, juce::Colours::green);
             statusText.setText("Loading new shader...", juce::dontSendNotification);
-        } else if (displayStatusError.load()) {
+        }
+        else if (displayStatusError.load()) {
             statusText.setColour(juce::Label::textColourId, juce::Colours::red);
             statusText.setText("There was an error\nloading the shader!", juce::dontSendNotification);
-        } else {
+        }
+        else {
             // Display nothing if there is no updates or errors.
             statusText.setText("", juce::dontSendNotification);
         }
@@ -305,9 +314,33 @@ public:
             if (shaderPtr) {
                 DBG("New AI Fragment shader is being handled.");
                 initNewFragmentShader(*shaderPtr);
+
+                // Create a new RenderState object for it and send it to OpenGLComponent so that users
+                // can view it as its own seperate render state if they want.
+                std::unique_ptr<RenderState> newRenderState = std::make_unique<RenderState2D>(
+                    openGLComponent.getNextAvailableRenderStateID(),
+                    openGLContext,
+                    juce::String(R"(
+                    #version 330 core
+                    layout(location = 0) in vec4 position;
+
+                    void main() {
+                        gl_Position = position;
+                    }
+                    )"),
+                    *shaderPtr
+                );
+                newRenderState.get()->initAndCompileShaders();
+                juce::String* shaderNamePtr = pendingFragShaderName.exchange(nullptr);
+                newRenderState.get()->getRenderProfile()->setPresetName("asdw");
+
+                openGLComponent.addRenderState(std::move(newRenderState));
+
                 delete shaderPtr; // filePtr is created using new
+                delete shaderNamePtr; // shaderNamePtr is created using new
                 displayStatusError.store(false);
-            } else {
+            }
+            else {
                 DBG("New AI Fragment shader failed to init and compile!");
                 displayStatusError.store(true);
             }
@@ -350,6 +383,8 @@ public:
 
 private:
     ApplicationSettings& appSettings;
+    OpenGLComponent& openGLComponent;
+    juce::OpenGLContext& openGLContext;
 
     juce::TextButton loadFromFile;
     juce::TextButton loadFromBackend;
@@ -370,6 +405,7 @@ private:
     juce::FileChooser saveChooser, loadChooser;
 
     std::atomic<juce::String*> pendingFragShader{ nullptr };
+    std::atomic<juce::String*> pendingFragShaderName{ nullptr };
     std::atomic<bool> pendingAPIRequest{ false };
     std::atomic<bool> pendingSubmit{ false };
     std::atomic<bool> displayStatusError{ false };

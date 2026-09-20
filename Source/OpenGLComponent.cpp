@@ -22,7 +22,7 @@ OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p, ApplicationSe
     addRenderState(std::make_unique<TimeDomain2_2D>(6, openGLContext));
     addRenderState(std::make_unique<TimeDomain3_2D>(7, openGLContext));
     addRenderState(std::make_unique<SDF_1_2D>(8, openGLContext));
-    addRenderState(std::make_unique<AskAI>(9, openGLContext, appSettings));
+    addRenderState(std::make_unique<AskAI>(9, *this, openGLContext, appSettings));
     
     setOpaque(true); // Indicates that no part of this Component is transparent
     openGLContext.setRenderer(this); // Set this instance as the renderer for the context
@@ -110,12 +110,15 @@ void OpenGLComponent::renderOpenGL() {
     openGLContext.extensions.glUniform1f(screenHeightUniform, getHeight() * scale);
 
     ringBuffer.readSamples(readBuffer, RING_BUFFER_READ_SIZE);
-    juce::FloatVectorOperations::clear(visualizationBuffer, RING_BUFFER_READ_SIZE);
+    juce::FloatVectorOperations::clear(visualizationBufferTD, RING_BUFFER_READ_SIZE);
     for (int i = 0; i < 2; ++i) { // Sum channels together
-        juce::FloatVectorOperations::add(visualizationBuffer, readBuffer.getReadPointer(i, 0), RING_BUFFER_READ_SIZE);
+        juce::FloatVectorOperations::add(visualizationBufferTD, readBuffer.getReadPointer(i, 0), RING_BUFFER_READ_SIZE);
     }
-    GLuint visualizationUniform = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "audioBufferTD");
-    openGLContext.extensions.glUniform1fv(visualizationUniform, RING_BUFFER_READ_SIZE, visualizationBuffer);
+    GLuint visualizationUniformTD = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "audioBufferTD");
+    openGLContext.extensions.glUniform1fv(visualizationUniformTD, RING_BUFFER_READ_SIZE, visualizationBufferTD);
+
+    GLuint visualizationUniformFD = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "audioBufferFD");
+    openGLContext.extensions.glUniform1fv(visualizationUniformFD, FFT_BIN_SIZE, processor.getShaderFFT().data());
 
     // Video Encoding
     juce::String* filePtr = pendingEncoderFileName.exchange(nullptr);
@@ -147,9 +150,33 @@ void OpenGLComponent::renderOpenGL() {
         videoEncoder->addVideoFrame();
     }
 
+    bool postProcessingEnabled = false; //!postProcessor.noPostProcessorsEnabled();
+    if (postProcessingEnabled) {
+        // If we want to do screen space effects,
+        // then render the screen to a texture first.
+        //int frameBuffer = screenSpaceRenderQuad.getFrameBufferReference(); // We need to get the frame buffer from the screen space effect.
+        
+       //juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, frameBuffer);
+    } else {
+        // We are not doing any post processing so we can render to the screen.
+        juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
+    }
+
     juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
     juce::gl::glViewport(0, 0, getWidth() * openGLContext.getRenderingScale(), getHeight() * openGLContext.getRenderingScale());
     renderState->render();
+
+    if (postProcessingEnabled) {
+        // If screen space effects are being used, we already rendered the scene to our custom frame buffer
+        // instead of the window buffer. Therefore, its now time to take that initial render and render it back
+        // to the screen.
+        juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
+
+        juce::gl::glClear(juce::gl::GL_COLOR_BUFFER_BIT);
+        juce::gl::glViewport(0, 0, getWidth() * openGLContext.getRenderingScale(), getHeight() * openGLContext.getRenderingScale());
+
+        //screenSpaceRenderQuad.draw();
+    }
 }
 
 void OpenGLComponent::resetVideoRecorder(int width, int height) {

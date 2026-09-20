@@ -20,7 +20,7 @@ juce::String visualiser_listAll(SelectorTabPanel& selectorTabPanel)
     for (const auto* item : selectorTabPanel.getRenderProfiles())
     {
         if (item != nullptr)
-            varArray.add(item->getPresetName());
+            varArray.add(item->getComponentID() + juce::String(" ") + item->getPresetName());
     }
 
     return juce::JSON::toString(juce::var(varArray), true);

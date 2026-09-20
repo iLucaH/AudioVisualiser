@@ -41,6 +41,14 @@
       <FILE id="hmrUVy" name="tv.png" compile="0" resource="1" file="Source/tv.png"/>
       <FILE id="iTx3Xw" name="RingBuffer.h" compile="0" resource="0" file="Source/RingBuffer.h"/>
       <GROUP id="{F84C6851-88F1-C34A-B55C-867AC3CB76A4}" name="render">
+        <GROUP id="{6DCBDA73-3C89-D5D2-34B1-115E80DC59E4}" name="postprocess">
+          <FILE id="jNATWk" name="PostProcessor.cpp" compile="1" resource="0"
+                file="Source/PostProcessor.cpp"/>
+          <FILE id="IJg5Qw" name="PostProcessor.h" compile="0" resource="0" file="Source/PostProcessor.h"/>
+          <FILE id="fi2NgF" name="RenderTarget.h" compile="0" resource="0" file="Source/RenderTarget.h"/>
+          <FILE id="Ob0eCl" name="ScreenSpaceQuad.h" compile="0" resource="0"
+                file="Source/ScreenSpaceQuad.h"/>
+        </GROUP>
         <FILE id="yyTjkd" name="VideoEncoder.cpp" compile="1" resource="0"
               file="Source/VideoEncoder.cpp"/>
         <FILE id="QSCswz" name="VideoEncoder.h" compile="0" resource="0" file="Source/VideoEncoder.h"/>
@@ -100,6 +108,7 @@
     <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
@@ -134,6 +143,7 @@
         <MODULEPATH id="juce_opengl" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
         <MODULEPATH id="juce_video" path="../../../../Downloads/juce-8.0.10-windows/JUCE/modules"/>
         <MODULEPATH id="juce_audio_processors_headless" path="../../../../../Program Files/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../../../../Program Files/JUCE/modules"/>
       </MODULEPATHS>
     </VS2022>
   </EXPORTFORMATS>

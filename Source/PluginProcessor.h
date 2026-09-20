@@ -146,6 +146,11 @@ public:
         return *ringBuffer;
     }
 
+    static constexpr int numShaderBins = 128;
+
+    const std::array<float, numShaderBins>& getShaderFFT() const {
+        return shaderFFT;
+    }
 
 
 private:
@@ -159,6 +164,14 @@ private:
     juce::AudioTransportSource transport;
 
     TransportState state;
+
+    static constexpr int fftOrder = 10;
+    static constexpr int fftSize = 1 << fftOrder;
+    
+    juce::dsp::FFT fft{ fftOrder };
+    std::array<float, fftSize * 2> fftData{};
+    
+    std::array<float, numShaderBins> shaderFFT{};
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioVisualiserAudioProcessor)

@@ -159,6 +159,74 @@ void AudioVisualiserAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
 
         ringBuffer->writeSamples(buffer, 0, buffer.getNumSamples());
     }
+
+    // 1. Copy audio into FFT buffer
+    std::fill(fftData.begin(), fftData.end(), 0.0f);
+    const int samplesToCopy = juce::jmin(fftSize, buffer.getNumSamples());
+
+    for (int i = 0; i < samplesToCopy; ++i) {
+        fftData[i] = buffer.getSample(0, i);
+    }
+
+    // Zero the imaginary portion required by JUCE
+    std::fill(fftData.begin() + fftSize, fftData.end(), 0.0f);
+
+    // Perform FFT
+    fft.performRealOnlyForwardTransform(fftData.data());
+
+    // Convert FFT output to magnitude
+    std::array<float, fftSize / 2> magnitudes{};
+
+    for (int i = 0; i < fftSize / 2; ++i) {
+        const float real = fftData[i * 2];
+        const float imag = fftData[i * 2 + 1];
+
+        magnitudes[i] = std::sqrt(real * real + imag * imag);
+    }
+
+    // Convert to 128 logarithmically-spaced frequency bands
+    constexpr float minFrequency = 20.0f;
+    const float maxFrequency = getSampleRate() * 0.5f;
+
+    const float fftBinWidth = getSampleRate() / static_cast<float>(fftSize);
+
+    for (int i = 0; i < numShaderBins; ++i) {
+        // Position of this shader bin: 0 -> 1
+        const float t0 = static_cast<float>(i) / static_cast<float>(numShaderBins);
+        const float t1 = static_cast<float>(i + 1) / static_cast<float>(numShaderBins);
+
+        // Logarithmic frequency boundaries
+        const float frequencyStart = minFrequency * std::pow(maxFrequency / minFrequency, t0);
+        const float frequencyEnd = minFrequency * std::pow(maxFrequency / minFrequency, t1);
+
+        // Convert frequencies to FFT bins
+        int startBin = static_cast<int>(frequencyStart / fftBinWidth);
+        int endBin = static_cast<int>(frequencyEnd / fftBinWidth);
+
+        startBin = juce::jlimit(0, fftSize / 2 - 1, startBin);
+        endBin = juce::jlimit(startBin + 1, fftSize / 2, endBin);
+
+        // Average all FFT bins inside this logarithmic band
+        float sum = 0.0f;
+        int count = 0;
+
+        for (int bin = startBin; bin < endBin; ++bin) {
+            sum += magnitudes[bin];
+            ++count;
+        }
+
+        shaderFFT[i] = count > 0 ? sum / static_cast<float>(count) : 0.0f;
+    }
+
+    // Convert magnitude to dB and normalise between 0 and 1
+    for (auto& value : shaderFFT)
+    {
+        value /= static_cast<float>(fftSize);
+
+        value = juce::Decibels::gainToDecibels(value, -100.0f);
+        value = juce::jmap(value, -100.0f, 0.0f, 0.0f, 1.0f);
+        value = juce::jlimit(0.0f, 1.0f, value);
+    }
 }
 
 //==============================================================================
