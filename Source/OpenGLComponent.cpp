@@ -13,7 +13,7 @@
 #include "RenderHeaders.h"
 
 //==============================================================================
-OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p, ApplicationSettings& appSettings) : processor(p), appSettings(appSettings), ringBuffer(p.getRingBuffer()), readBuffer(2, RING_BUFFER_READ_SIZE) {
+OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p, ApplicationSettings& appSettings) : processor(p), appSettings(appSettings), ringBuffer(p.getRingBuffer()), readBuffer(2, RING_BUFFER_READ_SIZE), postProcessor(*this) {
     addRenderState(std::make_unique<Classic1_2D>(1, openGLContext));
     addRenderState(std::make_unique<Classic2_2D>(2, openGLContext));
     addRenderState(std::make_unique<Classic3_2D>(3, openGLContext));
@@ -23,6 +23,85 @@ OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p, ApplicationSe
     addRenderState(std::make_unique<TimeDomain3_2D>(7, openGLContext));
     addRenderState(std::make_unique<SDF_1_2D>(8, openGLContext));
     addRenderState(std::make_unique<AskAI>(9, *this, openGLContext, appSettings));
+
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(0, "wave dist", 0, openGLContext, R"(
+        #version 330 core
+
+        in vec2 uv;
+        out vec4 fragColor;
+
+        uniform sampler2D u_screenTexture;
+
+        void main()
+        {
+            vec2 centre = uv - 0.5;
+            float dist = length(centre);
+
+            vec2 distortedUV = uv;
+
+            distortedUV.x += sin(uv.y * 30.0 + dist * 15.0) * 0.012;
+            distortedUV.y += cos(uv.x * 25.0 + dist * 12.0) * 0.012;
+
+            fragColor = texture(u_screenTexture, distortedUV);
+        }
+    )"));
+
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(1, "abberation", 1, openGLContext, R"(
+        #version 330 core
+
+        in vec2 uv;
+        out vec4 fragColor;
+
+        uniform sampler2D u_screenTexture;
+
+        void main()
+        {
+            vec2 centre = uv - 0.5;
+            float dist = length(centre);
+
+            float offset = dist * 0.025;
+
+            float red = texture(
+                u_screenTexture,
+                uv + vec2(offset, 0.0)
+            ).r;
+
+            float green = texture(
+                u_screenTexture,
+                uv
+            ).g;
+
+            float blue = texture(
+                u_screenTexture,
+                uv - vec2(offset, 0.0)
+            ).b;
+
+            fragColor = vec4(red, green, blue, 1.0);
+        }
+    )"));
+
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(2, "vignette", 2, openGLContext, R"(
+        #version 330 core
+
+        in vec2 uv;
+        out vec4 fragColor;
+
+        uniform sampler2D u_screenTexture;
+
+        void main()
+        {
+            vec4 colour = texture(u_screenTexture, uv);
+
+            vec2 centre = uv - 0.5;
+            float dist = length(centre);
+
+            float vignette = 1.0 - smoothstep(0.25, 0.75, dist);
+
+            colour.rgb *= vignette;
+
+            fragColor = colour;
+        }
+    )"));
     
     setOpaque(true); // Indicates that no part of this Component is transparent
     openGLContext.setRenderer(this); // Set this instance as the renderer for the context
@@ -75,6 +154,8 @@ void OpenGLComponent::newOpenGLContextCreated() {
     if (juce::gl::glCheckFramebufferStatus(juce::gl::GL_FRAMEBUFFER) != juce::gl::GL_FRAMEBUFFER_COMPLETE) {
         DBG("FBO creation incomplete!");
     }
+
+    postProcessor.init(getWidth(), getHeight());
 }
 
 void OpenGLComponent::renderOpenGL() {
@@ -150,32 +231,23 @@ void OpenGLComponent::renderOpenGL() {
         videoEncoder->addVideoFrame();
     }
 
-    bool postProcessingEnabled = false; //!postProcessor.noPostProcessorsEnabled();
+    bool postProcessingEnabled = !postProcessor.noPostProcessorsEnabled() || postProcessor.isEnabledGlobal();
     if (postProcessingEnabled) {
         // If we want to do screen space effects,
         // then render the screen to a texture first.
-        //int frameBuffer = screenSpaceRenderQuad.getFrameBufferReference(); // We need to get the frame buffer from the screen space effect.
+        GLuint frameBuffer = postProcessor.peek()->getScreenSpaceQuadFrameBuffer(); // We need to get the frame buffer from the screen space effect.
         
-       //juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, frameBuffer);
+        juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, frameBuffer);
     } else {
         // We are not doing any post processing so we can render to the screen.
         juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
     }
 
-    juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
     juce::gl::glViewport(0, 0, getWidth() * openGLContext.getRenderingScale(), getHeight() * openGLContext.getRenderingScale());
     renderState->render();
 
     if (postProcessingEnabled) {
-        // If screen space effects are being used, we already rendered the scene to our custom frame buffer
-        // instead of the window buffer. Therefore, its now time to take that initial render and render it back
-        // to the screen.
-        juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
-
-        juce::gl::glClear(juce::gl::GL_COLOR_BUFFER_BIT);
-        juce::gl::glViewport(0, 0, getWidth() * openGLContext.getRenderingScale(), getHeight() * openGLContext.getRenderingScale());
-
-        //screenSpaceRenderQuad.draw();
+        postProcessor.renderAll(getWidth() * openGLContext.getRenderingScale(), getHeight() * openGLContext.getRenderingScale());
     }
 }
 

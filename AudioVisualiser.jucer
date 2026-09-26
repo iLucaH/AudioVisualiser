@@ -42,6 +42,8 @@
       <FILE id="iTx3Xw" name="RingBuffer.h" compile="0" resource="0" file="Source/RingBuffer.h"/>
       <GROUP id="{F84C6851-88F1-C34A-B55C-867AC3CB76A4}" name="render">
         <GROUP id="{6DCBDA73-3C89-D5D2-34B1-115E80DC59E4}" name="postprocess">
+          <FILE id="QXgZ3v" name="PostProcessEffect.h" compile="0" resource="0"
+                file="Source/PostProcessEffect.h"/>
           <FILE id="jNATWk" name="PostProcessor.cpp" compile="1" resource="0"
                 file="Source/PostProcessor.cpp"/>
           <FILE id="IJg5Qw" name="PostProcessor.h" compile="0" resource="0" file="Source/PostProcessor.h"/>
