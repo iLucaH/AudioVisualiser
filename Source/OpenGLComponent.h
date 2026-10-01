@@ -107,9 +107,19 @@ public:
         return &postProcessor;
     }
 
+    bool isOpenGLEnabled() const {
+        return openGLEnabled;
+    }
+
+    void setOpenGLEnabled(bool enabled) {
+        openGLEnabled = enabled;
+    }
+
 private:
     AudioVisualiserAudioProcessor& processor;
     ApplicationSettings& appSettings;
+
+    bool openGLEnabled = true;
 
     RingBuffer<float>& ringBuffer;
     juce::AudioBuffer<GLfloat> readBuffer;

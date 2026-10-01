@@ -62,6 +62,14 @@ public:
 
     juce::String getSocketConnectionHandle();
 
+    float getAudioScalar() const {
+        return audioScalar;
+    }
+
+    void setAudioScalar(float newScalarValue) {
+        audioScalar = newScalarValue;
+    }
+
 private:
     AudioVisualiserAudioProcessorEditor* root;
 
@@ -72,6 +80,8 @@ private:
     int width = 1920, height = 1080;
     int fftSize = 10;
     bool fullScreen = false;
+
+    float audioScalar = 1.0f;
 
     juce::String socketClientAuth = "password";
 };

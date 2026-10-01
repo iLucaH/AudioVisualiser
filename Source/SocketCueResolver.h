@@ -22,6 +22,7 @@
 #define COMMAND_VISUALISER_SET 205
 #define COMMAND_VISUALISER_MUTE 206
 #define COMMAND_VISUALISER_UNMUTE 207
+#define COMMAND_VISUALISER_STATE 208
 
 #define COMMAND_EFFECTS_CURRENT_GLOBAL_STATE 301
 #define COMMAND_EFFECTS_PAUSE_ALL 302
@@ -80,9 +81,11 @@ public:
                 ? message(RESPONSE_OK, "Successfully set the visualiser.")
                 : message(RESPONSE_ERR, "Visualiser could not be found!");
         case COMMAND_VISUALISER_MUTE:
-            return message(RESPONSE_OK, "Template message response.");
+            return message(RESPONSE_OK, visualiser_muted_set(selectorTabPanel.getOpenGLComponent(), true) ? "Successfully muted the visualiser!" : "Failed to mute the visualiser");
         case COMMAND_VISUALISER_UNMUTE:
-            return message(RESPONSE_OK, "Template message response.");
+            return message(RESPONSE_OK, visualiser_muted_set(selectorTabPanel.getOpenGLComponent(), false) ? "Successfully unmuted the visualiser!" : "Failed to unmute the visualiser");
+        case COMMAND_VISUALISER_STATE:
+            return message(RESPONSE_OK, visualiser_muted(selectorTabPanel.getOpenGLComponent()) ? "Enabled" : "Disabled");
 
         case COMMAND_EFFECTS_CURRENT_GLOBAL_STATE:
             return message(RESPONSE_OK, selectorTabPanel.getOpenGLComponent().getPostProcessor()->isEnabledGlobal() ? "Enabled" : "Disabled");
@@ -129,11 +132,11 @@ public:
             return message(RESPONSE_OK, "Template message response.");
 
         case COMMAND_RECORD_START:
-            return message(RESPONSE_OK, "Template message response.");
+            return message(RESPONSE_OK, recording_start ? "Successfully started recording!" : "Failed to start recording!");
         case COMMAND_RECORD_STOP:
-            return message(RESPONSE_OK, "Template message response.");
+            return message(RESPONSE_OK, recording_stop ? "Successfully stopped recording!" : "Failed to stop recording!");
         case COMMAND_RECORD_CURRENT_STATE:
-            return message(RESPONSE_OK, "Template message response.");
+            return message(RESPONSE_OK, recording_state ? "Active" : "Inactive");
 
         case SETTINGS_FFT_BAND_STATE:
             return message(RESPONSE_OK, "Template message response.");

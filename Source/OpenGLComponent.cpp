@@ -201,6 +201,10 @@ void OpenGLComponent::renderOpenGL() {
     GLuint visualizationUniformFD = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "audioBufferFD");
     openGLContext.extensions.glUniform1fv(visualizationUniformFD, FFT_BIN_SIZE, processor.getShaderFFT().data());
 
+    if (!isOpenGLEnabled()) { // If we aren't rendering openGL, then dont let it reach here.
+        return;
+    }
+
     // Video Encoding
     juce::String* filePtr = pendingEncoderFileName.exchange(nullptr);
     if (filePtr) {

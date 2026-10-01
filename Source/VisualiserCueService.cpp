@@ -124,6 +124,15 @@ bool visualiser_setVisualiser(SelectorTabPanel& selectorTabPanel, juce::String p
     return false;
 }
 
+bool visualiser_muted(OpenGLComponent& openGLComponent) {
+    return openGLComponent.isOpenGLEnabled();
+}
+
+bool visualiser_muted_set(OpenGLComponent& openGLComponent, bool muted) {
+    openGLComponent.setOpenGLEnabled(!muted);
+    return true;
+}
+
 juce::String visualiser_effect_info(OpenGLComponent& openGLComponent, juce::String effectID) {
     juce::DynamicObject* obj = new juce::DynamicObject();
     obj->setProperty("id", "unknown");
@@ -201,4 +210,72 @@ bool visualiser_effects_disable_one(OpenGLComponent& openGLComponent, juce::Stri
 
 bool visualiser_effects_update_effect(OpenGLComponent& openGLComponent, juce::String effectID) {
 
+}
+
+bool recording_start(OpenGLComponent& openGLComponent) {
+    //if (!openGLComponent.getVideoEncoder()) {
+    //    return false;
+    //}
+    //juce::File outputFile(juce::String(juce::Time::getCurrentTime().toString(true, true)));
+    //outputFile = outputFile.getChildFile(fileNameEditor.getText());
+
+    //auto* str = new juce::String(outputFile.getFullPathName());
+
+    //juce::File outputFile(pathNameButton.getButtonText());
+    //outputFile = outputFile.getChildFile(fileNameEditor.getText());
+    //auto* str = new juce::String(juce::Time::getCurrentTime().toString(true, true));
+    //openGLComponent.pendingEncoderFileName.store(str);
+    return true;
+}
+
+bool recording_stop(OpenGLComponent& openGLComponent) {
+    openGLComponent.getVideoEncoder()->finishRecordingSession();
+    return true;
+}
+
+bool recording_state(OpenGLComponent& openGLComponent) {
+    return openGLComponent.getVideoEncoder()->isActive();
+}
+
+juce::String settings_fft_state(SelectorTabPanel& selectorTabPanel) {
+    return juce::String(static_cast<int>(selectorTabPanel.getAppSettings().getFFTSize()));
+}
+
+bool settings_fft_state_set(SelectorTabPanel& selectorTabPanel, juce::String band) {
+    if (band.equalsIgnoreCase("9") ||
+        band.equalsIgnoreCase("10") ||
+        band.equalsIgnoreCase("11") ||
+        band.equalsIgnoreCase("12")) {
+
+        selectorTabPanel.getAppSettings().setFFTSize(band.getIntValue());
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+bool settings_visualiser_fullscreen_state(OpenGLComponent& openGLComponent) {
+    return openGLComponent.isFullScreen();
+}
+
+bool settings_visualiser_fullscreen_set_state(OpenGLComponent& openGLComponent, juce::String state) {
+    if (state.equalsIgnoreCase("true")) {
+        openGLComponent.setFullScreen(true);
+        return true;
+    } else if (state.equalsIgnoreCase("false")) {
+        openGLComponent.setFullScreen(true);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+float settings_audio_master_state(SelectorTabPanel& selectorTabPanel) {
+    return selectorTabPanel.getAppSettings().getAudioScalar();
+}
+
+bool settings_audio_master_state_set(SelectorTabPanel& selectorTabPanel, juce::String scalar) {
+    selectorTabPanel.getAppSettings().setAudioScalar(scalar)
+    return true;
 }
