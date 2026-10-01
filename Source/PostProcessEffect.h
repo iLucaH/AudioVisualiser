@@ -40,8 +40,12 @@ public:
         return screenSpaceQuad->getRenderTarget()->framebufferReference;
     }
 
-    bool isEnabled() {
+    bool isEnabled() const {
         return enabled;
+    }
+
+    void setEnabled(const bool newEnabled) {
+        enabled = newEnabled;
     }
 
     unsigned int getPriority() {
@@ -50,6 +54,14 @@ public:
 
     void setPriority(unsigned int newPriority) {
         priority = newPriority;
+    }
+
+    int getEffectID() const {
+        return id;
+    }
+
+    juce::String getEffectName() const {
+        return name;
     }
 
 private:

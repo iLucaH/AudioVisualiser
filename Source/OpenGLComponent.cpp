@@ -231,7 +231,7 @@ void OpenGLComponent::renderOpenGL() {
         videoEncoder->addVideoFrame();
     }
 
-    bool postProcessingEnabled = !postProcessor.noPostProcessorsEnabled() || postProcessor.isEnabledGlobal();
+    bool postProcessingEnabled = !postProcessor.noPostProcessorsEnabled() && postProcessor.isEnabledGlobal();
     if (postProcessingEnabled) {
         // If we want to do screen space effects,
         // then render the screen to a texture first.

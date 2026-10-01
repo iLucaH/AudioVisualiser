@@ -47,6 +47,10 @@ public:
         enabled = newEnabled;
     }
 
+    std::vector<std::unique_ptr<PostProcessEffect>>& getPostProcessEffects() {
+        return postProcessEffects;
+    }
+
 private:
 
     bool enabled = true;

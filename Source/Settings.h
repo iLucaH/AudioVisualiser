@@ -73,5 +73,5 @@ private:
     int fftSize = 10;
     bool fullScreen = false;
 
-    juce::String socketClientAuth = "0000";
+    juce::String socketClientAuth = "password";
 };

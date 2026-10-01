@@ -117,6 +117,14 @@ set(SourceFiles
 	Source/VisualiserCueService.cpp
 	Source/WebViewHelper.h
 	Source/SocketCueResolver.h
+	Source/OpenGLFramebuffer.cpp
+	Source/OpenGLFramebuffer.h
+	Source/PostProcessEffect.h
+	Source/PostProcessor.cpp
+	Source/PostProcessor.h
+	Source/RenderTarget.h
+	Source/ScreenSpaceQuad.h
+	Source/VignetteEffect.h
 )
 
 set(WEBVIEW_FILES_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ui/public")

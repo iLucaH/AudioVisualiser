@@ -91,6 +91,10 @@ public:
         return appSettings;
     }
 
+    OpenGLComponent& getOpenGLComponent() {
+        return openGLComponent;
+    }
+
 private:
     AudioVisualiserAudioProcessor& pluginProcessor;
     OpenGLComponent& openGLComponent;

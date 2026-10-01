@@ -103,6 +103,10 @@ public:
         return renderStates.size() + 1;
     }
 
+    PostProcessor* getPostProcessor() {
+        return &postProcessor;
+    }
+
 private:
     AudioVisualiserAudioProcessor& processor;
     ApplicationSettings& appSettings;

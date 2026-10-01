@@ -12,6 +12,7 @@
 
 #include "VisualiserCueService.h"
 #include "SelectorTabPanel.h"
+#include "OpenGLComponent.h"
 
 juce::String visualiser_listAll(SelectorTabPanel& selectorTabPanel)
 {
@@ -99,10 +100,7 @@ juce::String visualiser_listPrevious(SelectorTabPanel& selectorTabPanel)
     return renderProfiles[previousIndex]->getPresetName();
 }
 
-bool visualiser_setVisualiser(
-    SelectorTabPanel& selectorTabPanel,
-    juce::String presetName)
-{
+bool visualiser_setVisualiser(SelectorTabPanel& selectorTabPanel, juce::String presetName) {
     const auto& renderProfiles = selectorTabPanel.getRenderProfiles();
 
     for (int i = 0; i < static_cast<int>(renderProfiles.size()); ++i)
@@ -124,4 +122,83 @@ bool visualiser_setVisualiser(
     }
 
     return false;
+}
+
+juce::String visualiser_effect_info(OpenGLComponent& openGLComponent, juce::String effectID) {
+    juce::DynamicObject* obj = new juce::DynamicObject();
+    obj->setProperty("id", "unknown");
+    obj->setProperty("name", "unknown");
+    obj->setProperty("priority", "unknown");
+    obj->setProperty("enabled", false);
+
+    juce::DynamicObject* properties = new juce::DynamicObject();
+    obj->setProperty("properties", properties);
+
+    for (auto& effect : openGLComponent.getPostProcessor()->getPostProcessEffects()) {
+        if (effect == nullptr)
+            continue;
+        if (!juce::String(effect->getEffectID()).equalsIgnoreCase(effectID)) // compare by string to avoid error handling converting effectId to int
+            continue;
+
+        obj->setProperty("id", effect->getEffectID()); // int form for consistency 
+        obj->setProperty("name", effect->getEffectName());
+        obj->setProperty("priority", static_cast<int>(effect->getPriority()));
+        obj->setProperty("enabled", effect->isEnabled());
+
+        // For when properties support is added, e.g. modifying shader values, etc.
+        juce::DynamicObject* properties = new juce::DynamicObject();
+        obj->setProperty("properties", properties);
+        
+        break;
+    }
+    juce::var json(obj);
+    return juce::JSON::toString(json);
+}
+
+juce::String visualiser_effects_listAll(OpenGLComponent& openGLComponent) {
+    juce::Array<juce::var> varArray;
+
+    for (auto& effect : openGLComponent.getPostProcessor()->getPostProcessEffects()) {
+        if (effect != nullptr)
+            varArray.add(juce::String("ID: ") + juce::String(effect->getEffectID()) + juce::String(" Name: ") + effect->getEffectName());
+    }
+
+    return juce::JSON::toString(juce::var(varArray), true);
+}
+
+bool visualiser_effects_resume_all(OpenGLComponent& openGLComponent) {
+    openGLComponent.getPostProcessor()->setEnabled(true);
+    return true;
+}
+
+bool visualiser_effects_pause_all(OpenGLComponent& openGLComponent) {
+    openGLComponent.getPostProcessor()->setEnabled(false);
+    return true;
+}
+
+bool visualiser_effects_enable_one(OpenGLComponent& openGLComponent, juce::String effectID) {
+    for (auto& effect : openGLComponent.getPostProcessor()->getPostProcessEffects()) {
+        if (effect == nullptr)
+            continue;
+        if (!juce::String(effect->getEffectID()).equalsIgnoreCase(effectID))
+            continue;
+        effect->setEnabled(true);
+        return true;
+    }
+    return false;
+}
+bool visualiser_effects_disable_one(OpenGLComponent& openGLComponent, juce::String effectID) {
+    for (auto& effect : openGLComponent.getPostProcessor()->getPostProcessEffects()) {
+        if (effect == nullptr)
+            continue;
+        if (!juce::String(effect->getEffectID()).equalsIgnoreCase(effectID))
+            continue;
+        effect->setEnabled(false);
+        return true;
+    }
+    return false;
+}
+
+bool visualiser_effects_update_effect(OpenGLComponent& openGLComponent, juce::String effectID) {
+
 }

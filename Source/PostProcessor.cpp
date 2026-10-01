@@ -11,6 +11,9 @@
 #include "PostProcessor.h"
 #include "OpenGLComponent.h"
 
+#include <iterator>
+#include <ranges>
+
 PostProcessor::PostProcessor(OpenGLComponent& glComponent) : openGLComponent(glComponent) {
 
 }
@@ -41,17 +44,25 @@ PostProcessEffect* PostProcessor::peek() {
 }
 
 void PostProcessor::renderAll(int viewportWidth, int viewportHeight) {
-    for (int i = 0; i < postProcessEffects.size(); ++i) {
-        if (i == postProcessEffects.size() - 1) { // render to screen frame buffer
+    auto enabledEffects = postProcessEffects | std::views::filter([](const auto& effect) {
+        return effect != nullptr && effect->isEnabled();
+    });
+
+    for (auto it = enabledEffects.begin(); it != enabledEffects.end(); ++it) {
+        auto& effect = *it;
+
+        auto next = std::next(it);
+        bool isLastEffect = next == enabledEffects.end();
+
+        if (isLastEffect) { // Render to screen
             juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
-        }
-        else { // render to the next post processing effect frame buffer
-            juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, postProcessEffects[i + 1]->getScreenSpaceQuadFrameBuffer());
+        } else { // Render to the next enabled effect's framebuffer
+            juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, (*next)->getScreenSpaceQuadFrameBuffer());
         }
 
         juce::gl::glClear(juce::gl::GL_COLOR_BUFFER_BIT);
         juce::gl::glViewport(0, 0, viewportWidth, viewportHeight);
 
-        postProcessEffects[i]->render();
+        effect->render();
     }
 }
