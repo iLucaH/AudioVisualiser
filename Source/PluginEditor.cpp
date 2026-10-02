@@ -1,6 +1,8 @@
 /*
   ==============================================================================
-    AudioVisualiser editor - modern dark layout
+
+    This file contains the basic framework code for a JUCE plugin editor.
+
   ==============================================================================
 */
 
@@ -41,37 +43,6 @@ AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor(AudioVi
 
     addAndMakeVisible(openGLComponent);
     addAndMakeVisible(panelComponent);
-
-    // Bottom action buttons (flat, dark, matching the mockup)
-    for (auto* b : { &launchRecorder, &login })
-    {
-        b->setColour(juce::TextButton::buttonColourId, juce::Colours::transparentBlack);
-        b->setColour(juce::TextButton::buttonOnColourId, Theme::cardEdge);
-        b->setColour(juce::TextButton::textColourOffId, Theme::text);
-        b->setColour(juce::TextButton::textColourOnId, Theme::text);
-        addAndMakeVisible(*b);
-    }
-
-    launchRecorder.onClick = [this] {
-        if (!recorderSessionInitialised) {
-            DBG("Launching the recorder panel!");
-            videoComponent.addToDesktop();
-            videoComponent.setResizable(false, false);
-            videoComponent.setUsingNativeTitleBar(true);
-        }
-        videoComponent.setBounds(100, 100, 600, 300);
-        videoComponent.setVisible(true);
-        videoComponent.toFront(true);
-        };
-
-    login.onClick = [this] {
-        if (!loginSessionInitialised) {
-            DBG("Launching the login panel!");
-            loginComponent.addToDesktop();
-        }
-        loginComponent.setVisible(true);
-        loginComponent.toFront(true);
-        };
 
     globalSocketHandler.startListening();
 }

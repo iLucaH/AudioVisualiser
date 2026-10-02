@@ -42,7 +42,7 @@ public:
 			.withBackend(juce::WebBrowserComponent::Options::Backend::webview2)
 			.withWinWebView2Options(juce::WebBrowserComponent::Options::WinWebView2{} // Change the Webview component from Explorer to the more modern and working Edge.
 				.withUserDataFolder(juce::File::getSpecialLocation(juce::File::tempDirectory))  // May get weird permission errors if no user data folder defined.
-				.withBackgroundColour(juce::Colours::white))
+				.withBackgroundColour(juce::Colour(0xff262e36)))
 			.withResourceProvider([this](const auto& url) { return getResource(url); })
 			.withNativeIntegrationEnabled()
 			.withNativeFunction(juce::Identifier{"nativeFunctionLogin"}, [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion) {
@@ -52,14 +52,18 @@ public:
 				nativeFunctionRegister(args, std::move(completion));
 				}) } {
 
-		webView.goToURL(webView.getResourceProviderRoot()); // Ask c++ backend for the resource.
+		webView.goToURL("http://localhost:5173/"); // Ask c++ backend for the resource.
 		DBG("WebView Location set to Root: " << webView.getResourceProviderRoot());
 
 		addAndMakeVisible(webView);
 	}
 
 	void resized() override {
-		webView.setBounds(getLocalBounds()); // Make the web view fit the entire window on resize.
+		webView.setBounds(getLocalBounds().expanded(4, 4)); // Make the web view fit the entire window on resize.
+	}
+
+	void paint(juce::Graphics& g) override {
+		g.fillAll(juce::Colour(0xff262e36));
 	}
 
 private:
