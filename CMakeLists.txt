@@ -124,7 +124,7 @@ set(SourceFiles
 	Source/PostProcessor.h
 	Source/RenderTarget.h
 	Source/ScreenSpaceQuad.h
-	Source/VignetteEffect.h
+	Source/PanelComponent.h
 )
 
 set(WEBVIEW_FILES_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ui/public")

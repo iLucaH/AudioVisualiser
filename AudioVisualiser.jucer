@@ -29,6 +29,8 @@
               file="Source/CreateVideoComponent.h"/>
         <FILE id="TDFANa" name="LoginComponent.h" compile="0" resource="0"
               file="Source/LoginComponent.h"/>
+        <FILE id="lj4ndf" name="PanelComponent.h" compile="0" resource="0"
+              file="Source/PanelComponent.h"/>
         <FILE id="VgV8JL" name="SettingsComponent.h" compile="0" resource="0"
               file="Source/SettingsComponent.h"/>
       </GROUP>

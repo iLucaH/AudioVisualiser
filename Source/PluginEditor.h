@@ -17,6 +17,7 @@
 #include "LoginComponent.h"
 #include "GlobalSocketHandler.h"
 #include "SocketCueResolver.h"
+#include "PanelComponent.h"
 
 class ApplicationSettings;
 
@@ -56,11 +57,15 @@ private:
     TVImageOverlay tvOverlayComponent;
 
     unsigned int width, height;
+    std::unique_ptr<juce::ComponentBoundsConstrainer> resizeConstrainer;
+    juce::Rectangle<int> titleBarArea, visualiserArea, panelArea, footerArea;
 
     juce::ImageComponent tvComponent;
     SelectorTabPanel selectorPanel;
     CreateVideoComponent videoComponent;
     LoginComponent loginComponent;
+    
+    PanelComponent panelComponent;
 
     bool recorderSessionInitialised = false, loginSessionInitialised = false;
     juce::TextButton launchRecorder, login;
