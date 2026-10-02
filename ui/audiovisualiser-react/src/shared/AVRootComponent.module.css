@@ -1,0 +1,24 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.cluster {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.cluster {
+    overflow-y: auto;
+    scrollbar-width: none;      /* Firefox, and Chromium 121+ */
+    -ms-overflow-style: none;   /* old Edge/IE */
+}
+
+.cluster::-webkit-scrollbar {
+    display: none;              /* Safari/WKWebView and older Chromium */
+}

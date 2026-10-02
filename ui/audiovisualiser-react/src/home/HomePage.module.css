@@ -1,0 +1,43 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.cluster {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.quickmenu {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 16px;
+    align-items: center;
+    flex-shrink: 0;   /* never gets squashed */
+
+    border: 2px solid transparent;
+    border-radius: 6px;
+
+    background:
+        linear-gradient(#262e36, #262e36) padding-box,
+        linear-gradient(to right, #3fd0ff, #9b5cff) border-box;
+    padding: 5px;
+
+    margin-top: 10px;
+}
+
+.cluster {
+    overflow-y: auto;
+    scrollbar-width: none;      /* Firefox, and Chromium 121+ */
+    -ms-overflow-style: none;   /* old Edge/IE */
+}
+
+.cluster::-webkit-scrollbar {
+    display: none;              /* Safari/WKWebView and older Chromium */
+}

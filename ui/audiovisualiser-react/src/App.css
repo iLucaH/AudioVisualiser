@@ -1,0 +1,17 @@
+html, body, #root {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    background-color: #262e36;
+}
+
+html, body {
+    overscroll-behavior: none;
+    overflow: hidden;
+}
+
+:root {
+    color-scheme: dark;
+}
