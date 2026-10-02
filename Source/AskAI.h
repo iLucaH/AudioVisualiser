@@ -217,14 +217,21 @@ loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocume
             load.setVisible(false);
 
             // Update the list of loaded render states from the backend now while there is opportunity.
-            renderStatesCached.clear();
-            backenedListComboBox.clear();
             juce::Thread::launch([this]() {
                 std::vector<struct RenderStateStruct> renderStates = getGetAllRenderStates(appSettings.getAuthJWT());
                 juce::MessageManager::callAsync([this, renderStates]() {
                     for (auto renderState : renderStates) {
-                        backenedListComboBox.addItem(renderState.name, renderState.id);
-                        renderStatesCached.insert({ renderState.id, renderState });
+                        bool exists = false;
+                        for (int i = 0; i < backenedListComboBox.getNumItems(); i++) {
+                            if (backenedListComboBox.getItemText(i).equalsIgnoreCase(renderState.name)) {
+                                exists = true;
+                                break;
+                            }
+                        }
+                        if (!exists) {
+                            backenedListComboBox.addItem(renderState.name, renderState.id);
+                            renderStatesCached.insert({ renderState.id, renderState });
+                        }
                     }
                     });
                 });

@@ -208,8 +208,8 @@ bool visualiser_effects_disable_one(OpenGLComponent& openGLComponent, juce::Stri
     return false;
 }
 
-bool visualiser_effects_update_effect(OpenGLComponent& openGLComponent, juce::String effectID) {
-
+bool visualiser_effects_update_effect(OpenGLComponent& openGLComponent, juce::String body) {
+    return true;
 }
 
 bool recording_start(OpenGLComponent& openGLComponent) {
@@ -259,16 +259,9 @@ bool settings_visualiser_fullscreen_state(OpenGLComponent& openGLComponent) {
     return openGLComponent.isFullScreen();
 }
 
-bool settings_visualiser_fullscreen_set_state(OpenGLComponent& openGLComponent, juce::String state) {
-    if (state.equalsIgnoreCase("true")) {
-        openGLComponent.setFullScreen(true);
-        return true;
-    } else if (state.equalsIgnoreCase("false")) {
-        openGLComponent.setFullScreen(true);
-        return true;
-    } else {
-        return false;
-    }
+bool settings_visualiser_fullscreen_set_state(OpenGLComponent& openGLComponent, bool state) {
+    openGLComponent.setFullScreen(state);
+    return true;
 }
 
 float settings_audio_master_state(SelectorTabPanel& selectorTabPanel) {
@@ -276,6 +269,6 @@ float settings_audio_master_state(SelectorTabPanel& selectorTabPanel) {
 }
 
 bool settings_audio_master_state_set(SelectorTabPanel& selectorTabPanel, juce::String scalar) {
-    selectorTabPanel.getAppSettings().setAudioScalar(scalar)
+    selectorTabPanel.getAppSettings().setAudioScalar(scalar.getFloatValue());
     return true;
 }

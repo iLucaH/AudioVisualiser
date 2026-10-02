@@ -180,9 +180,9 @@ void OpenGLComponent::renderOpenGL() {
     openGLContext.extensions.glUniform1i(timeUniform, time);
 
     GLuint leftRMSUniform = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "leftRMS");
-    openGLContext.extensions.glUniform1f(leftRMSUniform, processor.getRMS(0));
+    openGLContext.extensions.glUniform1f(leftRMSUniform, processor.getRMS(0) * appSettings.getAudioScalar());
     GLuint rightRMSUniform = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "rightRMS");
-    openGLContext.extensions.glUniform1f(rightRMSUniform, processor.getRMS(1));
+    openGLContext.extensions.glUniform1f(rightRMSUniform, processor.getRMS(1) * appSettings.getAudioScalar());
 
     GLuint screenWidthUniform = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "screenWidth");
     GLuint screenHeightUniform = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "screenHeight");
@@ -195,6 +195,7 @@ void OpenGLComponent::renderOpenGL() {
     for (int i = 0; i < 2; ++i) { // Sum channels together
         juce::FloatVectorOperations::add(visualizationBufferTD, readBuffer.getReadPointer(i, 0), RING_BUFFER_READ_SIZE);
     }
+    juce::FloatVectorOperations::multiply(visualizationBufferTD, appSettings.getAudioScalar(), RING_BUFFER_READ_SIZE);
     GLuint visualizationUniformTD = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "audioBufferTD");
     openGLContext.extensions.glUniform1fv(visualizationUniformTD, RING_BUFFER_READ_SIZE, visualizationBufferTD);
 

@@ -160,7 +160,7 @@ void AudioVisualiserAudioProcessor::processBlock(juce::AudioBuffer<float>& buffe
         ringBuffer->writeSamples(buffer, 0, buffer.getNumSamples());
     }
 
-    // 1. Copy audio into FFT buffer
+    // Copy audio into FFT buffer
     std::fill(fftData.begin(), fftData.end(), 0.0f);
     const int samplesToCopy = juce::jmin(fftSize, buffer.getNumSamples());
 

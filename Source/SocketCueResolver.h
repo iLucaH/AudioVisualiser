@@ -81,14 +81,22 @@ public:
                 ? message(RESPONSE_OK, "Successfully set the visualiser.")
                 : message(RESPONSE_ERR, "Visualiser could not be found!");
         case COMMAND_VISUALISER_MUTE:
-            return message(RESPONSE_OK, visualiser_muted_set(selectorTabPanel.getOpenGLComponent(), true) ? "Successfully muted the visualiser!" : "Failed to mute the visualiser");
+            return visualiser_muted_set(selectorTabPanel.getOpenGLComponent(), true) 
+                ? message(RESPONSE_OK, "Successfully muted the visualiser!" )
+                : message(RESPONSE_ERR, "Failed to mute the visualiser");
         case COMMAND_VISUALISER_UNMUTE:
-            return message(RESPONSE_OK, visualiser_muted_set(selectorTabPanel.getOpenGLComponent(), false) ? "Successfully unmuted the visualiser!" : "Failed to unmute the visualiser");
+            return visualiser_muted_set(selectorTabPanel.getOpenGLComponent(), false) 
+                ? message(RESPONSE_OK, "Successfully unmuted the visualiser!")
+                : message(RESPONSE_ERR, "Failed to unmute the visualiser");
         case COMMAND_VISUALISER_STATE:
-            return message(RESPONSE_OK, visualiser_muted(selectorTabPanel.getOpenGLComponent()) ? "Enabled" : "Disabled");
+            return visualiser_muted(selectorTabPanel.getOpenGLComponent()) 
+                ? message(RESPONSE_OK, "Enabled") 
+                : message(RESPONSE_OK, "Disabled");
 
         case COMMAND_EFFECTS_CURRENT_GLOBAL_STATE:
-            return message(RESPONSE_OK, selectorTabPanel.getOpenGLComponent().getPostProcessor()->isEnabledGlobal() ? "Enabled" : "Disabled");
+            return selectorTabPanel.getOpenGLComponent().getPostProcessor()->isEnabledGlobal() 
+                ? message(RESPONSE_OK, "Enabled") 
+                : message(RESPONSE_OK, "Disabled");
         case COMMAND_EFFECTS_PAUSE_ALL:
             return visualiser_effects_pause_all(selectorTabPanel.getOpenGLComponent())
                 ? message(RESPONSE_OK, "Successfully disabled all visualiser effects.")
@@ -110,7 +118,9 @@ public:
         case COMMAND_EFFECTS_INFO_EFFECT:
             return message(RESPONSE_OK, visualiser_effect_info(selectorTabPanel.getOpenGLComponent(), body));
         case COMMAND_EFFECTS_UPDATE_EFFECT:
-            return message(RESPONSE_OK, "Template message response.");
+            return visualiser_effects_update_effect(selectorTabPanel.getOpenGLComponent(), body) 
+                ? message(RESPONSE_OK, "Successfully updated the effect!")
+                : message(RESPONSE_ERR, "Failed to update the effect!");
 
         case COMMAND_TRACK_LIST_ALL:
             return message(RESPONSE_OK, "Template message response.");
@@ -124,34 +134,48 @@ public:
             return message(RESPONSE_OK, "Template message response.");
         case COMMAND_TRACK_STOP:
             selectorTabPanel.processStop();
-            return message(RESPONSE_OK, "Template message response.");
+            return message(RESPONSE_OK, "Stopping the track.");
         case COMMAND_TRACK_START:
             selectorTabPanel.processPlay();
-            return message(RESPONSE_OK, "Template message response.");
+            return message(RESPONSE_OK, "Starting the track.");
         case COMMAND_TRACK_CURRENT_STATE:
             return message(RESPONSE_OK, "Template message response.");
 
         case COMMAND_RECORD_START:
-            return message(RESPONSE_OK, recording_start ? "Successfully started recording!" : "Failed to start recording!");
+            return recording_start(selectorTabPanel.getOpenGLComponent()) 
+                ? message(RESPONSE_OK, "Successfully started recording!") 
+                : message(RESPONSE_ERR, "Failed to start recording!");
         case COMMAND_RECORD_STOP:
-            return message(RESPONSE_OK, recording_stop ? "Successfully stopped recording!" : "Failed to stop recording!");
+            return recording_stop(selectorTabPanel.getOpenGLComponent()) 
+                ? message(RESPONSE_OK, "Successfully stopped recording!") 
+                : message(RESPONSE_ERR, "Failed to stop recording!");
         case COMMAND_RECORD_CURRENT_STATE:
-            return message(RESPONSE_OK, recording_state ? "Active" : "Inactive");
+            return recording_state(selectorTabPanel.getOpenGLComponent()) 
+                ? message(RESPONSE_OK, "Active") 
+                : message(RESPONSE_OK, "Inactive");
 
         case SETTINGS_FFT_BAND_STATE:
-            return message(RESPONSE_OK, "Template message response.");
+            return message(RESPONSE_OK, settings_fft_state(selectorTabPanel));
         case SETTINGS_FFT_BAND_UPDATE:
-            return message(RESPONSE_OK, "Template message response.");
+            return settings_fft_state_set(selectorTabPanel, body) 
+                ? message(RESPONSE_OK, "Successfully set the new state to " + body)
+                : message(RESPONSE_ERR, "Failed  to update FFT band!");
         case SETTINGS_FULLSCREEN_STATE:
-            return message(RESPONSE_OK, "Template message response.");
+            return message(RESPONSE_OK, settings_visualiser_fullscreen_state(selectorTabPanel.getOpenGLComponent()) ? "True" : "False");
         case SETTINGS_FULLSCREEN_ENABLE:
-            return message(RESPONSE_OK, "Template message response.");
+            return settings_visualiser_fullscreen_set_state(selectorTabPanel.getOpenGLComponent(), true) 
+                ? message(RESPONSE_OK, "Successfully set the visualiser to fullscreen!")
+                : message(RESPONSE_ERR, "Failed to update state!");
         case SETTINGS_FULLSCREEN_DISABLE:
-            return message(RESPONSE_OK, "Template message response.");
+            return settings_visualiser_fullscreen_set_state(selectorTabPanel.getOpenGLComponent(), false) 
+                ? message(RESPONSE_OK, "Screen minimized successfully!")
+                : message(RESPONSE_ERR, "Failed to update state!");
         case SETTINGS_AUDIO_MASTER:
-            return message(RESPONSE_OK, "Template message response.");
+            return message(RESPONSE_OK, juce::String(settings_audio_master_state(selectorTabPanel)));
         case SETTINGS_AUDIO_MASTER_SET:
-            return message(RESPONSE_OK, "Template message response.");
+            return settings_audio_master_state_set(selectorTabPanel, body) 
+                ? message(RESPONSE_OK, "Successfully set the audio master scalar to " + body)
+                : message(RESPONSE_ERR, "Failed to update master scalar!");
         default:
             return message(RESPONSE_ERR, "You have sent an unknown command!");
         }
