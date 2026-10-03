@@ -17,6 +17,7 @@
 #include "SettingsComponent.h"
 #include "Settings.h"
 #include "AppQRComponent.h"
+#include "EventBus.h"
 
 //==============================================================================
 /*
@@ -95,8 +96,15 @@ public:
         return openGLComponent;
     }
 
+    EventBus& getEventBus() {
+        return eventBus;
+    }
+
 private:
     AudioVisualiserAudioProcessor& pluginProcessor;
+
+    EventBus eventBus;
+    
     OpenGLComponent& openGLComponent;
 
     ApplicationSettings& appSettings;

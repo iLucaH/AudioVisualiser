@@ -46,6 +46,14 @@ public:
         return globalSocketHandler;
 	}
 
+    LoginComponent& getLoginComponent() {
+        return loginComponent;
+    }
+
+    SelectorTabPanel& getSelectorTabPanel() {
+        return selectorPanel;
+    }
+
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.

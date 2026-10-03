@@ -13,6 +13,7 @@
 #include <JuceHeader.h>
 
 class AudioVisualiserAudioProcessorEditor;
+class EventBus;
 
 class ApplicationSettings {
 public:
@@ -69,6 +70,12 @@ public:
     void setAudioScalar(float newScalarValue) {
         audioScalar = newScalarValue;
     }
+
+    AudioVisualiserAudioProcessorEditor* getRoot() const {
+        return root;
+    }
+
+    EventBus& getEventBus();
 
 private:
     AudioVisualiserAudioProcessorEditor* root;

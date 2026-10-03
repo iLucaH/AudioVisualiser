@@ -1,4 +1,4 @@
-import NativeSelector from '../shared/OptionSelector'
+import {NativeSelector} from '../shared/OptionSelector'
 
 function Preset({options, selectedValue, setSelectedValue}) {
     return (

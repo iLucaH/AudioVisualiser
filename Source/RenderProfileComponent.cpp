@@ -12,7 +12,15 @@
 #include "RenderProfileComponent.h"
 
 //==============================================================================
-RenderProfileComponent::RenderProfileComponent(int id) : renderStateID(id), bounds(0, 0, 0, 0) {}
+RenderProfileComponent::RenderProfileComponent(int id) : renderStateID(id), bounds(0, 0, 0, 0) {
+    auto* preset = new juce::DynamicObject();
+
+    preset->setProperty("value", name);
+    preset->setProperty("key", id);
+    preset->setProperty("subcontent", juce::Array<juce::var>());
+
+    frontEndPresets = juce::var(preset);
+}
 
 RenderProfileComponent::~RenderProfileComponent() {}
 

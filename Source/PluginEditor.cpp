@@ -26,7 +26,7 @@ namespace Theme
 AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor(AudioVisualiserAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p), appSettings(this), loginComponent(appSettings),
     openGLComponent(p, appSettings), selectorPanel(p, openGLComponent, appSettings),
-    tvOverlayComponent(openGLComponent), launchRecorder("Export Video"), login("Login"), panelComponent(appSettings),
+    tvOverlayComponent(openGLComponent), launchRecorder("Export Video"), login("Login"), panelComponent(selectorPanel),
     videoComponent(openGLComponent), socketCueResolver(selectorPanel), globalSocketHandler(socketCueResolver)
 {
     width = 1580;

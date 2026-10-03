@@ -15,6 +15,7 @@
 #include "AVAPIResolver.h"
 #include "AVIOHandler.h"
 #include "Settings.h"
+#include "SelectorTabPanel.h"
 
 class AskAI : public RenderState2D, public juce::AsyncUpdater {
 public:
@@ -37,6 +38,7 @@ public:
 saveChooser("Save Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs"),
 loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocumentsDirectory), "*.avrs") {
         renderProfile.setPresetName("AI Generator");
+        renderProfile.setFrontEndPresets(createPresetSettings());
 
         saveEnterTitleText.setText("Enter name:", juce::dontSendNotification);
         saveEnterTitleText.setBorderSize(juce::BorderSize<int>(2));
@@ -418,4 +420,138 @@ private:
     std::atomic<bool> displayStatusError{ false };
 
     std::unordered_map<int, struct RenderStateStruct> renderStatesCached;
+
+    juce::var createPresetSettings() {
+        auto aiGenerator = new juce::DynamicObject();
+        aiGenerator->setProperty("value", renderProfile.getPresetName());
+        aiGenerator->setProperty("key", renderProfile.getRenderStateID());
+
+        juce::Array<juce::var> aiContent;
+
+        // Prompt
+        auto prompt = new juce::DynamicObject();
+        prompt->setProperty("type", "textfieldlong");
+        prompt->setProperty("label", "Prompt");
+        prompt->setProperty("clickhandler", "receive.preset.submit.prompt.new");
+        aiContent.add(juce::var(prompt));
+
+        // Generate Design
+        auto generate = new juce::DynamicObject();
+        generate->setProperty("type", "button");
+        generate->setProperty("label", "Generate Design");
+        generate->setProperty("clickhandler", "receive.preset.submit.prompt.new");
+        generate->setProperty("link", "Prompt");
+        aiContent.add(juce::var(generate));
+
+        // Spacer
+        auto spacer = new juce::DynamicObject();
+        spacer->setProperty("type", "spacer");
+        spacer->setProperty("paddingTop", 15);
+        spacer->setProperty("paddingBottom", 15);
+        aiContent.add(juce::var(spacer));
+
+        // ================================================================
+        // Row
+        // ================================================================
+
+        auto row = new juce::DynamicObject();
+        row->setProperty("type", "row");
+
+        juce::Array<juce::var> rowContent;
+
+        // ================================================================
+        // Save Preset
+        // ================================================================
+
+        auto savePreset = new juce::DynamicObject();
+        savePreset->setProperty("type", "expandbutton");
+        savePreset->setProperty("label", "Save Preset");
+
+        juce::Array<juce::var> saveContent;
+
+        // To File
+        auto toFile = new juce::DynamicObject();
+        toFile->setProperty("type", "button");
+        toFile->setProperty("label", "To File");
+        toFile->setProperty("clickhandler", "testclickHandler2");
+        toFile->setProperty("link", "Prompt");
+        saveContent.add(juce::var(toFile));
+
+        // To Account
+        auto toAccount = new juce::DynamicObject();
+        toAccount->setProperty("type", "expandbutton");
+        toAccount->setProperty("label", "To Account");
+
+        juce::Array<juce::var> accountContent;
+
+        // Preset Name
+        auto presetName = new juce::DynamicObject();
+        presetName->setProperty("type", "textfieldshort");
+        presetName->setProperty("label", "Name your preset");
+        presetName->setProperty("clickhandler", "submitPreset");
+        accountContent.add(juce::var(presetName));
+
+        // Save
+        auto save = new juce::DynamicObject();
+        save->setProperty("type", "button");
+        save->setProperty("label", "Save");
+        save->setProperty("clickhandler", "submitPreset");
+        save->setProperty("link", "Name your preset");
+        accountContent.add(juce::var(save));
+
+        toAccount->setProperty("subcontent", accountContent);
+        saveContent.add(juce::var(toAccount));
+
+        savePreset->setProperty("subcontent", saveContent);
+        rowContent.add(juce::var(savePreset));
+
+        // ================================================================
+        // Load Preset
+        // ================================================================
+
+        auto loadPreset = new juce::DynamicObject();
+        loadPreset->setProperty("type", "expandbutton");
+        loadPreset->setProperty("label", "Load Preset");
+
+        juce::Array<juce::var> loadContent;
+
+        // From File
+        auto fromFile = new juce::DynamicObject();
+        fromFile->setProperty("type", "button");
+        fromFile->setProperty("label", "From File");
+        fromFile->setProperty("clickhandler", "testclickHandler2");
+        fromFile->setProperty("link", "Prompt");
+        loadContent.add(juce::var(fromFile));
+
+        // From Account
+        auto fromAccount = new juce::DynamicObject();
+        fromAccount->setProperty("type", "expandbutton");
+        fromAccount->setProperty("label", "From Account");
+
+        juce::Array<juce::var> accountLoadContent;
+
+        // Account Picker
+        auto picker = new juce::DynamicObject();
+        picker->setProperty("type", "picker");
+        picker->setProperty("label", "Select Preset...");
+        picker->setProperty("gethandle", "getFromAccount");
+        picker->setProperty("sethandle", "setFromAccount");
+
+        accountLoadContent.add(juce::var(picker));
+
+        fromAccount->setProperty("subcontent", accountLoadContent);
+        loadContent.add(juce::var(fromAccount));
+
+        loadPreset->setProperty("subcontent", loadContent);
+        rowContent.add(juce::var(loadPreset));
+
+        // ================================================================
+
+        row->setProperty("subcontent", rowContent);
+        aiContent.add(juce::var(row));
+
+        aiGenerator->setProperty("subcontent", aiContent);
+
+        return juce::var(aiGenerator);
+    }
 };

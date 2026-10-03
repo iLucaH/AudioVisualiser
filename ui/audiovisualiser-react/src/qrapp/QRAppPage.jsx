@@ -3,7 +3,7 @@ import AVRootComponent from '../shared/AVRootComponent'
 
 import QRCode from "react-qr-code";
 
-import { openWebsiteHandler, getFromNativeFunction } from '../services/juceHandlerService'
+import { messageJUCE, JuceFunctionHandlers } from '../services/juceHandlerService'
 
 function QRAppPage() {
     return (
@@ -19,7 +19,7 @@ function QRAppPage() {
                         gap: "15px"
                     }}>
                         <QRCode value="https://example.com" size={256} />
-                        <button onClick={() => getFromNativeFunction(openWebsiteHandler, "https://github.com/iLucaH/audiovisualiser-socket-client")}>Download the App!</button>
+                        <button onClick={() => messageJUCE(JuceFunctionHandlers.getOpenWebsite, "https://github.com/iLucaH/audiovisualiser-socket-client")}>Download the App!</button>
                     </div>
                 </DropDownMenu>
             </AVRootComponent>

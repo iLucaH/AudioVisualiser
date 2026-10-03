@@ -18,6 +18,7 @@
 #include "AVAPIResolver.h"
 #include "Settings.h"
 #include "WebViewHelper.h"
+#include "EventBus.h"
 
 #define UPLOAD_NO_STATE 0
 #define UPLOAD_SUBMITTED 1
@@ -60,6 +61,61 @@ public:
 
 	void resized() override {
 		webView.setBounds(getLocalBounds()); // Make the web view fit the entire window on resize.
+	}
+
+	int registerNewUser(juce::String username, juce::String password) {
+		if (isAttemptingRegister.load()) {
+			DBG("A register attempt has been called while another register attempt was already in session!");
+			return Receive_Events::RegisterNewUser.args_ok;
+		}
+		if (username.length() <= 0) {
+			return Receive_Events::RegisterNewUser.invalid_username;
+		}
+		if (password.length() <= 0) {
+			return Receive_Events::RegisterNewUser.invalid_password;
+		}
+		DBG("Native Register Function called from front end to back end. Username: " << username << ", Password: " << password << ".");
+		juce::Thread::launch([this, username, password]() {
+			isAttemptingRegister.store(true);
+			int register_status = api_register(username, password);
+			juce::MessageManager::callAsync([this, register_status]() {
+				isAttemptingRegister.store(false);
+				settings.getEventBus().emit(Send_Events::RegisterComplete, juce::var(register_status));
+			});
+		});
+		return Receive_Events::RegisterNewUser.args_ok;
+	}
+
+	int loginUser(juce::String username, juce::String password) {
+		if (isAttemptingLogin.load()) { // If there is already a login attempt present, no need to continue with it.
+			// If there is already a login attempt, we can assume that there has already been args successfully passed through.
+			DBG("A login attempt has been called while another login attempt was already in session!");
+			return Receive_Events::LoginUser.args_ok;
+		}
+		if (username.length() <= 0) {
+			return Receive_Events::LoginUser.invalid_username;
+		}
+		if (password.length() <= 0) {
+			return Receive_Events::LoginUser.invalid_password;
+		}
+		DBG("Native Login Function called from front end to back end. Username: " << username << ", Password: " << password << ".");
+		juce::Thread::launch([this, username, password]() {
+			isAttemptingLogin.store(true);
+			juce::String token = api_login(username, password);
+			// Validate token here.
+			bool success = token.length() > 0; // A successful token get would have substance to the string.
+			if (!success) {
+				DBG("Failed to validate api login JWT!");
+			} else {
+				settings.setAuthJWT(token);
+				DBG("Successfully validated api login JWT! Token: " << token);
+			}
+			juce::MessageManager::callAsync([this, success]() {
+				isAttemptingLogin.store(false);
+				settings.getEventBus().emit(Send_Events::LoginComplete, juce::var(success));
+			}); // Post the login update back to the GUI thread.
+		});
+		return Receive_Events::LoginUser.args_ok; // Completion is sent back to the javascript frontend to have the result evaluated.
 	}
 
 private:
@@ -151,7 +207,10 @@ public:
 	LoginComponent(ApplicationSettings& appSettings) : DocumentWindow("Accounts and Login", juce::Colours::white, 5) {
 		setUsingNativeTitleBar(true);
 		setResizable(true, true);
-		setContentOwned(new LoginContentComponent(appSettings), true);
+
+		contentComponent = new LoginContentComponent(appSettings);
+		setContentOwned(contentComponent, true);
+
 		centreWithSize(600, 600);
 	}
 
@@ -159,6 +218,10 @@ public:
 		setVisible(false);
 	}
 
-private:
+	LoginContentComponent* getContentComponent() const {
+		return contentComponent;
+	}
 
+private:
+	LoginContentComponent* contentComponent = nullptr;
 };

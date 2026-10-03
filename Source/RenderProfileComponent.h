@@ -34,8 +34,11 @@ public:
         return renderStateID;
     }
 
-    void setPresetName(juce::String n) {
-        name = n;
+    void setPresetName(const juce::String& newName) {
+        name = newName;
+
+        if (auto* preset = frontEndPresets.getDynamicObject())
+            preset->setProperty("value", name);
     }
 
     juce::String getPresetName() const {
@@ -60,7 +63,18 @@ public:
         }
     }
 
+    juce::var getFrontEndPresets() const {
+        return frontEndPresets;
+    }
+
+    void setFrontEndPresets(const juce::var& newPresets) {
+        frontEndPresets = newPresets;
+    }
+
 private:
+
+    juce::var frontEndPresets;
+
     int renderStateID;
     juce::Rectangle<int> bounds;
     juce::String name = "Default";

@@ -30,3 +30,7 @@ void ApplicationSettings::setFullScreen(bool val) {
 juce::String ApplicationSettings::getSocketConnectionHandle() {
 	return root->getGlobalSocketHandler().getConnectionHandle();
 }
+
+EventBus& ApplicationSettings::getEventBus() {
+    return root->getSelectorTabPanel().getEventBus();
+}

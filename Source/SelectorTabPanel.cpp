@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "SelectorTabPanel.h"
 #include "RenderState2D.h"
+#include "PluginEditor.h"
 
 //==============================================================================
 SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLComponent& openGL, ApplicationSettings& applSettings) : pluginProcessor(p), openGLComponent(openGL), appSettings(applSettings), settingsComponent(applSettings), appQRComponent(applSettings),
@@ -98,6 +99,65 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
         settingsComponent.toFront(true);
         };
     addAndMakeVisible(settings);
+
+    // Event Bus Listeners for Panel
+
+    // For when React asks for all render states.
+    eventBus.subscribe(Receive_Events::VisualiserPresetGetAll,
+        [this](const auto& args) {
+            juce::Array<juce::var> presets;
+            for (auto* profile : renderProfiles) {
+                presets.add(profile->getFrontEndPresets());
+            }
+            return juce::var(presets);
+        }
+    );
+
+    // For when React tells us to change render state.
+    eventBus.subscribe(Receive_Events::VisualiserPresetSet,
+        [this](const auto& args) {
+            if (args.size() < 2) {
+                return false;
+            }
+            int newState = static_cast<int>(args[1]);
+            if (newState <= 0 || newState > renderProfiles.size()) {
+                return false;
+            }
+            updatePanelRenderProfile(newState, selectedState);
+            selectedState = newState;
+            return true;
+        }
+    );
+
+    // For when React tells us to make a new prompt.
+    eventBus.subscribe(Receive_Events::VisualiserSubmitNewPrompt,
+        [this](const auto& args) {
+            if (args.size() < 2) {
+                return false;
+            }
+            juce::String prompt = args[1];
+            DBG(prompt);
+            return true;
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::RegisterNewUser.handle,
+        [this](const auto& args) {
+            if (args.size() < 3) {
+                return Receive_Events::RegisterNewUser.invalid_username; // good enough i guess
+            }
+            return appSettings.getRoot()->getLoginComponent().getContentComponent()->registerNewUser(args[1], args[2]);
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::LoginUser.handle,
+        [this](const auto& args) {
+            if (args.size() < 3) {
+                return Receive_Events::LoginUser.not_enough_args;
+            }
+            return appSettings.getRoot()->getLoginComponent().getContentComponent()->loginUser(args[1], args[2]);
+        }
+    );
 }
 
 SelectorTabPanel::~SelectorTabPanel(){

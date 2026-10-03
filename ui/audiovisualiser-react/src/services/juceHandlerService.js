@@ -1,40 +1,33 @@
 import * as Juce from './juce/index.js'
 
-export const registerHandler = {
-    nativeFunctionHandle: Juce.getNativeFunction('nativeFunctionRegister'),
-    nativeEventHandle: "onRegisterEvent"
+const nativeFunctionHandle = Juce.getNativeFunction('nativeFunctionMessage')
+
+export const JuceFunctionHandlers = {
+    getPresets: 'receive.preset.getall',
+    setPreset: 'receive.preset.set',
+    getSelectorOptions: 'receive.preset.selector.options',
+
+    getOpenWebsite: 'receive.qr.opensite',
+
+    registerNewUser: 'receive.register.new.user',
+    loginUser: 'receive.login.user',
+    loginPromiseEvent: 'send.login.complete',
+    registerPromiseEvent: 'send.register.complete'
 }
 
-export const loginHandler = {
-    nativeFunctionHandle: Juce.getNativeFunction('nativeFunctionLogin'),
-    nativeEventHandle: "onLoginEvent"
-}
-
-export const openWebsiteHandler = { nativeFunctionHandle: Juce.getNativeFunction('nativeFunctionOpenWebsite') }
-
-export const getSettingsHandler = { nativeFunctionHandle: Juce.getNativeFunction('nativeFunctionGetSettings') }
-
-export const changeSettingsHandler = { nativeFunctionHandle: Juce.getNativeFunction('nativeFunctionChangeSettings') }
-
-export const getSocketHandleHandler = { nativeFunctionHandle: Juce.getNativeFunction('nativeFunctionGetSocketHandle') }
-
-export const submitPromptHandler = { nativeFunctionHandle: Juce.getNativeFunction('nativeFunctionPromptSubmit') }
-
-export function getNativeFunctionHandle(functionName) {
-    return Juce.getNativeFunction(functionName)
-}
-
-export function getFromNativeFunction(handler, ...args) {
-    return handler.nativeFunctionHandle(...args)
+export function messageJUCE(eventName, ...args) {
+    return nativeFunctionHandle(eventName, ...args);
 }
 
 export function waitForNativeEvent(handler) {
     return new Promise((resolve) => {
         const handle = (data) => {
-            window.__JUCE__.backend.removeEventListener(handler.nativeEventHandle, handle)
+            console.log("Received JUCE event:", handler, data)
+            window.__JUCE__.backend.removeEventListener(handler, handle)
             resolve(data)
         }
-        window.__JUCE__.backend.addEventListener(handler.nativeEventHandle, handle)
+        console.log("Waiting for JUCE event:", handler)
+        window.__JUCE__.backend.addEventListener(handler, handle)
     })
 }
 
