@@ -1,7 +1,9 @@
 import Preset from './Preset'
 import { useState } from 'react'
 
-import { submitPromptHandler, getFromNativeFunction } from '../../services/juceHandlerService'
+import styles from './Presets.module.css'
+
+import { getNativeFunctionHandle, getFromNativeFunction } from '../../services/juceHandlerService'
 
 function Presets() {
     const options = [
@@ -25,7 +27,12 @@ function Presets() {
             key: '2', 
             subcontent: [
                 {type: 'textfieldlong', label: 'Prompt', clickhandler:'submitPrompt'},
-                {type: 'button', label: 'Generate Design', clickhandler:'testclickHandler2', link: 'Prompt'}
+                {type: 'button', label: 'Generate Design', clickhandler:'testclickHandler2', link: 'Prompt'},
+                {type: 'spacer', paddingTop: 15, paddingBottom: 15},
+                {type: 'row', subcontent: [
+                    {type: 'button', label: 'Save Preset', clickhandler:'testclickHandler2'},
+                    {type: 'button', label: 'Load Preset', clickhandler:'testclickHandler2'},
+                ]},
             ]
         }
     ]
@@ -37,40 +44,49 @@ function Presets() {
         setInputValues(previous => ({ ...previous, [key]: value }))
     }
 
+    const evaluateOption = (subcontent) => {
+        return subcontent.map((subcontentItem, index) => (
+            subcontentItem.type === 'button' ? (
+                <button key={index} onClick={() => {
+                    if (inputValues[subcontentItem.link]) {
+                        const value = inputValues[subcontentItem.link]
+                        getFromNativeFunction(getNativeFunctionHandle(subcontentItem.clickhandler), value)
+                    }
+                }}>
+                    {subcontentItem.label}
+                </button>
+            ) : subcontentItem.type === 'textfieldlong' ? (
+                <div key={index}>
+                    <label>{subcontentItem.label}</label>
+                    <textarea
+                        className={styles.textfieldlong}
+                        onChange={(e) =>
+                            handleInputChange(subcontentItem.label, e.target.value)
+                        }
+                    />
+                </div>
+            ) : subcontentItem.type === 'spacer' ? (
+                <div key={index}>
+                    <div style={{ 
+                        height: 0,
+                        width: '100%',
+                        borderTop: '3px solid black',
+                        marginTop: subcontentItem.paddingTop,
+                        marginBottom: subcontentItem.paddingBottom,
+                    }}/>
+                </div>
+            ) : subcontentItem.type === 'row' ? (
+                <div key={index} className={styles.customrow}>
+                    {evaluateOption(subcontentItem.subcontent)}
+                </div>
+            ) : null
+        ))
+    }
+
     return (
         <div>
             <Preset options={options} selectedValue={selectedValue} setSelectedValue={setSelectedValue} />
-            <p>Preset: {selectedValue.value}</p>
-            {selectedValue.subcontent.map((subcontentItem, index) => (
-                subcontentItem.type === 'button' ? (
-                    <button key={index} onClick={() => {
-                        if (inputValues[subcontentItem.link]) {
-                            const value = inputValues[subcontentItem.link]
-                            getFromNativeFunction(submitPromptHandler, value)
-                        }
-                    }}>
-                        {subcontentItem.label}
-                    </button>
-                ) : subcontentItem.type === 'textfieldlong' ? (
-                    <div key={index}>
-                        <label>{subcontentItem.label}</label>
-                        <input type="text" onChange={(e) => handleInputChange(subcontentItem.label, e.target.value)} />
-                    </div>
-                ) : null
-            ))}
-            <p>Child 3</p>
-            <p>Child 1</p>
-            <p>Child 2</p>
-            <p>Child 3</p>
-            <p>Child 1</p>
-            <p>Child 2</p>
-            <p>Child 3</p>
-            <p>Ella</p>
-            <p>Luca</p>
-            <p>Gumbo</p>
-            <p>Child 1</p>
-            <p>Child 2</p>
-            <p>Child 3</p>
+            {evaluateOption(selectedValue.subcontent)}
         </div>
     )
 }

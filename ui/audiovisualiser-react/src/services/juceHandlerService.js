@@ -20,6 +20,10 @@ export const getSocketHandleHandler = { nativeFunctionHandle: Juce.getNativeFunc
 
 export const submitPromptHandler = { nativeFunctionHandle: Juce.getNativeFunction('nativeFunctionPromptSubmit') }
 
+export function getNativeFunctionHandle(functionName) {
+    return Juce.getNativeFunction(functionName)
+}
+
 export function getFromNativeFunction(handler, ...args) {
     return handler.nativeFunctionHandle(...args)
 }
