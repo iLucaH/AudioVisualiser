@@ -16,7 +16,6 @@ function AccountPage() {
     return (
         <div>
             <AVRootComponent>
-                <h1>Account Page</h1>
                 <DropDownMenu title="Account Settings" open={true}>
                     <p>Update Account Settings</p>
                     <button onClick={logoutUser}>Logout</button>
