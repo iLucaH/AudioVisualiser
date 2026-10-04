@@ -22,8 +22,8 @@ void ApplicationSettings::sendDimensionUpdate(int w, int h) {
 void ApplicationSettings::setFullScreen(bool val) {
     root->getOpenGLComponent().setFullScreen(val);
     if (val == false) {
-        root->setSize(1080, 544);
-        root->centreWithSize(1080, 544);
+        //root->setSize(1580, 670);
+        //root->centreWithSize(1080, 544);
     }
 }
 

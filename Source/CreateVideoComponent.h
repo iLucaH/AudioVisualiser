@@ -24,7 +24,7 @@
 // 600 x 300
 class ContentComponent : public juce::Component, private juce::Timer {
 public:
-	ContentComponent(OpenGLComponent& openGLComponent) : glComponent(openGLComponent) {
+	ContentComponent(OpenGLComponent& openGLComponent, SelectorTabPanel& selectorTabPanel) : glComponent(openGLComponent), selectorTabPanel(selectorTabPanel) {
 		addAndMakeVisible(startButton);
 		addAndMakeVisible(finishButton);
 		addAndMakeVisible(fileNameEditor);
@@ -44,10 +44,13 @@ public:
 			// check if video encoder is null because it is initialised as a unique pointer at time of gl context creation.
 			// if null, it has not yet been initialised and we cannot proceed.
 			if (!glComponent.getVideoEncoder()) {
+				DBG("Video Encoder Null when trying to start recording session.");
 				return;
 			}
-			if (!filePathFound || !fileNameFound)
+			if (!filePathFound || !fileNameFound) {
+				DBG("File path or name not found when trying to start recording session.");
 				return;
+			}
 			juce::File outputFile(pathNameButton.getButtonText());
 			outputFile = outputFile.getChildFile(fileNameEditor.getText());
 
@@ -143,6 +146,29 @@ public:
 		videoDescriptionEditor.setMultiLine(true, true);
 		videoDescriptionEditor.setReturnKeyStartsNewLine(true);
 		videoDescriptionEditor.setScrollbarsShown(true);
+
+		selectorTabPanel.getEventBus().subscribe(Receive_Events::RecordingStart,
+			[this](const auto& args) {
+				fileNameEditor.setText(juce::String(juce::Time::getCurrentTime().toString(true, true)));
+				fileNameFound = true;
+				startButton.triggerClick();
+				return juce::var();
+			}
+		);
+
+		selectorTabPanel.getEventBus().subscribe(Receive_Events::RecordingStop,
+			[this](const auto& args) {
+				finishButton.triggerClick();
+				return juce::var();
+			}
+		);
+
+		selectorTabPanel.getEventBus().subscribe(Receive_Events::RecordingOutputpathSet,
+			[this](const auto& args) {
+				pathNameButton.triggerClick();
+				return juce::var();
+			}
+		);
 	}
 
 	void paint(juce::Graphics& g) override {
@@ -190,6 +216,7 @@ public:
 
 private:
 	OpenGLComponent& glComponent;
+	SelectorTabPanel& selectorTabPanel;
 
 	bool state = false, filePathFound = false, fileNameFound = false;
 	std::atomic<int> uploadingState{ 0 }; // The status of trying to upload to youtube.
@@ -230,10 +257,10 @@ private:
 
 class CreateVideoComponent : public juce::DocumentWindow {
 public:
-	CreateVideoComponent(OpenGLComponent& openGLComponent) : DocumentWindow("recorder!", juce::Colours::white, 5), openGLComponent(openGLComponent) {
+	CreateVideoComponent(SelectorTabPanel& selectorTabPanel, OpenGLComponent& openGLComponent) : DocumentWindow("recorder!", juce::Colours::white, 5), selectorTabPanel(selectorTabPanel), openGLComponent(openGLComponent) {
 		setUsingNativeTitleBar(true);
 
-		setContentOwned(new ContentComponent(openGLComponent), true);
+		setContentOwned(new ContentComponent(openGLComponent, selectorTabPanel), true);
 	}
 
 	void closeButtonPressed() override {
@@ -242,5 +269,6 @@ public:
 
 private:
 	OpenGLComponent& openGLComponent;
+	SelectorTabPanel& selectorTabPanel;
 
 };

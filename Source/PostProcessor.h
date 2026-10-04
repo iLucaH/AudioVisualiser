@@ -11,6 +11,7 @@
 #pragma once
 
 #include "PostProcessEffect.h"
+#include "EventBus.h"
 
 class OpenGLComponent;
 
@@ -18,7 +19,7 @@ class PostProcessor {
 public:
     PostProcessor(OpenGLComponent& glComponent);
 
-    void init(int w, int h);
+    void init(int w, int h, EventBus& eventBus);
     bool noPostProcessorsEnabled();
 
     PostProcessEffect* peek();

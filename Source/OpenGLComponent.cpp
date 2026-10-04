@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "OpenGLComponent.h"
 #include "RenderHeaders.h"
+#include "PostProcessEffects.h"
 
 //==============================================================================
 OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p, ApplicationSettings& appSettings) : processor(p), appSettings(appSettings), ringBuffer(p.getRingBuffer()), readBuffer(2, RING_BUFFER_READ_SIZE), postProcessor(*this) {
@@ -24,84 +25,11 @@ OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p, ApplicationSe
     addRenderState(std::make_unique<SDF_1_2D>(8, openGLContext));
     addRenderState(std::make_unique<AskAI>(9, *this, openGLContext, appSettings));
 
-    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(0, "wave dist", 0, openGLContext, R"(
-        #version 330 core
-
-        in vec2 uv;
-        out vec4 fragColor;
-
-        uniform sampler2D u_screenTexture;
-
-        void main()
-        {
-            vec2 centre = uv - 0.5;
-            float dist = length(centre);
-
-            vec2 distortedUV = uv;
-
-            distortedUV.x += sin(uv.y * 30.0 + dist * 15.0) * 0.012;
-            distortedUV.y += cos(uv.x * 25.0 + dist * 12.0) * 0.012;
-
-            fragColor = texture(u_screenTexture, distortedUV);
-        }
-    )"));
-
-    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(1, "abberation", 1, openGLContext, R"(
-        #version 330 core
-
-        in vec2 uv;
-        out vec4 fragColor;
-
-        uniform sampler2D u_screenTexture;
-
-        void main()
-        {
-            vec2 centre = uv - 0.5;
-            float dist = length(centre);
-
-            float offset = dist * 0.025;
-
-            float red = texture(
-                u_screenTexture,
-                uv + vec2(offset, 0.0)
-            ).r;
-
-            float green = texture(
-                u_screenTexture,
-                uv
-            ).g;
-
-            float blue = texture(
-                u_screenTexture,
-                uv - vec2(offset, 0.0)
-            ).b;
-
-            fragColor = vec4(red, green, blue, 1.0);
-        }
-    )"));
-
-    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(2, "vignette", 2, openGLContext, R"(
-        #version 330 core
-
-        in vec2 uv;
-        out vec4 fragColor;
-
-        uniform sampler2D u_screenTexture;
-
-        void main()
-        {
-            vec4 colour = texture(u_screenTexture, uv);
-
-            vec2 centre = uv - 0.5;
-            float dist = length(centre);
-
-            float vignette = 1.0 - smoothstep(0.25, 0.75, dist);
-
-            colour.rgb *= vignette;
-
-            fragColor = colour;
-        }
-    )"));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createWaveDistortionPostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createAberrationPostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createVignettePostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createPixelatePostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createInvertPostProcessingEffect(), openGLContext));
     
     setOpaque(true); // Indicates that no part of this Component is transparent
     openGLContext.setRenderer(this); // Set this instance as the renderer for the context
@@ -115,8 +43,12 @@ OpenGLComponent::~OpenGLComponent() {
 }
 
 void OpenGLComponent::mouseUp(const juce::MouseEvent & event) {
-    if (fullScreenMode.load() && event.mods.isShiftDown())
+    if (fullScreenMode.load() && event.mods.isShiftDown()) {
         setFullScreen(false);
+        juce::MessageManager::callAsync([this]() {
+            appSettings.getEventBus().emit(Send_Events::SettingsUpdated);
+        });
+    }
 }
 
 void OpenGLComponent::paint(juce::Graphics& g) {
@@ -155,7 +87,8 @@ void OpenGLComponent::newOpenGLContextCreated() {
         DBG("FBO creation incomplete!");
     }
 
-    postProcessor.init(getWidth(), getHeight());
+    // Init the post processor, and let it subscribe to any events here now that selectorTabPanel has been initialised.
+    postProcessor.init(getWidth(), getHeight(), appSettings.getEventBus());
 }
 
 void OpenGLComponent::renderOpenGL() {

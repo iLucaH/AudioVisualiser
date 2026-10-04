@@ -11,7 +11,7 @@ function VerticalSlider() {
             try {
                 const initialWidth = await messageJUCE(JuceFunctionHandlers.getAudioSourceMasterScalar)
                 if (initialWidth !== undefined)
-                    setValue(int(initialWidth * 100))
+                    setValue(Math.round(initialWidth * 100))
             } catch (err) {
                 console.error("Failed to load settings from JUCE:", err)
             }

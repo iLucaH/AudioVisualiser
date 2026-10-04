@@ -31,11 +31,13 @@ function NativeSelector({ options, selectedValue, setSelectedValue, onChange = (
                 onChange={handleChange}
                 onClick={handleClick}
             >
-                {options.map((option) => (
-                    <option key={option.key} value={option.value}>
-                        {option.value}
-                    </option>
-                ))}
+            {options.filter((option, index, self) =>
+                index === self.findIndex((o) => o.key === option.key)
+            ).map((option) => (
+                <option key={option.key} value={option.value}>
+                    {option.value}
+                </option>
+            ))}
             </select>
 
             <FiChevronDown className={styles.selectArrow} />

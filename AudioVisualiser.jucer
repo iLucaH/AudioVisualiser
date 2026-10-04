@@ -47,6 +47,8 @@
         <GROUP id="{6DCBDA73-3C89-D5D2-34B1-115E80DC59E4}" name="postprocess">
           <FILE id="QXgZ3v" name="PostProcessEffect.h" compile="0" resource="0"
                 file="Source/PostProcessEffect.h"/>
+          <FILE id="XQRO8b" name="PostProcessEffects.h" compile="0" resource="0"
+                file="Source/PostProcessEffects.h"/>
           <FILE id="jNATWk" name="PostProcessor.cpp" compile="1" resource="0"
                 file="Source/PostProcessor.cpp"/>
           <FILE id="IJg5Qw" name="PostProcessor.h" compile="0" resource="0" file="Source/PostProcessor.h"/>

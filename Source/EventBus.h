@@ -34,6 +34,7 @@ namespace Receive_Events {
     // Presets
     inline constexpr auto VisualiserPresetGetAll = "receive.preset.getall";
     inline constexpr auto VisualiserPresetSet = "receive.preset.set";
+    inline constexpr auto VisualiserPresetCurrent = "receive.preset.current";
     // Presets - AI
     inline constexpr auto VisualiserSubmitNewPrompt = "receive.preset.submit.prompt.new";
     inline constexpr auto VisualiserSaveToFile = "receive.preset.ai.save.file";
@@ -41,6 +42,12 @@ namespace Receive_Events {
     inline constexpr auto VisualiserLoadFromFile = "receive.preset.ai.load.file";
     inline constexpr auto VisualiserLoadFromAccountGet = "receive.preset.ai.load.account.get";
     inline constexpr auto VisualiserLoadFromAccountSet = "receive.preset.ai.load.account.set";
+
+    // Effects
+    inline constexpr auto VisualiserEffectGetAll = "receive.effect.getall";
+    inline constexpr auto VisualiserEffectPostProcessorSwitch = "receive.effect.postprocessor.enabled";
+    inline constexpr auto VisualiserEffectUpdateEffect = "receive.effect.update";
+    inline constexpr auto VisualiserEffectPostProcessorSwitchEnabled = "receive.effect.global.enabled";
 
     // Settings
     inline constexpr auto SettingsWidthGet = "settings.width.get";
@@ -62,6 +69,14 @@ namespace Receive_Events {
     inline constexpr auto AudioStop = "audio.stop";
     inline constexpr auto AudioSourceMasterScalarGet = "audio.source.master.scalar.get";
     inline constexpr auto AudioSourceMasterScalarSet = "audio.source.master.scalar.set";
+
+    // Recording
+    inline constexpr auto RecordingStart = "recording.start";
+    inline constexpr auto RecordingStop = "recording.stop";
+    inline constexpr auto RecordingStateGet = "recording.state";
+    inline constexpr auto RecordingOutputpathGet = "recording.outputpath.get";
+    inline constexpr auto RecordingOutputpathSet = "recording.outputpath.set";
+    inline constexpr auto RecordingList = "recording.list";
 
     // Register
     struct Register {
@@ -91,19 +106,25 @@ namespace Receive_Events {
 }
 
 namespace Send_Events {
+    // Global
+    inline constexpr auto GlobalSocketUpdateAll = "send.global.socket.update.all";
+
     inline constexpr auto PromptResponseComplete = "send.visualiser.submit.prompt.response.complete";
     inline constexpr auto VisualiserPresetChange = "send.visualiser.preset.change";
     inline constexpr auto VisualiserPresetNewPreset = "send.visualiser.preset.newpreset";
     inline constexpr auto VisualiserEffectChange = "send.visualiser.effect.changed";
     inline constexpr auto LoginComplete = "send.login.complete";
     inline constexpr auto RegisterComplete = "send.register.complete";
+    inline constexpr auto SettingsUpdated = "send.settings.updated";
 
     inline constexpr std::array Events = {
+        GlobalSocketUpdateAll,
         PromptResponseComplete,
         VisualiserPresetChange,
         VisualiserPresetNewPreset,
         LoginComplete,
-        RegisterComplete
+        RegisterComplete,
+        SettingsUpdated
     };
 }
 

@@ -15,14 +15,71 @@
 #include <ranges>
 
 PostProcessor::PostProcessor(OpenGLComponent& glComponent) : openGLComponent(glComponent) {
-
 }
 
 // to happen on OpenGL thread.
-void PostProcessor::init(int w, int h) {
+void PostProcessor::init(int w, int h, EventBus& eventBus) {
     for (const auto& effect : postProcessEffects) {
         effect->init(w, h);
     }
+
+    juce::MessageManager::callAsync([this, &eventBus]() {
+        // subscribe to events on the message thread.
+        eventBus.subscribe(Receive_Events::VisualiserEffectGetAll,
+            [this](const auto& args) {
+                juce::Array<juce::var> effects;
+                for (const auto& effect : postProcessEffects) {
+                    auto* object = new juce::DynamicObject();
+                    object->setProperty("name", effect->getEffectName());
+                    object->setProperty("id", effect->getEffectID());
+                    object->setProperty("priority", static_cast<int>(effect->getPriority()));
+                    object->setProperty("enabled", effect->isEnabled());
+                    effects.add(juce::var(object));
+                }
+                return juce::var(effects);
+            }
+        );
+        eventBus.subscribe(Receive_Events::VisualiserEffectPostProcessorSwitch,
+            [this](const auto& args) {
+                setEnabled(!isEnabledGlobal());
+                return juce::var(isEnabledGlobal());
+            }
+        );
+        eventBus.subscribe(Receive_Events::VisualiserEffectPostProcessorSwitchEnabled,
+            [this](const auto& args) {
+                return juce::var(isEnabledGlobal());
+            }
+        );
+        eventBus.subscribe(Receive_Events::VisualiserEffectUpdateEffect,
+            [this](const auto& args) {
+                if (args.size() < 5) {
+                    return juce::var(false);
+                }
+                juce::String name = args[1];
+                int id = args[2];
+                PostProcessEffect* effect = nullptr;
+                for (const auto& e : postProcessEffects) {
+                    if (e->getEffectID() != id) {
+                        continue;
+                    }
+                    effect = e.get();
+                }
+                if (effect == nullptr) {
+                    DBG("Unable to update effect: " << name << ". Effect not found!");
+                    return juce::var(false);
+                }
+                int priorityArg = static_cast<int>(args[3]);
+                unsigned int priority = priorityArg >= 0 ? priorityArg : 0;
+                bool enabled = args[4];
+
+                effect->setPriority(priority);
+                effect->setEnabled(enabled);
+                DBG("Updating effect: " << name << ". Priority is now: " << priority << " and enabled is now " << (enabled ? "enabled." : "disabled."));
+
+                return juce::var(true);
+            }
+        );
+    });
 }
 
 bool PostProcessor::noPostProcessorsEnabled() {
@@ -36,14 +93,18 @@ bool PostProcessor::noPostProcessorsEnabled() {
 }
 
 PostProcessEffect* PostProcessor::peek() {
-    if (postProcessEffects.empty()) {
-        return nullptr;
+    for (const auto& effect : postProcessEffects) {
+        if (effect != nullptr && effect->isEnabled()) {
+            return effect.get();
+        }
     }
-
-    return postProcessEffects.front().get();
+    return nullptr;
 }
 
 void PostProcessor::renderAll(int viewportWidth, int viewportHeight) {
+    std::ranges::stable_sort(postProcessEffects, {}, [](const auto& e) {
+        return e->getPriority();
+    });
     auto enabledEffects = postProcessEffects | std::views::filter([](const auto& effect) {
         return effect != nullptr && effect->isEnabled();
     });

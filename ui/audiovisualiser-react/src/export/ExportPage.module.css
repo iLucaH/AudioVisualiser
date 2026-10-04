@@ -1,0 +1,48 @@
+/* ExportPage.module.css */
+
+/* Start / Stop side by side */
+.buttonRow {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.status {
+    margin: 0 0 16px;
+}
+
+.pathRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pathRow label {
+    flex: 0 0 auto;
+}
+
+/* Path field takes the remaining space, button stays its natural size */
+.pathRow input {
+    flex: 1;
+    min-width: 0;
+    padding: 4px 8px;
+}
+
+.pathRow button {
+    flex: 0 0 auto;
+    padding: 4px 8px;
+}
+
+/* Recordings list */
+.list {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.list li + li {
+    margin-top: 4px;
+}
+
+.empty {
+    margin: 0;
+}

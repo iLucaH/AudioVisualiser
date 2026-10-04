@@ -4,6 +4,7 @@ const nativeFunctionHandle = Juce.getNativeFunction('nativeFunctionMessage')
 
 export const JuceFunctionHandlers = {
     newPresetPromiseEvent: 'send.visualiser.preset.newpreset',
+    getCurrentPreset: 'receive.preset.current',
     getPresets: 'receive.preset.getall',
     setPreset: 'receive.preset.set',
     getSelectorOptions: 'receive.preset.selector.options',
@@ -29,6 +30,8 @@ export const JuceFunctionHandlers = {
     getSettingsSocketPassword: 'settings.socketpassword.get',
     setSettingsSocketPassword: 'settings.socketpassword.set',
     
+    settingsUpdatedPromiseEvent: 'send.settings.updated',
+    
     audioSourceOpen: 'audio.source.open',
     setAudioPlaying: 'audio.play',
     setAudioStopping: 'audio.stop',
@@ -40,7 +43,14 @@ export const JuceFunctionHandlers = {
     getRecordingState: 'recording.state',
     getRecordingOutputpath: 'recording.outputpath.get',
     setRecordingOutputpath: 'recording.outputpath.set',
-    recordingList: 'recording.list'
+    recordingList: 'recording.list',
+
+    effectsGetAll: 'receive.effect.getall',
+    switchPostProcessorEnabled: 'receive.effect.postprocessor.enabled',
+    effectUpdate: 'receive.effect.update',
+    effectGlobalEnabled: 'receive.effect.global.enabled',
+
+    globalUpdateAll: 'send.global.socket.update.all'
 
 }
 

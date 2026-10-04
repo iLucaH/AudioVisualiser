@@ -1,0 +1,84 @@
+.slider {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.label {
+    font-size: 0.85em;
+}
+
+.value {
+    min-width: 2.5ch;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.85em;
+}
+
+.input {
+    --track: #c8c8c8;
+    --fill-color: #2a2a2a;
+    --thumb: #2a2a2a;
+
+    -webkit-appearance: none;
+    appearance: none;
+    width: 120px;
+    height: 14px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Track (WebKit / Chromium, which is what JUCE's WebView uses on Windows) */
+.input::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(
+        to right,
+        var(--fill-color) var(--fill),
+        var(--track) var(--fill)
+    );
+}
+
+.input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    margin-top: -4px; /* centers thumb on the 4px track */
+    border-radius: 50%;
+    background: var(--thumb);
+    border: none;
+}
+
+/* Firefox */
+.input::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--track);
+}
+
+.input::-moz-range-progress {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--fill-color);
+}
+
+.input::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--thumb);
+    border: none;
+}
+
+.input:focus-visible {
+    outline: 2px solid #4a7bd0;
+    outline-offset: 3px;
+    border-radius: 4px;
+}

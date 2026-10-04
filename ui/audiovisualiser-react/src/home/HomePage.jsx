@@ -2,6 +2,7 @@ import DropDownMenu from '../shared/DropDownMenu'
 import AVRootComponent from '../shared/AVRootComponent'
 
 import Presets from './preset/Presets'
+import Effects from './effects/Effects'
 
 function Homepage() {
     return (
@@ -10,22 +11,8 @@ function Homepage() {
                 <DropDownMenu title="Presets" open={true}>
                     <Presets />
                 </DropDownMenu>
-                <DropDownMenu title="Effects" open={false}> 
-                    <p>Child 1</p>
-                    <p>Child 2</p>
-                    <p>Child 3</p>
-                    <p>Child 1</p>
-                    <p>Child 2</p>
-                    <p>Child 3</p>
-                    <p>Child 1</p>
-                    <p>Child 2</p>
-                    <p>Child 3</p>
-                    <p>Child 1</p>
-                    <p>Child 2</p>
-                    <p>Child 3</p>
-                    <p>Child 1</p>
-                    <p>Child 2</p>
-                    <p>Milo</p>
+                <DropDownMenu title="Effects" open={false}>
+                    <Effects />
                 </DropDownMenu>                
             </AVRootComponent>
         </div>

@@ -115,6 +115,12 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
         }
     );
 
+    eventBus.subscribe(Receive_Events::VisualiserPresetCurrent,
+        [this](const auto& args) {
+            return juce::var(static_cast<int>(selectedState));
+        }
+    );
+
     // For when React tells us to change render state.
     eventBus.subscribe(Receive_Events::VisualiserPresetSet,
         [this](const auto& args) {

@@ -19,6 +19,10 @@ function Presets() {
     const fetchPresets = async () => {
         const result = await messageJUCE(JuceFunctionHandlers.getPresets)
         setPresets(result)
+        const currentPreset = await messageJUCE(JuceFunctionHandlers.getCurrentPreset)
+        const selected = result.find(item => item.key === currentPreset);
+
+        setSelectedValue(selected);
     }
 
     useEffect(() => {

@@ -13,12 +13,15 @@
 #include <JuceHeader.h>
 #include "RenderState2D.h"
 #include "RenderTarget.h"
+#include "PostProcessEffects.h"
 #include "ScreenSpaceQuad.h"
 
 class PostProcessEffect {
 public:
-    PostProcessEffect(int id, const juce::String& name, int priority, juce::OpenGLContext& context, const juce::String& fragShader) : id(id), name(name), priority(priority), glContext(context), fragmentShader(fragShader) {
-    }
+    PostProcessEffect(const PostProcessingEffectStruct& def, juce::OpenGLContext& context)
+        : id(def.id), priority(def.priority), glContext(context),
+        fragmentShader(def.fragmentShader), name(def.name),
+        enabled(def.enabled), uniforms(def.uniforms) {}
 
     void init(int w, int h) {
         renderTarget = std::make_unique<RenderTarget>(w, h);
@@ -73,5 +76,6 @@ private:
     std::unique_ptr<RenderTarget> renderTarget;
     std::unique_ptr<ScreenSpaceQuad> screenSpaceQuad;
 
-    bool enabled = true;
+    bool enabled;
+    juce::var uniforms;
 };

@@ -4,7 +4,7 @@ import DropDownMenu from '../shared/DropDownMenu'
 import AVRootComponent from '../shared/AVRootComponent'
 import styles from './SettingsPage.module.css'
 
-import { JuceFunctionHandlers, messageJUCE } from '../services/juceHandlerService'
+import { JuceFunctionHandlers, messageJUCE, waitForNativeEvent } from '../services/juceHandlerService'
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
 
@@ -42,6 +42,20 @@ function SettingsPage() {
         }
 
         fetchSettings()
+
+        let cancelled = false
+
+        const listenForNewPresets = async () => {
+            while (!cancelled) {
+                await waitForNativeEvent(JuceFunctionHandlers.settingsUpdatedPromiseEvent)
+                if (!cancelled) {
+                    console.log("message received")
+                    await fetchSettings()
+                }
+            }
+        }
+        listenForNewPresets()
+        return () => { cancelled = true }
     }, [])
 
     // Input blur handlers with clamp & JUCE state sync
@@ -126,7 +140,7 @@ function SettingsPage() {
                             type="button"
                             onClick={handleToggleFullscreen}
                         >
-                            {fullscreen ? 'On' : 'Off'}
+                            Enable
                         </button>
                     </div>
 

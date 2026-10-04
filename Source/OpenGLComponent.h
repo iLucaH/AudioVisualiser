@@ -92,7 +92,9 @@ public:
         juce::String s = state == true ? "true" : "false";
         DBG("OpenGLComponent full screen mode set to " << s << ".");
         fullScreenMode.store(state);
-        getPeer()->setFullScreen(state);
+        //if (getPeer()) {
+        //    getPeer()->setFullScreen(state);
+        //}
         if (state) {
             pushBounds();
         } else {
@@ -122,6 +124,10 @@ public:
 
     void setOpenGLEnabled(bool enabled) {
         openGLEnabled = enabled;
+    }
+
+    ApplicationSettings& getApplicationSettings() {
+        return appSettings;
     }
 
 private:
@@ -154,10 +160,9 @@ private:
         cacheBounds = getBounds();
         const juce::Displays::Display* mainDisplay = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
         if (mainDisplay != nullptr) {
-            setBounds(mainDisplay->userArea);
+            setBounds(mainDisplay->totalArea);
             setTopLeftPosition(mainDisplay->topLeftPhysical);
         }
-        // setTopLeftPosition(-10000, -10000);
     }
 
     PostProcessor postProcessor;
