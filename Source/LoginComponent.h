@@ -107,12 +107,18 @@ public:
 			if (!success) {
 				DBG("Failed to validate api login JWT!");
 			} else {
-				settings.setAuthJWT(token);
 				DBG("Successfully validated api login JWT! Token: " << token);
 			}
-			juce::MessageManager::callAsync([this, success]() {
+			juce::MessageManager::callAsync([this, success, token]() {
+				juce::Array<juce::var> responseAsync;
+				responseAsync.add(success);
+				responseAsync.add(token);
 				isAttemptingLogin.store(false);
-				settings.getEventBus().emit(Send_Events::LoginComplete, juce::var(success));
+				settings.getEventBus().emit(Send_Events::LoginComplete, juce::var(responseAsync));
+				if (success) { // Tell AskAI that you can poll account info now.
+					settings.getEventBus().emit(Local_Events::LoginComplete, juce::var(responseAsync));
+					settings.setAuthJWT(token);
+				}
 			}); // Post the login update back to the GUI thread.
 		});
 		return Receive_Events::LoginUser.args_ok; // Completion is sent back to the javascript frontend to have the result evaluated.

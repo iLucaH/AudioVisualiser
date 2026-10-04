@@ -1,9 +1,9 @@
 import {NativeSelector} from '../shared/OptionSelector'
 
-function Preset({options, selectedValue, setSelectedValue}) {
+function Preset({options, selectedValue, setSelectedValue, onChange = () => {} }) {
     return (
         <div>
-            <NativeSelector options={options} selectedValue={selectedValue} setSelectedValue={setSelectedValue} />
+            <NativeSelector options={options} selectedValue={selectedValue} setSelectedValue={setSelectedValue} onChange={onChange} />
         </div>
     )
 }

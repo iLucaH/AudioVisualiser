@@ -11,6 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "EventBus.h"
 
 //==============================================================================
 /*
@@ -19,6 +20,8 @@
 class RenderProfileComponent  : public juce::Component
 {
 public:
+    using EventSubscription = std::function<void(EventBus&)>;
+
     RenderProfileComponent(int id);
     ~RenderProfileComponent() override;
 
@@ -71,7 +74,17 @@ public:
         frontEndPresets = newPresets;
     }
 
+    void subscribeToEvents(EventBus& eventBus) {
+        if (eventSubscription)
+            eventSubscription(eventBus);
+    }
+
+    void setEventSubscription(EventSubscription callback) {
+        eventSubscription = std::move(callback);
+    }
+
 private:
+    EventSubscription eventSubscription;
 
     juce::var frontEndPresets;
 

@@ -1,10 +1,11 @@
 import Preset from './Preset'
-import {NativeSelectorFromBackened} from '../shared/OptionSelector'
+import { NativeSelectorFromBackened } from '../shared/OptionSelector'
 import { useState, useEffect } from 'react'
+import { useApp } from '../../AppContext'
 
 import styles from './Presets.module.css'
 
-import { messageJUCE, JuceFunctionHandlers } from '../../services/juceHandlerService'
+import { messageJUCE, JuceFunctionHandlers, waitForNativeEvent } from '../../services/juceHandlerService'
 
 function Presets() {
     const [presets, setPresets] = useState([
@@ -15,63 +16,40 @@ function Presets() {
         }
     ])
 
+    const fetchPresets = async () => {
+        const result = await messageJUCE(JuceFunctionHandlers.getPresets)
+        setPresets(result)
+    }
+
     useEffect(() => {
-        const fetchPresets = async () => {
-            const result = await messageJUCE(JuceFunctionHandlers.getPresets)
-            setPresets(result)
-        }
-
+        // Fetch presets when the component starts
         fetchPresets()
-    }, [])
 
-    console.log(presets)
+        let cancelled = false
+
+        const listenForNewPresets = async () => {
+            while (!cancelled) {
+                await waitForNativeEvent(JuceFunctionHandlers.newPresetPromiseEvent)
+                if (!cancelled) {
+                    await fetchPresets()
+                }
+            }
+        }
+        listenForNewPresets()
+        return () => { cancelled = true } // Stop listening when the component is unmounted
+    }, [])
     
-    // Test Options
-    // const options = [
-    //     {
-    //         value: 'preset1', 
-    //         key: '0', 
-    //         subcontent: [
-    //             {type: 'button', label: 'buttontest', clickhandler:'testclickHandler'},
-    //             {type: 'button', label: 'buttontest2', clickhandler:'testclickHandler2'}
-    //         ]
-    //     },
-    //     { 
-    //         value: 'preset2', 
-    //         key: '1', 
-    //         subcontent: [
-    //             {type: 'button', label: 'buttontest', clickhandler:'testclickHandler'},
-    //         ]
-    //     },
-    //     { 
-    //         value: 'AI Generator', 
-    //         key: '2', 
-    //         subcontent: [
-    //             {type: 'textfieldlong', label: 'Prompt', clickhandler:'submitPrompt'},
-    //             {type: 'button', label: 'Generate Design', clickhandler:'submitPrompt', link: 'Prompt'},
-    //             {type: 'spacer', paddingTop: 15, paddingBottom: 15},
-    //             {type: 'row', subcontent: [
-    //                 {type: 'expandbutton', label: 'Save Preset', subcontent: [
-    //                     {type: 'button', label: 'To File', clickhandler:'testclickHandler2', link: 'Prompt'},
-    //                     {type: 'expandbutton', label: 'To Account', subcontent: [
-    //                         {type: 'textfieldshort', label: 'Name your preset', clickhandler:'submitPreset'},
-    //                         {type: 'button', label: 'Save', clickhandler:'submitPreset', link: 'Name your preset'},
-    //                     ]}
-    //                 ]},
-    //                 {type: 'expandbutton', label: 'Load Preset', subcontent: [
-    //                     {type: 'button', label: 'From File', clickhandler:'testclickHandler2', link: 'Prompt'},
-    //                     {type: 'expandbutton', label: 'From Account', subcontent: [
-    //                         {type: 'picker', label: 'Select Preset...', gethandle: 'getFromAccount', sethandle: 'setFromAccount'},                            
-    //                     ]}
-    //                 ]},
-    //             ]},
-    //         ]
-    //     }
-    // ]
-    const [selectedValue, setSelectedValue] = useState(presets[0]);
+    const { selectedValue, setSelectedValue } = useApp()
+    // Only select a preset if one isn't already selected
+    useEffect(() => {
+        if (selectedValue === null && presets.length > 0) {
+            setSelectedValue(presets[0])
+        }
+    }, [presets, selectedValue, setSelectedValue])
 
     const [inputValues, setInputValues] = useState({})
     const [hiddenContent, setHiddenContent] = useState(null)
+    const [informationMessage, setInformationMessage] = useState("")
 
     const handleInputChange = (key, value) => {
         setInputValues(previous => ({ ...previous, [key]: value }))
@@ -88,12 +66,9 @@ function Presets() {
         return subcontent.map((subcontentItem, index) => {
             return (
                 subcontentItem.type === 'button' ? (
-                    <button key={index} onClick={() => {
-                        if (inputValues[subcontentItem.link]) {
-                            const value = inputValues[subcontentItem.link]
-                            
-                            messageJUCE(subcontentItem.clickhandler, value)
-                        }
+                    <button key={index} onClick={async () => {
+                        const value = inputValues[subcontentItem.link]
+                        setInformationMessage(value ? await messageJUCE(subcontentItem.clickhandler, value) : await messageJUCE(subcontentItem.clickhandler))
                     }}>
                         {subcontentItem.label}
                     </button>
@@ -137,6 +112,22 @@ function Presets() {
                             {subcontentItem.label}
                         </button>
                     </div>
+                ) : subcontentItem.type === 'waitingbutton' ? (
+                    <button key={index} onClick={async () => {
+                            const eventPromise = waitForNativeEvent(subcontentItem.waitingpromisehandle)
+                            const value = inputValues[subcontentItem.link]
+
+                            const response = value ? await messageJUCE(subcontentItem.clickhandler, value) : await messageJUCE(subcontentItem.clickhandler)
+                            console.log(response)
+
+                            setInformationMessage(response[1])
+                            if (response[0] === false) {
+                                return
+                            }
+                            const message = await eventPromise
+                            setInformationMessage(message[0])
+                        }}
+                    >{subcontentItem.label}</button>
                 ) : subcontentItem.type === 'picker' ? (
                     <div key={index}>
                         <NativeSelectorFromBackened getHandleName={subcontentItem.gethandle} setHandleName={subcontentItem.sethandle}/>
@@ -148,7 +139,11 @@ function Presets() {
 
     return (
         <div>
-            <Preset options={presets} selectedValue={selectedValue} setSelectedValue={setSelectedValue} />
+            <Preset options={presets} selectedValue={selectedValue} setSelectedValue={setSelectedValue} onChange={ () => {
+                setHiddenContent(null)
+                setInformationMessage("")
+                } } />
+            <p>{informationMessage}</p>
             {evaluateOption(selectedValue.subcontent)}
             {hiddenContent !== null ? (
                 <div className={styles.hiddenContentBlock}>

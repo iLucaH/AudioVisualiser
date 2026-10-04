@@ -27,10 +27,41 @@
 #include <array>
 
 namespace Receive_Events {
+
+    // QR
+    inline constexpr auto QROpenSite = "receive.qr.opensite";
+
     // Presets
     inline constexpr auto VisualiserPresetGetAll = "receive.preset.getall";
     inline constexpr auto VisualiserPresetSet = "receive.preset.set";
+    // Presets - AI
     inline constexpr auto VisualiserSubmitNewPrompt = "receive.preset.submit.prompt.new";
+    inline constexpr auto VisualiserSaveToFile = "receive.preset.ai.save.file";
+    inline constexpr auto VisualiserSaveToAccount = "receive.preset.ai.save.account";
+    inline constexpr auto VisualiserLoadFromFile = "receive.preset.ai.load.file";
+    inline constexpr auto VisualiserLoadFromAccountGet = "receive.preset.ai.load.account.get";
+    inline constexpr auto VisualiserLoadFromAccountSet = "receive.preset.ai.load.account.set";
+
+    // Settings
+    inline constexpr auto SettingsWidthGet = "settings.width.get";
+    inline constexpr auto SettingsHeightGet = "settings.height.get";
+    inline constexpr auto SettingsWidthSet = "settings.width.set";
+    inline constexpr auto SettingsHeightSet = "settings.height.set";
+    inline constexpr auto SettingsFullscreenGet = "settings.fullscreen.get";
+    inline constexpr auto SettingsFullscreenSet = "settings.fullscreen.set";
+
+    inline constexpr auto SettingsFFTSizeGet = "settings.fftsize.get";
+    inline constexpr auto SettingsFFTSizeSet = "settings.fftsize.set";
+
+    inline constexpr auto SettingsSocketPasswordGet = "settings.socketpassword.get";
+    inline constexpr auto SettingsSocketPasswordSet = "settings.socketpassword.set";
+
+    // Audio
+    inline constexpr auto AudioSourceOpen = "audio.source.open";
+    inline constexpr auto AudioPlay = "audio.play";
+    inline constexpr auto AudioStop = "audio.stop";
+    inline constexpr auto AudioSourceMasterScalarGet = "audio.source.master.scalar.get";
+    inline constexpr auto AudioSourceMasterScalarSet = "audio.source.master.scalar.set";
 
     // Register
     struct Register {
@@ -56,20 +87,29 @@ namespace Receive_Events {
         "receive.login.user",
         0, 1, 2, 3,
     };
+    inline constexpr auto LoginAuthTokenAlreadyExists = "receive.auth.token.already.exists";
 }
 
 namespace Send_Events {
+    inline constexpr auto PromptResponseComplete = "send.visualiser.submit.prompt.response.complete";
     inline constexpr auto VisualiserPresetChange = "send.visualiser.preset.change";
+    inline constexpr auto VisualiserPresetNewPreset = "send.visualiser.preset.newpreset";
     inline constexpr auto VisualiserEffectChange = "send.visualiser.effect.changed";
     inline constexpr auto LoginComplete = "send.login.complete";
     inline constexpr auto RegisterComplete = "send.register.complete";
 
     inline constexpr std::array Events = {
+        PromptResponseComplete,
         VisualiserPresetChange,
-        VisualiserEffectChange,
+        VisualiserPresetNewPreset,
         LoginComplete,
         RegisterComplete
     };
+}
+
+// Events that only take place inside the c++ backend.
+namespace Local_Events {
+    inline constexpr auto LoginComplete = "local.login.complete";
 }
 
 class EventBus {

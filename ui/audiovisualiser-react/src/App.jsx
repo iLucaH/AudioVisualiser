@@ -4,6 +4,9 @@ import './App.css'
 
 import usePreventZoom from './tool/scrollManager'
 
+import { getUser } from './tool/auth'
+import { JuceFunctionHandlers, messageJUCE } from './services/juceHandlerService'
+
 import Homepage from './home/HomePage'
 
 import AudioPage from './audio/AudioPage'
@@ -15,6 +18,11 @@ import QRAppPage from './qrapp/QRAppPage'
 
 function App() {
   usePreventZoom();
+
+  if (getUser()) {
+    messageJUCE(JuceFunctionHandlers.setAuthTokenAlreadyExists, getUser().token);
+  }
+
   return (
     <BrowserRouter onContextMenu={(e) => e.preventDefault()}>
       <Routes>

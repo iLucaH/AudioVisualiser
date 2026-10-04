@@ -34,7 +34,6 @@ function LoginPage() {
             const eventPromise = waitForNativeEvent(JuceFunctionHandlers.loginPromiseEvent)
 
             const token = await messageJUCE(JuceFunctionHandlers.loginUser, loginUsername, loginPassword)
-            console.log(token)
             if (token === 1) {
                 setLoginMessage("Your details are incorrect! Please try again.")
             } else if (token === 2) {
@@ -45,7 +44,7 @@ function LoginPage() {
                 setLoginMessage("Logging in...")
                 const status = await eventPromise
                 if (status[0]) {
-                    setUser({ token: "Logged-In" }) // mark the account as logged in
+                    setUser({ token: status[0][1] }) // mark the account as logged in
                     navigate('/account')
                 } else {
                     setLoginMessage("Your details are incorrect! Please try again.")

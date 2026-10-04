@@ -28,8 +28,10 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
         selectedState = newState;
         };
     addAndMakeVisible(&presetSelector);
+    
     for (int i = 0; i < openGL.getNumRenderStates(); i++) {
         addRenderPofile(openGL.getProfileComponent(i)); // Here they will be added to the presetSelector.
+        openGL.getProfileComponent(i)->subscribeToEvents(eventBus);
     }
     presetSelector.setSelectedId(DEFAULT_RENDER_STATE);
 
@@ -129,17 +131,7 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
         }
     );
 
-    // For when React tells us to make a new prompt.
-    eventBus.subscribe(Receive_Events::VisualiserSubmitNewPrompt,
-        [this](const auto& args) {
-            if (args.size() < 2) {
-                return false;
-            }
-            juce::String prompt = args[1];
-            DBG(prompt);
-            return true;
-        }
-    );
+    // Event bus listeners for login/register
 
     eventBus.subscribe(Receive_Events::RegisterNewUser.handle,
         [this](const auto& args) {
@@ -156,6 +148,154 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
                 return Receive_Events::LoginUser.not_enough_args;
             }
             return appSettings.getRoot()->getLoginComponent().getContentComponent()->loginUser(args[1], args[2]);
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::LoginAuthTokenAlreadyExists,
+        [this](const auto& args) {
+            if (args.size() < 2) {
+                return juce::var();
+            }
+            eventBus.emit(Local_Events::LoginComplete, juce::var());
+            appSettings.setAuthJWT(args[1]);
+            return juce::var();
+        }
+    );
+
+    // Event bus listeners for settings
+
+    eventBus.subscribe(Receive_Events::SettingsWidthGet,
+        [this](const auto& args) {
+            return juce::var(appSettings.getWidth());
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::SettingsWidthSet,
+        [this](const auto& args) {
+            if (args.size() < 2) {
+                return juce::var(false);
+            }
+            appSettings.setDimensions(static_cast<int>(args[1]), appSettings.getHeight());
+            return juce::var(true);
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::SettingsHeightGet,
+        [this](const auto& args) {
+            return juce::var(appSettings.getHeight());
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::SettingsHeightSet,
+        [this](const auto& args) {
+            if (args.size() < 2) {
+                return juce::var(false);
+            }
+            appSettings.setDimensions(appSettings.getWidth(), static_cast<int>(args[1]));
+            return juce::var(true);
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::SettingsFullscreenGet,
+        [this](const auto& args) {
+            return juce::var(openGLComponent.isFullScreen());
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::SettingsFullscreenSet,
+        [this](const auto& args) {
+            if (args.size() < 2) {
+                return juce::var(false);
+            }
+            appSettings.setFullScreen(!openGLComponent.isFullScreen());
+            return juce::var(true);
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::SettingsFFTSizeGet,
+        [this](const auto& args) {
+            return juce::var(appSettings.getFFTSize());
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::SettingsFFTSizeSet,
+        [this](const auto& args) {
+            if (args.size() < 2) {
+                return juce::var(false);
+            }
+            appSettings.setFFTSize(static_cast<int>(args[1]));
+            return juce::var(true);
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::SettingsSocketPasswordGet,
+        [this](const auto& args) {
+            return juce::var(appSettings.getSocketClientAuth());
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::SettingsSocketPasswordSet,
+        [this](const auto& args) {
+            if (args.size() < 2) {
+                return juce::var(false);
+            }
+            appSettings.setSocketClientAuth(args[1]);
+            return juce::var(true);
+        }
+    );
+
+    // audio
+
+    eventBus.subscribe(Receive_Events::AudioSourceOpen,
+        [this](const auto& args) {
+            auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
+            openChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
+                juce::File file = chooser.getResult();
+                DBG("File selected for playback!");
+                pluginProcessor.setNewTransportSource(file);
+                });
+            return juce::var();
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::AudioPlay,
+        [this](const auto& args) {
+            processPlay();
+            return juce::var();
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::AudioStop,
+        [this](const auto& args) {
+            processStop();
+            return juce::var();
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::AudioSourceMasterScalarGet,
+        [this](const auto& args) {
+            return juce::var(appSettings.getAudioScalar());
+        }
+    );
+
+    eventBus.subscribe(Receive_Events::AudioSourceMasterScalarSet,
+        [this](const auto& args) {
+            if (args.size() < 2) {
+                return juce::var(false);
+            }
+            appSettings.setAudioScalar(static_cast<float>(args[1]));
+            return juce::var(true);
+        }
+    );
+
+    // QR 
+
+    eventBus.subscribe(Receive_Events::QROpenSite,
+        [this](const auto& args) {
+            if (args.size() > 1) {
+                juce::URL(args[1]).launchInDefaultBrowser();
+            }
+            return juce::var();
         }
     );
 }

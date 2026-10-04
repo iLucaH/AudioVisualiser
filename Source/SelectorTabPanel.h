@@ -46,7 +46,17 @@ public:
         if (component->getRenderStateID() != selectedState)
             component->setVisible(false);
         renderProfiles.push_back(component);
-        presetSelector.addItem(component->getPresetName(), component->getRenderStateID());
+
+        const int id = component->getRenderStateID();
+
+        for (int i = 0; i < presetSelector.getNumItems(); ++i) {
+            if (presetSelector.getItemId(i) == id) {
+                DBG("Preset already exists in ComboBox with ID: " << id);
+                return;
+            }
+        }
+
+        presetSelector.addItem(component->getPresetName(), id);
     }
 
     void updatePanelRenderProfile(int newState, int oldState) {
@@ -70,7 +80,14 @@ public:
         // in checking whether any new render profiles have been created that we need to add.
         
         if (renderProfiles.size() != openGLComponent.getNumRenderStates()) {
-            addRenderPofile(openGLComponent.getProfileComponent(openGLComponent.getNumRenderStates() - 1)); // Here they will be added to the presetSelector.
+            DBG("Added the new render profile!");
+            auto* profile = openGLComponent.getProfileComponent(openGLComponent.getNumRenderStates() - 1);
+            addRenderPofile(profile); // Here they will be added to the presetSelector.
+            juce::Array<juce::var> newRenderStateInfo;
+            newRenderStateInfo.add(profile->getRenderStateID());
+            newRenderStateInfo.add(profile->getPresetName());
+            DBG("Emitting the new preset event!");
+            eventBus.emit(Send_Events::VisualiserPresetNewPreset, juce::var(newRenderStateInfo));
         }
 
         resized();

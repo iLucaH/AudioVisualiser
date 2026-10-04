@@ -16,6 +16,7 @@
 #include "AVIOHandler.h"
 #include "Settings.h"
 #include "SelectorTabPanel.h"
+#include "EventBus.h"
 
 class AskAI : public RenderState2D, public juce::AsyncUpdater {
 public:
@@ -71,20 +72,27 @@ loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocume
             juce::Thread::launch([this, promptText]() {
                 pendingAPIRequest.store(true);
                 juce::String response = postPromptResponse(appSettings.getAuthJWT(), promptText);
-                if (response.length() > 0) {
+                bool success = response.length() > 0;
+                if (success) {
                     auto* fragShader = new juce::String(response); // The fragShader will be freed once exchanged in the render loop.
                     pendingFragShader.store(fragShader);
                     auto* fragShaderName = new juce::String("My New Shader");
                     pendingFragShaderName.store(fragShaderName);
                     pendingSubmit.store(true);
-                }
-                else {
+                    DBG("Resolved a prompt for the AskAI RenderState!");
+                } else {
                     DBG("Could not resolve a prompt for the AskAI RenderState!");
                     displayStatusError.store(true);
                 }
                 pendingAPIRequest.store(false);
+                juce::MessageManager::callAsync([this, success]() {
+                    juce::Array<juce::var> response;
+                    response.add(success);
+                    response.add(success ? "Everything worked!" : "There was an error processing your prompt!");
+                    appSettings.getEventBus().emit(Send_Events::PromptResponseComplete, juce::var(response));
                 });
-            };
+            });
+        };
         renderProfile.addComponent(&submit);
 
         loadFromFile.setButtonText("File");
@@ -290,6 +298,217 @@ loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocume
         prompt.setScrollbarsShown(true);
         prompt.setBounds(7, 7, 125, 187);
         renderProfile.addComponent(&prompt);
+
+        renderProfile.setEventSubscription(
+            [this](EventBus& eventBus) {
+                eventBus.subscribe(Local_Events::LoginComplete, // local handler to know when a login is successful from login component.
+                    [this](const auto& args) {
+                        handleLoginPolls();
+                        return juce::var();
+                    }
+                );
+
+                eventBus.subscribe(Receive_Events::VisualiserSubmitNewPrompt,
+                    [this](const auto& args) {
+                        if (args.size() < 2) {
+                            return juce::var(juce::Array<juce::var>{ false, "Please write a prompt!" });
+                        }
+                        juce::String promptResponse = args[1];
+                        return juce::var(handleSubmit(promptResponse));
+                    }
+                );
+
+                eventBus.subscribe(Receive_Events::VisualiserSaveToFile, // always returns true because it will always launch.
+                    [this](const auto& args) {
+                        bool success = handleSaveToFile();
+                        return juce::var(juce::String(success ? "" : "Error saving to file!"));
+                    }
+                );
+
+                eventBus.subscribe(Receive_Events::VisualiserLoadFromFile, // always returns true because it will always launch.
+                    [this](const auto& args) {
+                        bool success = handleLoadFromFile();
+                        handleLoginPolls();
+                        return juce::var(juce::String(success ? "" : "Error loading from file!"));
+                    }
+                );
+
+                eventBus.subscribe(Receive_Events::VisualiserLoadFromAccountGet,
+                    [this](const auto& args) {
+                        handleLoginPolls();
+                        return juce::var(handleLoadFromAccountGet());
+                    }
+                );
+
+                eventBus.subscribe(Receive_Events::VisualiserLoadFromAccountSet,
+                    [this](const auto& args) {
+                        if (args.size() < 2) {
+                            return juce::var(false);
+                        }
+                        if (!appSettings.isAuth()) {
+                            return juce::var(false);
+                        }
+                        return juce::var(handleLoadFromAccountSet(static_cast<int>(args[1])));
+                    }
+                );
+
+                eventBus.subscribe(Receive_Events::VisualiserSaveToAccount,
+                    [this](const auto& args) {
+                        if (args.size() < 2) {
+                            return juce::var(juce::String("Please enter a name."));
+                        }
+                        if (!appSettings.isAuth()) {
+                            return juce::var(juce::String("You must be logged in."));
+                        }
+                        return juce::var(juce::String(handleSaveToAccount(args[1]) ? "Succcessfully saved your preset!" : "Failed to save preset!"));
+                    }
+                );
+
+                // eventBus.subscribe(...);
+            }
+        );
+    }
+
+    bool handleLoadFromAccountSet(int id) {
+        auto rs = renderStatesCached.find(id);
+        if (rs != renderStatesCached.end()) {
+            struct RenderStateStruct renderState = rs->second;
+            auto* fragShader = new juce::String(renderState.renderState);
+            pendingFragShader.store(fragShader);
+            auto* fragShaderName = new juce::String(renderState.name);
+            pendingFragShaderName.store(fragShaderName);
+            pendingSubmit.store(true);
+            shouldCreateNewRenderState.store(true);
+            handleLoginPolls();
+            return true;
+        }
+        return false;
+    }
+
+    bool handleSaveToAccount(juce::String name) {
+        auto shaderPtr = std::atomic_load(&fragmentShader);
+        juce::Thread::launch([this, shaderPtr, name]() {
+            if (shaderPtr) {
+                juce::String newRSId = postAddRenderState(appSettings.getAuthJWT(), name, *shaderPtr);
+                DBG("Adding new render state id resolved from cloud as: " << newRSId);
+            }
+        });
+        pendingFragShaderName.store(new juce::String(name));
+        shouldCreateNewRenderState.store(true);
+        return true;
+    }
+
+    juce::Array<juce::var> handleLoadFromAccountGet() {
+        juce::Array<juce::var> presets;
+        if (appSettings.isAuth()) {
+            for (const auto& [id, renderState] : renderStatesCached) {
+                auto* object = new juce::DynamicObject();
+                object->setProperty("value", renderState.name);
+                object->setProperty("key", juce::String(id));
+                presets.add(juce::var(object));
+            }
+        } else {
+            auto* object = new juce::DynamicObject();
+            object->setProperty("value", "Please log-in...");
+            object->setProperty("key", -1);
+            presets.add(juce::var(object));
+        }
+        return presets;
+    }
+
+    bool handleSaveToFile() {
+        auto flags = juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting;
+        saveChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
+            juce::String filePath = chooser.getResult().getFullPathName();
+            if (filePath.isEmpty())
+                return;
+            DBG("Saving render state to: " << filePath);
+            auto shaderPtr = std::atomic_load(&fragmentShader);
+            if (shaderPtr)
+                saveRenderStateToFile(filePath, *shaderPtr);
+        });
+        return true;
+    }
+
+    bool handleLoadFromFile() {
+        auto flags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
+        loadChooser.launchAsync(flags, [this](const juce::FileChooser& chooser) {
+            juce::String filePath = chooser.getResult().getFullPathName();
+            if (filePath.isEmpty())
+                return;
+            DBG("Loading render state from " << filePath);
+            juce::String renderState = getRenderStateFromFile(filePath);
+            auto* fragShader = new juce::String(renderState);
+            pendingFragShader.store(fragShader);
+            auto* fragShaderName = new juce::String(chooser.getResult().getFileName());
+            pendingFragShaderName.store(fragShaderName);
+            pendingSubmit.store(true);
+            shouldCreateNewRenderState.store(true);
+        });
+        return true;
+    }
+
+    juce::Array<juce::var> handleSubmit(const juce::String& promptText) {
+        juce::Array<juce::var> response;
+        // If we are already making a prompt submit request, then we should not continue with this one.
+        if (pendingAPIRequest.load()) {
+            response.add(false);
+            response.add("Please wait for the previous prompt to finish!");
+            return response;
+        } else if (!appSettings.isAuth()) {
+            response.add(false);
+            response.add("Please log in to be able to use this feature!");
+            return response;
+        }
+
+        // Launch the API request on a seperate thread because it is a blocking operation.
+        juce::Thread::launch([this, promptText]() {
+            pendingAPIRequest.store(true);
+            juce::String response = postPromptResponse(appSettings.getAuthJWT(), promptText);
+            bool success = response.length() > 0;
+            if (success) {
+                auto* fragShader = new juce::String(response); // The fragShader will be freed once exchanged in the render loop.
+                pendingFragShader.store(fragShader);
+                auto* fragShaderName = new juce::String("My New Shader");
+                pendingFragShaderName.store(fragShaderName);
+                pendingSubmit.store(true);
+                DBG("Resolved a prompt for the AskAI RenderState!");
+            } else {
+                DBG("Could not resolve a prompt for the AskAI RenderState!");
+                displayStatusError.store(true);
+            }
+            pendingAPIRequest.store(false);
+            juce::MessageManager::callAsync([this, success]() { // inform the front end of the changes
+                juce::Array<juce::var> responseAsync;
+                responseAsync.add(success);
+                responseAsync.add(success ? "" : "There was an error processing your prompt!");
+                appSettings.getEventBus().emit(Send_Events::PromptResponseComplete, juce::var(responseAsync));
+            });
+        });
+        response.add(true);
+        response.add("Loading Shader...");
+        return response;
+    }
+
+    void handleLoginPolls() {
+        juce::Thread::launch([this]() {
+            std::vector<struct RenderStateStruct> renderStates = getGetAllRenderStates(appSettings.getAuthJWT());
+            juce::MessageManager::callAsync([this, renderStates]() {
+                for (auto renderState : renderStates) {
+                    bool exists = false;
+                    for (int i = 0; i < backenedListComboBox.getNumItems(); i++) {
+                        if (backenedListComboBox.getItemText(i).equalsIgnoreCase(renderState.name)) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) {
+                        backenedListComboBox.addItem(renderState.name, renderState.id);
+                        renderStatesCached.insert({ renderState.id, renderState });
+                    }
+                }
+            });
+        });
     }
 
     // Handle updating component entities on the messange thread. You can only update on the messange thread
@@ -324,32 +543,13 @@ loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocume
                 DBG("New AI Fragment shader is being handled.");
                 initNewFragmentShader(*shaderPtr);
 
-                // Create a new RenderState object for it and send it to OpenGLComponent so that users
-                // can view it as its own seperate render state if they want.
-                std::unique_ptr<RenderState> newRenderState = std::make_unique<RenderState2D>(
-                    openGLComponent.getNextAvailableRenderStateID(),
-                    openGLContext,
-                    juce::String(R"(
-                    #version 330 core
-                    layout(location = 0) in vec4 position;
-
-                    void main() {
-                        gl_Position = position;
-                    }
-                    )"),
-                    *shaderPtr
-                );
-                newRenderState.get()->initAndCompileShaders();
-                juce::String* shaderNamePtr = pendingFragShaderName.exchange(nullptr);
-                newRenderState.get()->getRenderProfile()->setPresetName("asdw");
-
-                openGLComponent.addRenderState(std::move(newRenderState));
+                if (shouldCreateNewRenderState.exchange(false)) {
+                    addNewRenderStateFromLoadOrSave();
+                }
 
                 delete shaderPtr; // filePtr is created using new
-                delete shaderNamePtr; // shaderNamePtr is created using new
                 displayStatusError.store(false);
-            }
-            else {
+            } else {
                 DBG("New AI Fragment shader failed to init and compile!");
                 displayStatusError.store(true);
             }
@@ -360,6 +560,41 @@ loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocume
         triggerAsyncUpdate();
 
         RenderState2D::render();
+    }
+
+    void addNewRenderStateFromLoadOrSave() {
+        juce::String* shaderNamePtr = pendingFragShaderName.exchange(nullptr);
+
+        // Make a copy while the pointer is still valid.
+        juce::String shaderName = shaderNamePtr != nullptr ? *shaderNamePtr : "Unnamed Render State";
+
+        delete shaderNamePtr;
+
+        // Before going any further lets check if another shader with this name has already added,
+        // because we don't want to add it twice.
+        if (openGLComponent.renderStateExistsByName(shaderName)) {
+            return;
+        }
+
+        juce::String fragmentShaderCopy = fragmentShader != nullptr ? *fragmentShader : "";
+
+        std::unique_ptr<RenderState> newRenderState = std::make_unique<RenderState2D>(
+            openGLComponent.getNextAvailableRenderStateID(),
+            openGLContext,
+            juce::String(R"(
+                #version 330 core
+                layout(location = 0) in vec4 position;
+
+                void main() {
+                    gl_Position = position;
+                }
+            )"), fragmentShaderCopy);
+
+        newRenderState->initAndCompileShaders();
+
+        newRenderState->getRenderProfile()->setPresetName(shaderName);
+
+        openGLComponent.addRenderState(std::move(newRenderState));
     }
 
     void delayColourChangeToComponent(juce::TextButton* component, int colourId, juce::Colour colour) {
@@ -418,6 +653,7 @@ private:
     std::atomic<bool> pendingAPIRequest{ false };
     std::atomic<bool> pendingSubmit{ false };
     std::atomic<bool> displayStatusError{ false };
+    std::atomic<bool> shouldCreateNewRenderState{ false };
 
     std::unordered_map<int, struct RenderStateStruct> renderStatesCached;
 
@@ -432,14 +668,15 @@ private:
         auto prompt = new juce::DynamicObject();
         prompt->setProperty("type", "textfieldlong");
         prompt->setProperty("label", "Prompt");
-        prompt->setProperty("clickhandler", "receive.preset.submit.prompt.new");
+        prompt->setProperty("clickhandler", Receive_Events::VisualiserSubmitNewPrompt);
         aiContent.add(juce::var(prompt));
 
         // Generate Design
         auto generate = new juce::DynamicObject();
-        generate->setProperty("type", "button");
+        generate->setProperty("type", "waitingbutton");
         generate->setProperty("label", "Generate Design");
-        generate->setProperty("clickhandler", "receive.preset.submit.prompt.new");
+        generate->setProperty("clickhandler", Receive_Events::VisualiserSubmitNewPrompt);
+        generate->setProperty("waitingpromisehandle", Send_Events::PromptResponseComplete);
         generate->setProperty("link", "Prompt");
         aiContent.add(juce::var(generate));
 
@@ -473,7 +710,7 @@ private:
         auto toFile = new juce::DynamicObject();
         toFile->setProperty("type", "button");
         toFile->setProperty("label", "To File");
-        toFile->setProperty("clickhandler", "testclickHandler2");
+        toFile->setProperty("clickhandler", Receive_Events::VisualiserSaveToFile);
         toFile->setProperty("link", "Prompt");
         saveContent.add(juce::var(toFile));
 
@@ -488,14 +725,14 @@ private:
         auto presetName = new juce::DynamicObject();
         presetName->setProperty("type", "textfieldshort");
         presetName->setProperty("label", "Name your preset");
-        presetName->setProperty("clickhandler", "submitPreset");
+        presetName->setProperty("clickhandler", Receive_Events::VisualiserSaveToAccount);
         accountContent.add(juce::var(presetName));
 
         // Save
         auto save = new juce::DynamicObject();
         save->setProperty("type", "button");
         save->setProperty("label", "Save");
-        save->setProperty("clickhandler", "submitPreset");
+        save->setProperty("clickhandler", Receive_Events::VisualiserSaveToAccount);
         save->setProperty("link", "Name your preset");
         accountContent.add(juce::var(save));
 
@@ -519,7 +756,7 @@ private:
         auto fromFile = new juce::DynamicObject();
         fromFile->setProperty("type", "button");
         fromFile->setProperty("label", "From File");
-        fromFile->setProperty("clickhandler", "testclickHandler2");
+        fromFile->setProperty("clickhandler", Receive_Events::VisualiserLoadFromFile);
         fromFile->setProperty("link", "Prompt");
         loadContent.add(juce::var(fromFile));
 
@@ -534,8 +771,8 @@ private:
         auto picker = new juce::DynamicObject();
         picker->setProperty("type", "picker");
         picker->setProperty("label", "Select Preset...");
-        picker->setProperty("gethandle", "getFromAccount");
-        picker->setProperty("sethandle", "setFromAccount");
+        picker->setProperty("gethandle", Receive_Events::VisualiserLoadFromAccountGet);
+        picker->setProperty("sethandle", Receive_Events::VisualiserLoadFromAccountSet);
 
         accountLoadContent.add(juce::var(picker));
 

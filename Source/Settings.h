@@ -37,6 +37,10 @@ public:
         return socketClientAuth;
     }
 
+    void setSocketClientAuth(juce::String password) {
+        socketClientAuth = password;
+    }
+
     void setDimensions(int w, int h) {
         width = w;
         height = h;

@@ -3,16 +3,45 @@ import * as Juce from './juce/index.js'
 const nativeFunctionHandle = Juce.getNativeFunction('nativeFunctionMessage')
 
 export const JuceFunctionHandlers = {
+    newPresetPromiseEvent: 'send.visualiser.preset.newpreset',
     getPresets: 'receive.preset.getall',
     setPreset: 'receive.preset.set',
     getSelectorOptions: 'receive.preset.selector.options',
 
     getOpenWebsite: 'receive.qr.opensite',
 
+    setAuthTokenAlreadyExists: 'receive.auth.token.already.exists',
     registerNewUser: 'receive.register.new.user',
     loginUser: 'receive.login.user',
     loginPromiseEvent: 'send.login.complete',
-    registerPromiseEvent: 'send.register.complete'
+    registerPromiseEvent: 'send.register.complete',
+    
+    getSettingsWidth: 'settings.width.get',
+    setSettingsWidth: 'settings.width.set',
+    getSettingsHeight: 'settings.height.get',
+    setSettingsHeight: 'settings.height.set',
+    getSettingsFullscreen: 'settings.fullscreen.get',
+    setSettingsFullscreen: 'settings.fullscreen.set',
+
+    getSettingsFFTSize: 'settings.fftsize.get',
+    setSettingsFFTSize: 'settings.fftsize.set',
+
+    getSettingsSocketPassword: 'settings.socketpassword.get',
+    setSettingsSocketPassword: 'settings.socketpassword.set',
+    
+    audioSourceOpen: 'audio.source.open',
+    setAudioPlaying: 'audio.play',
+    setAudioStopping: 'audio.stop',
+    getAudioSourceMasterScalar: 'audio.source.master.scalar.get',
+    setAudioSourceMasterScalar: 'audio.source.master.scalar.set',
+
+    recordingStart: 'recording.start',
+    recordingStop: 'recording.stop',
+    getRecordingState: 'recording.state',
+    getRecordingOutputpath: 'recording.outputpath.get',
+    setRecordingOutputpath: 'recording.outputpath.set',
+    recordingList: 'recording.list'
+
 }
 
 export function messageJUCE(eventName, ...args) {

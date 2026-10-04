@@ -75,6 +75,15 @@ public:
         return renderStates[id].get()->getRenderProfile();
     }
 
+    bool renderStateExistsByName(const juce::String& shaderName) {
+        for (const auto& renderState : renderStates) {
+            if (renderState->getRenderProfile()->getPresetName() == shaderName)
+                return true;
+        }
+
+        return false;
+    }
+
     VideoEncoder* getVideoEncoder() { 
         return videoEncoder.get(); 
     }

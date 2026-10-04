@@ -6,9 +6,9 @@ function ExportPage() {
         <div>
             <AVRootComponent>
                 <DropDownMenu title="Recorder" open={true}>
-                    <p>Start</p>
-                    <p>Stop</p>
-                    <p>FilePath</p>
+                    <button>Start</button>
+                    <button>Stop</button>
+                    
                 </DropDownMenu>
             </AVRootComponent>
         </div>
