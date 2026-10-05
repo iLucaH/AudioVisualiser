@@ -1,13 +1,9 @@
+import styles from './Shared.module.css'
+
 function IconButton({ onClick, text, highlighted = false, logo: Logo }) {
     return (
-        <div
-            style={{
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                backgroundColor: highlighted ? 'lightgray' : 'transparent'
-            }}
+        <div 
+            className={highlighted ? styles.highlighted : styles.unhighlited}
             role="button"
             tabIndex="0"
             onClick={onClick}

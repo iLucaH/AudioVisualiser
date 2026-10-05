@@ -35,6 +35,7 @@ function DropDownMenu({title, open = true, children}) {
     if (isOpen) {
         return (
             <div className={styles.dropdownOpen}>
+                <div className={styles.headingborder}>
                 <div className={styles.dropdownContent} onClick={() => setIsOpen(false)}>
                     <button className={styles.dropdownButton}>
                         <FiChevronDown className={`${styles.arrowIcon} ${isOpen ? styles.rotate180 : ''}`} />
@@ -42,6 +43,7 @@ function DropDownMenu({title, open = true, children}) {
                     <div className={styles.dropdownTitle}>
                         <p>{title}</p>
                     </div>
+                </div>
                 </div>
                 <div className={styles.dropdownChildren}>
                     {children}

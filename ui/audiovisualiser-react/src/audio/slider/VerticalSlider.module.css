@@ -21,7 +21,7 @@
 .slider::-webkit-slider-runnable-track {
     width: 8px;
     height: 100%;
-    background: #6c6868;
+    background: var(--color-lighter-emerald);
     border-radius: 10px;
 }
 
@@ -34,7 +34,7 @@
 
     margin-left: -6px;
 
-    background: #be2c2c;
+    background: var(--color-emerald);
     border-radius: 50%;
     border: none;
 }
@@ -53,4 +53,14 @@
     background: #be2c2c;
     border: none;
     border-radius: 50%;
+}
+
+.insetContainer {
+    padding: 10px;
+    background-color: var(--color-background-soft);
+    border-radius: 6px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.7) inset;
+    width: 10%;
+    display: flex;
+    justify-content: center;
 }

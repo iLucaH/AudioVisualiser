@@ -16,7 +16,7 @@ function QRAppPage() {
                         justifyContent: "center",
                         alignItems: "center",
                         height: "100%",
-                        gap: "15px"
+                        gap: "15px",
                     }}>
                         <QRCode value="https://example.com" size={256} />
                         <button onClick={() => messageJUCE(JuceFunctionHandlers.getOpenWebsite, "https://github.com/iLucaH/audiovisualiser-socket-client")}>Download the App!</button>

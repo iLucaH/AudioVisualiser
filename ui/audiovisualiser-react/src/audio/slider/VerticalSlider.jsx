@@ -27,14 +27,16 @@ function VerticalSlider() {
 
     return (
         <div className={styles.container}>
-            <input
-                className={styles.slider}
-                type="range"
-                min="0"
-                max="200"
-                value={value}
-                onChange={(e) => updateState(e.target.value)}
-            />
+            <div className={styles.insetContainer}>
+                <input
+                    className={styles.slider}
+                    type="range"
+                    min="0"
+                    max="200"
+                    value={value}
+                    onChange={(e) => updateState(e.target.value)}
+                />
+            </div>
 
             <span className={styles.value}>{value} %</span>
         </div>

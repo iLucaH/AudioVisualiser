@@ -1,0 +1,47 @@
+:root {
+    --color-primary-1: #353535;
+    --color-primary-2: #ffffff;
+    --color-primary-3: #0175b8;
+    --color-primary-4: #9c7b53;
+    --color-primary-5: #c79965;
+    
+    --color-emerald: #10b981;
+    --color-darker-emerald: #0a7753;
+    --color-even-darker-emerald: #045f41;
+    --color-lighter-emerald: #ACECCF;
+    --color-background: #353535;
+    --color-background-soft: #414141;
+    --color-text-strong: #ffffff;
+    --color-text-weak: rgb(205, 243, 226);
+
+    --font-primary: Arial, sans-serif;
+    --font-secondary: system-ui, sans-serif;
+}
+
+body {
+    font-family: var(--font-secondary);
+    color: var(--color-text-strong);
+}
+
+button {
+    cursor: pointer;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-emerald);
+    border-radius: 6px;
+    color: var(--color-text-weak);
+    padding-left: 9px;
+    padding-right: 9px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    box-shadow: 0 0 5px rgba(205, 243, 226, 0.3) inset;
+}
+
+button:hover {
+    background-color: #ACECCF;
+    color: var(--color-background);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.6) inset;
+}
+
+button:active {
+    background-color: #FFFFFF;
+}

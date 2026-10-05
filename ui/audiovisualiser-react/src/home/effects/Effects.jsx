@@ -83,53 +83,56 @@ export default function Effects () {
                 }} disabled={!globalSwitchState}>Off</button>
             </div>
 
-            <div style={{ height: 0, width: '100%', borderTop: '3px solid black', marginTop: '10px', marginBottom: '10px',}}/>
+            <div style={{ height: 0, width: '100%', borderTop: '1px solid #045f41', marginTop: '15px', marginBottom: '15px',}}/>
             <div className={styles.content}>
                 {effects.map((effect) => (
                     <div key={effect.id}>
                         <DropDownMenu title={effect.name} open={false}>
+                            <div className={styles.effectTop}>
+                                <div className={styles.effectName}>
+                                    {getMessage(effect.id)}
+                                </div>
+                                <div className={styles.effectPriority}>
+                                    Priority:
+                                    <Slider
+                                        value={getPrioritySliderValue(effect.id, effect.priority)}
+                                        onChange={(val) => handlePriorityDrag(effect, val)}
+                                        onCommit={(val) => handlePriorityCommit(effect, val)}
+                                    />
+                                </div>
+                                <div className={styles.effectEnabled}>
+                                    Enabled: 
+                                    <button type="button" onClick={async () => {
+                                        const success = await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, effect.priority, true, effect.uniforms)
+                                        if (success) {
+                                            setEffects(previous => previous.map(e => e.id === effect.id ? { ...e, enabled:true } : e))
+                                        } else {
+                                            setMessage(effect.id, "There was an error enabling this effect!")
+                                        }
+                                    }} disabled={effect.enabled}>On</button>
+                                    <button type="button" onClick={async () => {
+                                        const success = await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, effect.priority, false, effect.uniforms)
+                                        if (success) {
+                                            setEffects(previous => previous.map(e => e.id === effect.id ? { ...e, enabled:false } : e))
+                                        } else {
+                                            setMessage(effect.id, "There was an error enabling this effect!")
+                                        }
+                                    }} disabled={!effect.enabled}>Off</button>
+                                </div>
+                            </div>
                             <div>
-                                {getMessage(effect.id)}
-                            </div>
-                            <div className={styles.effectName}>
-                                Name: {effect.name}
-                            </div>
-                            <div className={styles.effectPriority}>
-                                Priority:
-                                <Slider
-                                    value={getPrioritySliderValue(effect.id, effect.priority)}
-                                    onChange={(val) => handlePriorityDrag(effect, val)}
-                                    onCommit={(val) => handlePriorityCommit(effect, val)}
-                                />
-                            </div>
-                            <div className={styles.effectEnabled}>
-                                Enabled: 
-                                <button type="button" onClick={async () => {
-                                    const success = await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, effect.priority, true, effect.uniforms)
-                                    if (success) {
-                                        setEffects(previous => previous.map(e => e.id === effect.id ? { ...e, enabled:true } : e))
-                                    } else {
-                                        setMessage(effect.id, "There was an error enabling this effect!")
-                                    }
-                                }} disabled={effect.enabled}>On</button>
-                                <button type="button" onClick={async () => {
-                                    const success = await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, effect.priority, false, effect.uniforms)
-                                    if (success) {
-                                        setEffects(previous => previous.map(e => e.id === effect.id ? { ...e, enabled:false } : e))
-                                    } else {
-                                        setMessage(effect.id, "There was an error enabling this effect!")
-                                    }
-                                }} disabled={!effect.enabled}>Off</button>
-                            </div>
-                            <div>
-                                {effect.uniforms && <div style={{ height: 0, width: '100%', borderTop: '3px solid black', marginTop: '10px', marginBottom: '10px',}}/>}
-                                {effect.uniforms && effect.uniforms.map((uniform) => (
-                                    <div key={uniform.handle}>
-                                        <Uniform uniformVar={uniform} updateEffect={(newValue) => handleUniformsCommit(effect, uniform, newValue)}/>
-                                    </div>
-                                ))}
-                                {effect.uniforms && <div style={{ height: 0, width: '100%', borderTop: '3px solid black', marginTop: '10px', marginBottom: '10px',}}/>}
-                                <button onClick={() => { handleUniformsReset(effect) }}>Reset Effect Settings</button>
+                                {effect.uniforms && <div style={{ height: 0, width: '100%', borderTop: '1px solid #045f41', marginTop: '15px', marginBottom: '10px',}}/>}
+                                <div className={styles.effectMiddle}>
+                                    {effect.uniforms && effect.uniforms.map((uniform) => (
+                                        <div key={uniform.handle}>
+                                            <Uniform uniformVar={uniform} updateEffect={(newValue) => handleUniformsCommit(effect, uniform, newValue)}/>
+                                        </div>
+                                    ))}
+                                </div>
+                                {effect.uniforms && <div style={{ height: 0, width: '100%', borderTop: '1px solid #045f41', marginTop: '15px', marginBottom: '15px',}}/>}
+                                <div className={styles.effectBottom}>
+                                    <button onClick={() => { handleUniformsReset(effect) }}>Reset Effect Settings</button>
+                                </div>
                             </div>
                         </DropDownMenu>
                     </div>

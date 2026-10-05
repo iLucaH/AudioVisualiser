@@ -1,7 +1,7 @@
 .content {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 12px;
 }
 
 .buttonRow {
@@ -13,14 +13,20 @@
     margin-bottom: 12px;
 }
 
-.effectName {
-
+.effectTop {
+    padding: 10px;
+    background-color: var(--color-background-soft);
+    border-radius: 6px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.7) inset;
 }
 
-.effectPriority {
-
-}
-
-.effectEnabled {
+.effectMiddle {
+    padding: 10px;
+    background-color: var(--color-background-soft);
+    border-radius: 6px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.7) inset;
     
+}
+
+.effectBottom {
 }
