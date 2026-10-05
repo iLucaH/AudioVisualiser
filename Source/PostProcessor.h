@@ -20,6 +20,8 @@ public:
     PostProcessor(OpenGLComponent& glComponent);
 
     void init(int w, int h, EventBus& eventBus);
+    void resizeTargets(juce::Rectangle<int> visualiserArea);
+    void updateRenderOrder(int screenWidth, int screenHeight);
     bool noPostProcessorsEnabled();
 
     PostProcessEffect* peek();
@@ -53,6 +55,7 @@ public:
     }
 
 private:
+    std::vector<PostProcessEffect*> renderOrder; // Only for GL thread
 
     bool enabled = true;
 

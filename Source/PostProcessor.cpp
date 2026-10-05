@@ -34,6 +34,7 @@ void PostProcessor::init(int w, int h, EventBus& eventBus) {
                     object->setProperty("id", effect->getEffectID());
                     object->setProperty("priority", static_cast<int>(effect->getPriority()));
                     object->setProperty("enabled", effect->isEnabled());
+                    object->setProperty("uniforms", effect->getUniforms());
                     effects.add(juce::var(object));
                 }
                 return juce::var(effects);
@@ -52,10 +53,12 @@ void PostProcessor::init(int w, int h, EventBus& eventBus) {
         );
         eventBus.subscribe(Receive_Events::VisualiserEffectUpdateEffect,
             [this](const auto& args) {
-                if (args.size() < 5) {
+                if (args.size() < 6) {
                     return juce::var(false);
                 }
+
                 juce::String name = args[1];
+
                 int id = args[2];
                 PostProcessEffect* effect = nullptr;
                 for (const auto& e : postProcessEffects) {
@@ -65,16 +68,19 @@ void PostProcessor::init(int w, int h, EventBus& eventBus) {
                     effect = e.get();
                 }
                 if (effect == nullptr) {
-                    DBG("Unable to update effect: " << name << ". Effect not found!");
                     return juce::var(false);
                 }
+
                 int priorityArg = static_cast<int>(args[3]);
                 unsigned int priority = priorityArg >= 0 ? priorityArg : 0;
+
                 bool enabled = args[4];
+
+                juce::var uniforms = args[5];
+                effect->setUniforms(uniforms);
 
                 effect->setPriority(priority);
                 effect->setEnabled(enabled);
-                DBG("Updating effect: " << name << ". Priority is now: " << priority << " and enabled is now " << (enabled ? "enabled." : "disabled."));
 
                 return juce::var(true);
             }
@@ -82,44 +88,42 @@ void PostProcessor::init(int w, int h, EventBus& eventBus) {
     });
 }
 
-bool PostProcessor::noPostProcessorsEnabled() {
-    bool noneEnabled = std::ranges::none_of(
-        postProcessEffects,
-        [](const auto& effect) {
-            return effect->isEnabled();
-        }
-    );
-    return noneEnabled;
+void PostProcessor::resizeTargets(juce::Rectangle<int> visualiserArea) {
+}
+
+void PostProcessor::updateRenderOrder(int screenWidth, int screenHeight) {
+    std::vector<std::pair<unsigned int, PostProcessEffect*>> ordered;
+    ordered.reserve(postProcessEffects.size());
+
+    for (const auto& effect : postProcessEffects) {
+        if (effect != nullptr && effect->isEnabled())
+            ordered.emplace_back(effect->getPriority(), effect.get());
+    }
+
+    std::ranges::stable_sort(ordered, {}, &std::pair<unsigned int, PostProcessEffect*>::first);
+
+    renderOrder.clear();
+    for (const auto& entry : ordered) {
+        entry.second->ensureSize(screenWidth, screenHeight);
+        renderOrder.push_back(entry.second);
+    }
 }
 
 PostProcessEffect* PostProcessor::peek() {
-    for (const auto& effect : postProcessEffects) {
-        if (effect != nullptr && effect->isEnabled()) {
-            return effect.get();
-        }
-    }
-    return nullptr;
+    return renderOrder.empty() ? nullptr : renderOrder.front();
+}
+
+bool PostProcessor::noPostProcessorsEnabled() {
+    return renderOrder.empty();
 }
 
 void PostProcessor::renderAll(int viewportWidth, int viewportHeight) {
-    std::ranges::stable_sort(postProcessEffects, {}, [](const auto& e) {
-        return e->getPriority();
-    });
-    auto enabledEffects = postProcessEffects | std::views::filter([](const auto& effect) {
-        return effect != nullptr && effect->isEnabled();
-    });
+    for (size_t i = 0; i < renderOrder.size(); ++i) {
+        PostProcessEffect* effect = renderOrder[i];
+        const bool isLast = (i + 1 == renderOrder.size());
 
-    for (auto it = enabledEffects.begin(); it != enabledEffects.end(); ++it) {
-        auto& effect = *it;
-
-        auto next = std::next(it);
-        bool isLastEffect = next == enabledEffects.end();
-
-        if (isLastEffect) { // Render to screen
-            juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
-        } else { // Render to the next enabled effect's framebuffer
-            juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, (*next)->getScreenSpaceQuadFrameBuffer());
-        }
+        juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER,
+            isLast ? 0 : renderOrder[i + 1]->getScreenSpaceQuadFrameBuffer());
 
         juce::gl::glClear(juce::gl::GL_COLOR_BUFFER_BIT);
         juce::gl::glViewport(0, 0, viewportWidth, viewportHeight);

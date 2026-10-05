@@ -30,6 +30,15 @@ OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p, ApplicationSe
     postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createVignettePostProcessingEffect(), openGLContext));
     postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createPixelatePostProcessingEffect(), openGLContext));
     postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createInvertPostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createColourGradingPostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createColourTintPostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createBlurPostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createSharpenPostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createFilmGrainPostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createScanlinesPostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createPosterizePostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createEdgeDetectPostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createBarrelDistortionPostProcessingEffect(), openGLContext));
     
     setOpaque(true); // Indicates that no part of this Component is transparent
     openGLContext.setRenderer(this); // Set this instance as the renderer for the context
@@ -88,7 +97,8 @@ void OpenGLComponent::newOpenGLContextCreated() {
     }
 
     // Init the post processor, and let it subscribe to any events here now that selectorTabPanel has been initialised.
-    postProcessor.init(getWidth(), getHeight(), appSettings.getEventBus());
+    const auto scale = openGLContext.getRenderingScale();
+    postProcessor.init(juce::roundToInt(getWidth() * scale), juce::roundToInt(getHeight() * scale), appSettings.getEventBus());
 }
 
 void OpenGLComponent::renderOpenGL() {
@@ -119,9 +129,11 @@ void OpenGLComponent::renderOpenGL() {
 
     GLuint screenWidthUniform = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "screenWidth");
     GLuint screenHeightUniform = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "screenHeight");
-    auto scale = (float)openGLContext.getRenderingScale();
-    openGLContext.extensions.glUniform1f(screenWidthUniform, getWidth() * scale);
-    openGLContext.extensions.glUniform1f(screenHeightUniform, getHeight() * scale);
+    auto scale = (float) openGLContext.getRenderingScale();
+    const int screenWidth = juce::roundToInt(getWidth() * scale);
+    const int screenHeight = juce::roundToInt(getHeight() * scale);
+    openGLContext.extensions.glUniform1f(screenWidthUniform, (float)screenWidth);
+    openGLContext.extensions.glUniform1f(screenHeightUniform, (float)screenHeight);
 
     ringBuffer.readSamples(readBuffer, RING_BUFFER_READ_SIZE);
     juce::FloatVectorOperations::clear(visualizationBufferTD, RING_BUFFER_READ_SIZE);
@@ -169,6 +181,7 @@ void OpenGLComponent::renderOpenGL() {
         videoEncoder->addVideoFrame();
     }
 
+    postProcessor.updateRenderOrder(screenWidth, screenHeight);
     bool postProcessingEnabled = !postProcessor.noPostProcessorsEnabled() && postProcessor.isEnabledGlobal();
     if (postProcessingEnabled) {
         // If we want to do screen space effects,
@@ -181,12 +194,13 @@ void OpenGLComponent::renderOpenGL() {
         juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, 0);
     }
 
-    juce::gl::glViewport(0, 0, getWidth() * openGLContext.getRenderingScale(), getHeight() * openGLContext.getRenderingScale());
+    juce::gl::glViewport(0, 0, screenWidth, screenHeight);
+    if (postProcessingEnabled)
+        juce::gl::glClear(juce::gl::GL_COLOR_BUFFER_BIT);   // see note below
     renderState->render();
 
-    if (postProcessingEnabled) {
-        postProcessor.renderAll(getWidth() * openGLContext.getRenderingScale(), getHeight() * openGLContext.getRenderingScale());
-    }
+    if (postProcessingEnabled)
+        postProcessor.renderAll(screenWidth, screenHeight);
 }
 
 void OpenGLComponent::resetVideoRecorder(int width, int height) {
@@ -197,6 +211,10 @@ void OpenGLComponent::resetVideoRecorder(int width, int height) {
     // The VideoEncoder object needs to be handled on the GLThread because it deals with a GL Texture Reference.
     DBG("Resetting video encoder call has been made!");
     pendingStop.store(true);
+}
+
+void OpenGLComponent::resizeComponent(juce::Rectangle<int> visualiserArea) {
+    postProcessor.resizeTargets(visualiserArea);
 }
 
 void OpenGLComponent::openGLContextClosing() {

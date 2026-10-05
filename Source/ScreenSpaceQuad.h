@@ -14,6 +14,8 @@
 #include "RenderState2D.h"
 #include "RenderTarget.h"
 
+#include <functional>
+
 class ScreenSpaceQuad : public RenderState2D {
 public:
     ScreenSpaceQuad(int id, juce::OpenGLContext& context, juce::String& fragShader, RenderTarget* renderTarget) : rTarget(renderTarget), RenderState2D(id, context, juce::String(R"(
@@ -36,6 +38,19 @@ public:
         openGLContext.extensions.glUseProgram(getShaderProgramID());
         juce::gl::glActiveTexture(juce::gl::GL_TEXTURE0);
         juce::gl::glBindTexture(juce::gl::GL_TEXTURE_2D, rTarget->renderTextureId);
+
+        GLuint textureUniform = openGLContext.extensions.glGetUniformLocation(getShaderProgramID(), "u_screenTexture");
+        openGLContext.extensions.glUniform1i(textureUniform, 0);
+        RenderState2D::render();
+    }
+
+    // Used for settings uniforms
+    void render(const std::function<void(juce::OpenGLExtensionFunctions&, GLuint)>& beforeRender) {
+        openGLContext.extensions.glUseProgram(getShaderProgramID());
+        juce::gl::glActiveTexture(juce::gl::GL_TEXTURE0);
+        juce::gl::glBindTexture(juce::gl::GL_TEXTURE_2D, rTarget->renderTextureId);
+
+        beforeRender(openGLContext.extensions, getShaderProgramID());
 
         GLuint textureUniform = openGLContext.extensions.glGetUniformLocation(getShaderProgramID(), "u_screenTexture");
         openGLContext.extensions.glUniform1i(textureUniform, 0);

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 
 import DropDownMenu from '../../shared/DropDownMenu'
 import Slider from './slider/Slider'
+import Uniform from './uniform/Uniform'
 
 import { JuceFunctionHandlers, messageJUCE } from '../../services/juceHandlerService'
 
@@ -22,16 +23,34 @@ export default function Effects () {
         setPrioritySliderValues(previous => ({ ...previous, [effect.id]: value }))
     }
 
-    // Called once on release: send to JUCE
     const handlePriorityCommit = async (effect, value) => {
-        const success = await messageJUCE(
-            JuceFunctionHandlers.effectUpdate,
-            effect.name, effect.id, value, effect.enabled
-        )
+        const success = await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, value, effect.enabled, effect.uniforms)
         if (success) {
             setEffects(previous => previous.map(e => e.id === effect.id ? { ...e, priority: value } : e))
         } else {
             setMessage(effect.id, "There was an error updating the priority of this effect!")
+        }
+    }
+
+    const handleUniformsCommit = async (effect, uniform, newValue) => {
+        const updatedUniforms = effect.uniforms.map((u) => u.handle === uniform.handle ? { ...u, value: newValue } : u)
+        const success = await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, effect.priority, effect.enabled, updatedUniforms)
+        if (success) {
+            setEffects(previous => previous.map(e => e.id === effect.id ? { ...e, uniforms: updatedUniforms } : e))
+        } else {
+            setMessage(effect.id, "There was an error updating this effect!")
+        }
+    }
+
+    const handleUniformsReset = async (effect) => {
+        const updatedUniforms = effect.uniforms.map((uniform) => ({ ...uniform, value: uniform.default }))
+
+        const success = await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, effect.priority, effect.enabled, updatedUniforms)
+
+        if (success) {
+            setEffects(previous => previous.map(e => e.id === effect.id ? { ...e, uniforms: updatedUniforms } : e ))
+        } else {
+            setMessage(effect.id, "There was an error resetting this effect!")
         }
     }
 
@@ -64,13 +83,7 @@ export default function Effects () {
                 }} disabled={!globalSwitchState}>Off</button>
             </div>
 
-            <div style={{ 
-                height: 0,
-                width: '100%',
-                borderTop: '3px solid black',
-                marginTop: '10px',
-                marginBottom: '10px',
-            }}/>
+            <div style={{ height: 0, width: '100%', borderTop: '3px solid black', marginTop: '10px', marginBottom: '10px',}}/>
             <div className={styles.content}>
                 {effects.map((effect) => (
                     <div key={effect.id}>
@@ -92,7 +105,7 @@ export default function Effects () {
                             <div className={styles.effectEnabled}>
                                 Enabled: 
                                 <button type="button" onClick={async () => {
-                                    const success = await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, effect.priority, true)
+                                    const success = await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, effect.priority, true, effect.uniforms)
                                     if (success) {
                                         setEffects(previous => previous.map(e => e.id === effect.id ? { ...e, enabled:true } : e))
                                     } else {
@@ -100,7 +113,7 @@ export default function Effects () {
                                     }
                                 }} disabled={effect.enabled}>On</button>
                                 <button type="button" onClick={async () => {
-                                    const success = await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, effect.priority, false)
+                                    const success = await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, effect.priority, false, effect.uniforms)
                                     if (success) {
                                         setEffects(previous => previous.map(e => e.id === effect.id ? { ...e, enabled:false } : e))
                                     } else {
@@ -108,16 +121,20 @@ export default function Effects () {
                                     }
                                 }} disabled={!effect.enabled}>Off</button>
                             </div>
-                            <button onClick={async () => {
-                                setMessage(effect.id, await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, effect.priority, effect.enabled) 
-                                    ? effect.name + " was updated!" 
-                                    : "Failed to update " + effect.name)
-                            }}>Update</button>
+                            <div>
+                                {effect.uniforms && <div style={{ height: 0, width: '100%', borderTop: '3px solid black', marginTop: '10px', marginBottom: '10px',}}/>}
+                                {effect.uniforms && effect.uniforms.map((uniform) => (
+                                    <div key={uniform.handle}>
+                                        <Uniform uniformVar={uniform} updateEffect={(newValue) => handleUniformsCommit(effect, uniform, newValue)}/>
+                                    </div>
+                                ))}
+                                {effect.uniforms && <div style={{ height: 0, width: '100%', borderTop: '3px solid black', marginTop: '10px', marginBottom: '10px',}}/>}
+                                <button onClick={() => { handleUniformsReset(effect) }}>Reset Effect Settings</button>
+                            </div>
                         </DropDownMenu>
                     </div>
                 ))}
             </div>
-        
         </div>
     )
 }

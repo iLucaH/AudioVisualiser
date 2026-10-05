@@ -26,17 +26,19 @@ public:
     void init(int w, int h) {
         renderTarget = std::make_unique<RenderTarget>(w, h);
 
-        screenSpaceQuad = std::make_unique<ScreenSpaceQuad>(
-            id,
-            glContext,
-            fragmentShader,
-            renderTarget.get()
-        );
+        screenSpaceQuad = std::make_unique<ScreenSpaceQuad>(id, glContext, fragmentShader, renderTarget.get());
         screenSpaceQuad->initAndCompileShaders();
     }
 
     void render() {
-        screenSpaceQuad->render();
+        screenSpaceQuad->render([this](auto& gl, GLuint program) {
+            useSetUniforms(gl, program);
+        });
+    }
+
+    void ensureSize(int w, int h) {
+        if (renderTarget)
+            renderTarget->resize(w, h);
     }
 
     GLuint getScreenSpaceQuadFrameBuffer() {
@@ -67,6 +69,16 @@ public:
         return name;
     }
 
+    juce::var getUniforms() const {
+        const juce::ScopedLock sl(uniformLock);
+        return uniforms;
+    }
+
+    void setUniforms(juce::var newUniforms) {
+        const juce::ScopedLock sl(uniformLock);
+        uniforms = std::move(newUniforms);
+    }
+
 private:
     int id;
     unsigned int priority;
@@ -77,5 +89,56 @@ private:
     std::unique_ptr<ScreenSpaceQuad> screenSpaceQuad;
 
     bool enabled;
+
+    mutable juce::CriticalSection uniformLock; // mutual exclusion for uniforms since its set in message thread but accessed in gl thread.
     juce::var uniforms;
+
+    void useSetUniforms(juce::OpenGLExtensionFunctions& gl, GLuint program) {
+        juce::var snapshot;
+        {
+            const juce::ScopedLock sl(uniformLock);
+            snapshot = uniforms;
+        }
+
+        auto* array = snapshot.getArray();
+        if (array == nullptr)
+            return;
+
+        for (const auto& uniform : *uniforms.getArray()) {
+            auto* object = uniform.getDynamicObject();
+
+            if (object == nullptr)
+                continue;
+
+            auto handle = object->getProperty("handle").toString();
+            auto type = object->getProperty("type").toString();
+            auto value = object->getProperty("value");
+
+            GLint location = gl.glGetUniformLocation(program, handle.toRawUTF8());
+
+            if (location == -1)
+                continue;
+
+            if (type == Uniform_Component_Type::FLOAT_INPUT || type == Uniform_Component_Type::FLOAT_SLIDER) {
+                gl.glUniform1f(location, static_cast<float>(value));
+            } else if (type == Uniform_Component_Type::INT_INPUT || type == Uniform_Component_Type::INT_SLIDER) {
+                gl.glUniform1i(location, static_cast<int>(value));
+            } else if (type == Uniform_Component_Type::BOOLEAN_BUTTON) {
+                gl.glUniform1i(location, static_cast<bool>(value) ? 1 : 0);
+            } else if (type == Uniform_Component_Type::RGB_PICKER) {
+                auto* rgb = value.getDynamicObject();
+
+                if (rgb == nullptr)
+                    continue;
+
+                gl.glUniform3f(
+                    location,
+                    static_cast<float>(rgb->getProperty("red")),
+                    static_cast<float>(rgb->getProperty("green")),
+                    static_cast<float>(rgb->getProperty("blue"))
+                );
+            }
+        }
+    }
+
 };

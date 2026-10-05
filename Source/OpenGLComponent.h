@@ -88,6 +88,8 @@ public:
         return videoEncoder.get(); 
     }
 
+    void resizeComponent(juce::Rectangle<int> visualiserArea);
+
     void setFullScreen(bool state) {
         juce::String s = state == true ? "true" : "false";
         DBG("OpenGLComponent full screen mode set to " << s << ".");

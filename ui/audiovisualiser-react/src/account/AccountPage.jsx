@@ -22,6 +22,6 @@ function AccountPage() {
                 </DropDownMenu>             
             </AVRootComponent>
         </div>
-    );
+    )
 }
 export default AccountPage;
