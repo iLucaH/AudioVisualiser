@@ -53,7 +53,7 @@ public:
 				nativeFunctionRegister(args, std::move(completion));
 				})} {
 
-		webView.goToURL(webView.getResourceProviderRoot()); // Ask c++ backend for the resource.
+		//webView.goToURL(webView.getResourceProviderRoot()); // Ask c++ backend for the resource.
 		DBG("WebView Location set to Root: " << webView.getResourceProviderRoot());
 
 		addAndMakeVisible(webView);

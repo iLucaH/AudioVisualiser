@@ -63,8 +63,7 @@ void AudioVisualiserAudioProcessorEditor::paint(juce::Graphics& g) {
         const float corner = 6.0f * scale;
         auto frame = visualiserArea.toFloat().expanded(thickness * 0.5f);
 
-        for (int i = 3; i >= 1; --i)
-        {
+        for (int i = 3; i >= 1; --i) {
             g.setColour(Theme::accent.withAlpha(0.07f * (4 - i)));
             g.drawRect(frame.expanded(i * 1.5f * scale), 1.5f * scale);
         }
@@ -85,8 +84,7 @@ void AudioVisualiserAudioProcessorEditor::paint(juce::Graphics& g) {
         const float corner = 12.0f * scale;
         auto frame = panelArea.toFloat().expanded(thickness * 0.5f);
 
-        for (int i = 3; i >= 1; --i)
-        {
+        for (int i = 3; i >= 1; --i) {
             g.setColour(Theme::accent.withAlpha(0.07f * (4 - i)));
             g.drawRoundedRectangle(frame.expanded(i * 1.5f * scale),
                 corner + i * 1.5f * scale, 1.5f * scale);

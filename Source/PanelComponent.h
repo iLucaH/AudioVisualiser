@@ -25,7 +25,8 @@ class PanelComponent : public juce::Component {
 public:
 	PanelComponent(SelectorTabPanel& selectorTabPanel) : selectorTabPanel(selectorTabPanel), webView(createWebViewOptions()) {
 		// Web View Management
-		webView.goToURL("http://localhost:5173/"); // Ask c++ backend for the resource.
+		DBG("Panel Loging Searching for resource provider root.");
+		webView.goToURL(webView.getResourceProviderRoot()); // Ask c++ backend for the resource.
 		DBG("WebView Location set to Root: " << webView.getResourceProviderRoot());
 		addAndMakeVisible(webView);
 

@@ -119,7 +119,7 @@ function NativeSelectorFromBackened({ getHandleName, setHandleName }) {
                 ))}
             </select>
 
-            <FiChevronDown className={styles.selectArrow} />
+            <FiChevronDown className={styles.selectArrowSmaller} />
         </div>
     )
 }

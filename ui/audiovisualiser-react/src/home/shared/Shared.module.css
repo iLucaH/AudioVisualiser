@@ -3,6 +3,7 @@
     display: flex;
     align-items: center;
     width: 100%;
+    margin-bottom: 10px;
 }
 
 .select {
@@ -12,10 +13,9 @@
     width: 100%;
     padding: 10px 40px 10px 14px;
 
-    background: #1a1919;
-    color: #d9d9d9;
-
-    border: 1px solid #6c6868;
+    color: var(--color-text-weak);
+    background-color: var(--color-background);
+    border: 1px solid var(--color-emerald);
     border-radius: 6px;
 
     font-family: inherit;
@@ -26,18 +26,115 @@
 }
 
 .select:hover {
-    border-color: #d9d9d9;
-}
-
-.select:focus {
-    border-color: #be2c2c;
-    box-shadow: 0 0 0 2px rgba(190, 44, 44, 0.2);
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.6) inset;
 }
 
 .selectArrow {
     position: absolute;
     left: 90%;
+    scale: 1.3;
 
     pointer-events: none;
-    color: #d9d9d9;
+    color: var(--color-lighter-emerald);
+}
+
+.selectArrowSmaller {
+    position: absolute;
+    left: 86%;
+    scale: 1.3;
+
+    pointer-events: none;
+    color: var(--color-lighter-emerald);
+}
+
+.switchEnabled,
+.switchDisabled {
+    width: 60px;
+    height: 28px;
+
+    padding: 0;
+    margin: 0;
+
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+
+    border: 1px solid var(--color-background-soft);
+    cursor: pointer;
+
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease,
+        opacity 0.15s ease;
+}
+
+/* ON button */
+.switchEnabled {
+    background-color: var(--color-lighter-emerald);
+    color: var(--color-background);
+
+    box-shadow:
+        0 0 8px rgba(0, 0, 0, 0.35) inset,
+        0 0 6px rgba(0, 0, 0, 0.15);
+}
+
+/* OFF button */
+.switchDisabled {
+    background-color: var(--color-background);
+    color: var(--color-text-secondary);
+}
+
+/* Only the active button gets hover feedback */
+.switchEnabled:hover {
+    background-color: var(--color-lighter-emerald);
+    box-shadow:
+        0 0 8px rgba(0, 0, 0, 0.35) inset,
+        0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Disabled = currently selected state */
+.switchEnabled:disabled,
+.switchDisabled:disabled {
+    opacity: 1;
+    cursor: default;
+}
+
+/* Make the inactive option slightly darker */
+.switchDisabled:disabled {
+    background-color: var(--color-background);
+    color: var(--color-text-secondary);
+    box-shadow: none;
+}
+
+.switch {
+    display: flex;
+    width: fit-content;
+    border-radius: 6px;
+    overflow: hidden;
+
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+}
+
+.switchEnabled,
+.switchDisabled {
+    border-radius: 0;
+}
+
+.switchEnabled:first-child,
+.switchDisabled:first-child {
+    border-radius: 6px 0 0 6px;
+}
+
+.switchEnabled:last-child,
+.switchDisabled:last-child {
+    border-radius: 0 6px 6px 0;
+}
+
+.swtichRow {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: first baseline;
+    justify-content: space-between;
 }

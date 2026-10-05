@@ -9,6 +9,7 @@
     resize: vertical;
 
     margin-bottom: 10px;
+    margin-top: 4px;
 }
 
 .textfieldshort {
@@ -24,6 +25,7 @@
     text-align: left;
 
     margin-bottom: 10px;
+    margin-top: 4px;
 
     resize: none;
 }
@@ -44,5 +46,24 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    gap: 30px;  
+    gap: 30px;
+}
+
+.informationMessage {
+    background-color: var(--color-darker-emerald);
+    border: 2px solid var(--color-lighter-emerald);
+    border-radius: 10px;
+    color: var(--color-text-weak);
+    box-shadow: 0 0 10px rgba(50, 207, 102, 0.7);
+
+    margin-top: 14px;
+    margin-bottom: 16px;
+    margin-left: 10px;
+    margin-right: 10px;
+    padding-top: 6px;
+    padding-bottom: 7px;
+    padding-left: 6px;
+    padding-right: 6px;
+
+    text-align: center;
 }

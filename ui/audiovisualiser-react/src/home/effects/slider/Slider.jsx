@@ -12,6 +12,7 @@ export default function Slider ({
     label,
     disabled = false,
     showValue = true,
+    toFixed = 2,
 }) {
     const id = useId()
     const percent = ((value - min) / (max - min)) * 100
@@ -21,6 +22,7 @@ export default function Slider ({
 
     return (
         <div className={styles.slider}>
+            {showValue && <span className={styles.value}>{value.toFixed(toFixed)}</span>}
             {label && <label htmlFor={id} className={styles.label}>{label}</label>}
             <input
                 id={id}
@@ -36,7 +38,6 @@ export default function Slider ({
                 onKeyUp={handleCommit}
                 style={{ '--fill': `${percent}%` }}
             />
-            {showValue && <span className={styles.value}>{value}</span>}
         </div>
     )
 }

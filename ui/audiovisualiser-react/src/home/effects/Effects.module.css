@@ -9,7 +9,6 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 8px;
     margin-bottom: 12px;
 }
 
@@ -29,4 +28,21 @@
 }
 
 .effectBottom {
+}
+
+.effectOpener {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.effectPriority {
+    display: flex;
+    gap: 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
 }

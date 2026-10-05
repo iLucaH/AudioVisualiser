@@ -4,6 +4,7 @@ import DropDownMenu from '../shared/DropDownMenu'
 import AVRootComponent from '../shared/AVRootComponent'
 
 import styles from './ExportPage.module.css'
+import ContentInset from '../shared/ContentInset'
 
 import { messageJUCE, JuceFunctionHandlers } from '../services/juceHandlerService'
 
@@ -57,16 +58,18 @@ function ExportPage() {
                     </div>
                 </DropDownMenu>
 
-                <DropDownMenu title="Recordings" open={true}>
-                    {recordings.length === 0 ? (
-                        <p className={styles.empty}>No recordings yet.</p>
-                    ) : (
-                        <ul className={styles.list}>
-                            {recordings.map(nameRecording => (
-                                <li key={nameRecording}>{nameRecording}</li>
-                            ))}
-                        </ul>
-                    )}
+                <DropDownMenu title="Recordings" open={false}>
+                    <ContentInset>
+                        {recordings.length === 0 ? (
+                            <p className={styles.empty}>No recordings yet.</p>
+                        ) : (
+                            <ul className={styles.list}>
+                                {recordings.map(nameRecording => (
+                                    <li key={nameRecording}>{nameRecording}</li>
+                                ))}
+                            </ul>
+                        )}
+                    </ContentInset>
                 </DropDownMenu>
             </AVRootComponent>
         </div>

@@ -1,5 +1,8 @@
 import Slider from '../slider/Slider'
 import ColourPicker from '../picker/ColourPicker'
+import Switch from '../../shared/Switch'
+
+import styles from './Uniform.module.css'
 
 export default function Uniform({ uniformVar, updateEffect }) {
 
@@ -8,7 +11,7 @@ export default function Uniform({ uniformVar, updateEffect }) {
     }
 
     return (
-        <div>
+        <div className={styles.uniformRow}>
             {uniformVar.name}
 
             {uniformVar.type === 'floatinput' ? (
@@ -95,6 +98,7 @@ function NumberSlider({ value, setValue, min, max, isFloat }) {
                 min={min}
                 max={max}
                 step={isFloat ? 0.01 : 1}
+                toFixed={isFloat ? 2 : 0}
             />
         </div>
     )
@@ -111,12 +115,18 @@ function RGBPicker({ value, setValue }) {
 function BooleanButton({ value, setValue }) {
     return (
         <div>
-            <button type="button" onClick={async () => {
+        <Switch
+            label=""
+            state={value}
+            onToggle={() => setValue(!value)}
+            inRow={false}
+        />
+            {/* <button type="button" onClick={async () => {
                 setValue(true)
             }} disabled={value}>On</button>
             <button type="button" onClick={async () => {
                 setValue(false)
-            }} disabled={!value}>Off</button>
+            }} disabled={!value}>Off</button> */}
         </div>
     )
 }

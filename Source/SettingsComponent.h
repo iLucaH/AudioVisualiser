@@ -42,7 +42,7 @@ public:
 				})
 			.withNativeIntegrationEnabled()} {
 
-		webView.goToURL(webView.getResourceProviderRoot() + "settings.html");
+		//webView.goToURL(webView.getResourceProviderRoot() + "settings.html");
 		DBG("WebView Location set to Root: " << webView.getResourceProviderRoot());
 
 		addAndMakeVisible(webView);

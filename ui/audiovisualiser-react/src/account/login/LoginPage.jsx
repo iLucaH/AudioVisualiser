@@ -6,6 +6,7 @@ import { useState } from 'react'
 
 import DropDownMenu from '../../shared/DropDownMenu'
 import AVRootComponent from '../../shared/AVRootComponent'
+import ContentInset from '../../shared/ContentInset'
 
 import { messageJUCE, JuceFunctionHandlers, waitForNativeEvent } from '../../services/juceHandlerService'
 
@@ -118,73 +119,77 @@ function LoginPage() {
             <AVRootComponent>
                 <DropDownMenu title="Login" open={true}>
                     <div className={styles.form}>
-                        <p className={styles.heading}>Login</p>
+                        <ContentInset expanded={true}>
+                            <h2 className={styles.heading}>Login</h2>
 
-                        <div className={styles.field}>
-                            <label className={styles.label} htmlFor="login-username">Username</label>
-                            <input
-                                className={styles.input}
-                                id="login-username"
-                                type="text"
-                                value={loginUsername}
-                                onChange={(e) => setLoginUsername(e.target.value)}
-                                autoComplete="username"
-                            />
-                        </div>
+                            <div className={styles.field}>
+                                <label className={styles.label} htmlFor="login-username">Username</label>
+                                <input
+                                    className={styles.input}
+                                    id="login-username"
+                                    type="text"
+                                    value={loginUsername}
+                                    onChange={(e) => setLoginUsername(e.target.value)}
+                                    autoComplete="username"
+                                />
+                            </div>
 
-                        <div className={styles.field}>
-                            <label className={styles.label} htmlFor="login-password">Password</label>
-                            <input
-                                className={styles.input}
-                                id="login-password"
-                                type="password"
-                                value={loginPassword}
-                                onChange={(e) => setLoginPassword(e.target.value)}
-                                autoComplete="current-password"
-                                onKeyDown={(e) => { if (e.key === 'Enter') loginUser() }}
-                            />
-                        </div>
+                            <div className={styles.field}>
+                                <label className={styles.label} htmlFor="login-password">Password</label>
+                                <input
+                                    className={styles.input}
+                                    id="login-password"
+                                    type="password"
+                                    value={loginPassword}
+                                    onChange={(e) => setLoginPassword(e.target.value)}
+                                    autoComplete="current-password"
+                                    onKeyDown={(e) => { if (e.key === 'Enter') loginUser() }}
+                                />
+                            </div>
 
-                        <button className={styles.button} onClick={loginUser} disabled={isLoading}>
-                            Login
-                        </button>
-                        {loginMessage && <p className={styles.message}>{loginMessage}</p>}
+                            <button className={styles.button} onClick={loginUser} disabled={isLoading}>
+                                Login
+                            </button>
+                            {loginMessage && <p className={styles.message}>{loginMessage}</p>}
+                        </ContentInset>
                     </div>
                 </DropDownMenu>
 
                 <DropDownMenu title="Register" open={false}>
                     <div className={styles.form}>
-                        <p className={styles.heading}>Create an account</p>
+                        <ContentInset expanded={true}>
+                            <h2 className={styles.heading}>Create an account</h2>
 
-                        <div className={styles.field}>
-                            <label className={styles.label} htmlFor="register-username">Username</label>
-                            <input
-                                className={styles.input}
-                                id="register-username"
-                                type="text"
-                                value={registerUsername}
-                                onChange={(e) => setRegisterUsername(e.target.value)}
-                                autoComplete="username"
-                            />
-                        </div>
+                            <div className={styles.field}>
+                                <label className={styles.label} htmlFor="register-username">Username</label>
+                                <input
+                                    className={styles.input}
+                                    id="register-username"
+                                    type="text"
+                                    value={registerUsername}
+                                    onChange={(e) => setRegisterUsername(e.target.value)}
+                                    autoComplete="username"
+                                />
+                            </div>
 
-                        <div className={styles.field}>
-                            <label className={styles.label} htmlFor="register-password">Password</label>
-                            <input
-                                className={styles.input}
-                                id="register-password"
-                                type="password"
-                                value={registerPassword}
-                                onChange={(e) => setRegisterPassword(e.target.value)}
-                                autoComplete="new-password"
-                                onKeyDown={(e) => { if (e.key === 'Enter') registerUser() }}
-                            />
-                        </div>
+                            <div className={styles.field}>
+                                <label className={styles.label} htmlFor="register-password">Password</label>
+                                <input
+                                    className={styles.input}
+                                    id="register-password"
+                                    type="password"
+                                    value={registerPassword}
+                                    onChange={(e) => setRegisterPassword(e.target.value)}
+                                    autoComplete="new-password"
+                                    onKeyDown={(e) => { if (e.key === 'Enter') registerUser() }}
+                                />
+                            </div>
 
-                        <button className={styles.button} onClick={registerUser} disabled={isLoading}>
-                            Click to register
-                        </button>
-                        {registerMessage && <p className={styles.message}>{registerMessage}</p>}
+                            <button className={styles.button} onClick={registerUser} disabled={isLoading}>
+                                Click to register
+                            </button>
+                            {registerMessage && <p className={styles.message}>{registerMessage}</p>}
+                        </ContentInset>
                     </div>
                 </DropDownMenu>
             </AVRootComponent>

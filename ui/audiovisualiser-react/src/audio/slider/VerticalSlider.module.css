@@ -19,24 +19,25 @@
 
 /* Track */
 .slider::-webkit-slider-runnable-track {
-    width: 8px;
+    width: 5px;
     height: 100%;
-    background: var(--color-lighter-emerald);
-    border-radius: 10px;
+    background: var(--color-emerald);
+    border-radius: 16px;
+    box-shadow: 0 0 0 4px var(--color-lighter-emerald);
 }
 
 /* Thumb */
 .slider::-webkit-slider-thumb {
     appearance: none;
 
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
 
-    margin-left: -6px;
+    margin-left: -12px;
 
-    background: var(--color-emerald);
+    background: var(--color-even-darker-emerald);
     border-radius: 50%;
-    border: none;
+    border: 3px solid var(--color-emerald);
 }
 
 /* Firefox */

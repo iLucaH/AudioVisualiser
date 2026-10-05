@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import DropDownMenu from '../shared/DropDownMenu'
 import AVRootComponent from '../shared/AVRootComponent'
 import styles from './SettingsPage.module.css'
+import ContentInset from '../shared/ContentInset'
 
 import { JuceFunctionHandlers, messageJUCE, waitForNativeEvent } from '../services/juceHandlerService'
 
@@ -100,96 +101,101 @@ function SettingsPage() {
 
                 {/* Rendering Settings */}
                 <DropDownMenu title="Rendering Settings" open={true}>
+                    <ContentInset>
+                        <div className={styles.formRowParent}>
+                            <div className={styles.formRow}>
+                                <label>Width</label>
+                                <input
+                                    id="width"
+                                    name="width"
+                                    type="number"
+                                    min="100"
+                                    max="1920"
+                                    step="2"
+                                    placeholder="Width"
+                                    value={width}
+                                    onChange={(e) => setWidth(e.target.value)}
+                                    onBlur={commitWidth}
+                                />
+                            </div>
 
-                    <div className={styles.formRow}>
-                        <label htmlFor="width">Width:</label>
-                        <input
-                            id="width"
-                            name="width"
-                            type="number"
-                            min="100"
-                            max="1920"
-                            step="2"
-                            placeholder="Width"
-                            value={width}
-                            onChange={(e) => setWidth(e.target.value)}
-                            onBlur={commitWidth}
-                        />
-                    </div>
+                            <div className={styles.formRow}>
+                                <label>Height</label>
+                                <input
+                                    id="height"
+                                    name="height"
+                                    type="number"
+                                    min="100"
+                                    max="1080"
+                                    step="2"
+                                    placeholder="Height"
+                                    value={height}
+                                    onChange={(e) => setHeight(e.target.value)}
+                                    onBlur={commitHeight}
+                                />
+                            </div>
 
-                    <div className={styles.formRow}>
-                        <label htmlFor="height">Height:</label>
-                        <input
-                            id="height"
-                            name="height"
-                            type="number"
-                            min="100"
-                            max="1080"
-                            step="2"
-                            placeholder="Height"
-                            value={height}
-                            onChange={(e) => setHeight(e.target.value)}
-                            onBlur={commitHeight}
-                        />
-                    </div>
-
-                    <div className={styles.formRow}>
-                        <label htmlFor="fullscreen">Fullscreen:</label>
-                        <button
-                            id="fullscreen"
-                            type="button"
-                            onClick={handleToggleFullscreen}
-                        >
-                            Enable
-                        </button>
-                    </div>
-
+                            <div className={styles.formRow}>
+                                <label htmlFor="fullscreen">Fullscreen:</label>
+                                <button
+                                    id="fullscreen"
+                                    type="button"
+                                    onClick={handleToggleFullscreen}
+                                >
+                                    Enable
+                                </button>
+                            </div>
+                        </div>
+                    </ContentInset>
                 </DropDownMenu>
 
 
                 {/* Audio Settings */}
                 <DropDownMenu title="Audio Settings" open={false}>
 
-                    <div className={styles.formRow}>
-                        <label htmlFor="fft">FFT Size:</label>
-                        <select
-                            id="fft"
-                            name="fft"
-                            value={fftSize}
-                            onChange={handleFftChange}
-                        >
-                            <option value="9">512</option>
-                            <option value="10">1024</option>
-                            <option value="11">2048</option>
-                            <option value="12">4096</option>
-                        </select>
-                    </div>
+                    <ContentInset>
+                        <div className={styles.formRow}>
+                            <label>FFT Size</label>
+                            <select
+                                id="fft"
+                                name="fft"
+                                value={fftSize}
+                                onChange={handleFftChange}
+                            >
+                                <option value="9">512</option>
+                                <option value="10">1024</option>
+                                <option value="11">2048</option>
+                                <option value="12">4096</option>
+                            </select>
+                        </div>
+                    </ContentInset>
 
                 </DropDownMenu>
 
 
                 {/* System Settings */}
                 <DropDownMenu title="System Settings" open={false}>
-
-                    <div className={styles.formRow}>
-                        <label htmlFor="socketPassword">Socket Service Password:</label>
-                        <div className={styles.inputGroup}>
+                    <ContentInset>
+                        <label htmlFor="socketPassword">Socket Service Password</label>
+                        <div className={styles.passwordContainer}>
                             <input
                                 id="socketPassword"
                                 type={showPassword ? 'text' : 'password'}
                                 value={socketPassword}
                                 onChange={handleSocketPasswordChange}
                                 onBlur={commitSocketPassword}
+                                className={styles.socketPassword}
                             />
+
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(previous => !previous)}
+                                className={styles.passwordButton}
                             >
                                 {showPassword ? 'Hide' : 'Show'}
                             </button>
                         </div>
-                    </div>
-
+                    </ContentInset>
                 </DropDownMenu>
 
             </AVRootComponent>

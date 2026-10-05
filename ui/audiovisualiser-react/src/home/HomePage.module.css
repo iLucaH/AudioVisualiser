@@ -19,7 +19,7 @@
     justify-content: center;
     gap: 16px;
     align-items: center;
-    flex-shrink: 0;   /* never gets squashed */
+    flex-shrink: 0;
 
     border: 2px solid transparent;
     border-radius: 6px;

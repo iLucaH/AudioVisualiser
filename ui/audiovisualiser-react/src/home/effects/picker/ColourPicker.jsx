@@ -24,7 +24,18 @@ export default function ColourPicker({ value, setValue }) {
 
     return (
         <div>
-            <input type="color" value={hex} onChange={handleChange} />
+            <input
+                type="color"
+                value={hex}
+                onChange={handleChange}
+                style={{
+                    border: '2px solid #10b981',
+                    borderRadius: '5px',
+                    padding: '0',
+                    background: 'transparent',
+                    cursor: 'pointer'
+                }}
+            />
         </div>
     )
 }

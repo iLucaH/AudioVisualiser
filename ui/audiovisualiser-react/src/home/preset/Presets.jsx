@@ -98,13 +98,7 @@ function Presets() {
                     </div>
                 ) : subcontentItem.type === 'spacer' ? (
                     <div key={index}>
-                        <div style={{ 
-                            height: 0,
-                            width: '100%',
-                            borderTop: '3px solid black',
-                            marginTop: subcontentItem.paddingTop,
-                            marginBottom: subcontentItem.paddingBottom,
-                        }}/>
+                        <div style={{ height: 0, width: '100%', borderTop: '1px solid #045f41', marginTop: subcontentItem.paddingTop, marginBottom: subcontentItem.paddingBottom }}/>
                     </div>
                 ) : subcontentItem.type === 'row' ? (
                     <div key={index} className={styles.customrow}>
@@ -147,7 +141,11 @@ function Presets() {
                 setHiddenContent(null)
                 setInformationMessage("")
                 } } />
-            <p>{informationMessage}</p>
+            {informationMessage !== "" ? 
+                <div className={styles.informationMessage}>
+                    {informationMessage}
+                </div>
+            : null }
             {evaluateOption(selectedValue.subcontent)}
             {hiddenContent !== null ? (
                 <div className={styles.hiddenContentBlock}>

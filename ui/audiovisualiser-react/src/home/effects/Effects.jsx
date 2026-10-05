@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react'
+import { useApp } from '../../AppContext'
 
 import DropDownMenu from '../../shared/DropDownMenu'
 import Slider from './slider/Slider'
 import Uniform from './uniform/Uniform'
+import Switch from '../shared/Switch'
 
 import { JuceFunctionHandlers, messageJUCE } from '../../services/juceHandlerService'
 
 import styles from './Effects.module.css'
 
 export default function Effects () {
+    
+    const { setDropdownSelectorOpen } = useApp();
     
     const [messages, setMessages] = useState({})
     const setMessage = (name, message) => setMessages(previous => ({ ...previous, [name]: message }))
@@ -54,6 +58,16 @@ export default function Effects () {
         }
     }
 
+    const setIsEffectDropDownOpen = (name, open) => {
+        setDropdownSelectorOpen(previous =>
+            previous.map(component =>
+                component.name === name
+                    ? { ...component, open }
+                    : component
+            )
+        )
+    }
+
     useEffect(() => {
         async function fetchSettings() {
             try {
@@ -71,19 +85,19 @@ export default function Effects () {
 
     return (
         <div>
-            <div className={styles.buttonRow}>
-                PostProcessing:
-                <button type="button" onClick={async () => {
+            <Switch
+                label="Using Effects"
+                state={globalSwitchState}
+                onToggle={async () => {
                     const newState = await messageJUCE(JuceFunctionHandlers.switchPostProcessorEnabled)
                     setGlobalSwitchState(newState)
-                }} disabled={globalSwitchState}>On</button>
-                <button type="button" onClick={async () => {
-                    const newState = await messageJUCE(JuceFunctionHandlers.switchPostProcessorEnabled)
-                    setGlobalSwitchState(newState)
-                }} disabled={!globalSwitchState}>Off</button>
-            </div>
-
+                }}
+            />
             <div style={{ height: 0, width: '100%', borderTop: '1px solid #045f41', marginTop: '15px', marginBottom: '15px',}}/>
+            <div className={styles.effectOpener}>
+                <button onClick={ () => effects.forEach(effect => setIsEffectDropDownOpen(effect.name, true)) }>Open All</button>
+                <button onClick={ () => effects.forEach(effect => setIsEffectDropDownOpen(effect.name, false)) }>Close All</button>
+            </div>
             <div className={styles.content}>
                 {effects.map((effect) => (
                     <div key={effect.id}>
@@ -93,32 +107,43 @@ export default function Effects () {
                                     {getMessage(effect.id)}
                                 </div>
                                 <div className={styles.effectPriority}>
-                                    Priority:
+                                    Priority
                                     <Slider
                                         value={getPrioritySliderValue(effect.id, effect.priority)}
                                         onChange={(val) => handlePriorityDrag(effect, val)}
                                         onCommit={(val) => handlePriorityCommit(effect, val)}
+                                        toFixed={0}
                                     />
                                 </div>
-                                <div className={styles.effectEnabled}>
-                                    Enabled: 
-                                    <button type="button" onClick={async () => {
-                                        const success = await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, effect.priority, true, effect.uniforms)
-                                        if (success) {
-                                            setEffects(previous => previous.map(e => e.id === effect.id ? { ...e, enabled:true } : e))
-                                        } else {
-                                            setMessage(effect.id, "There was an error enabling this effect!")
-                                        }
-                                    }} disabled={effect.enabled}>On</button>
-                                    <button type="button" onClick={async () => {
-                                        const success = await messageJUCE(JuceFunctionHandlers.effectUpdate, effect.name, effect.id, effect.priority, false, effect.uniforms)
-                                        if (success) {
-                                            setEffects(previous => previous.map(e => e.id === effect.id ? { ...e, enabled:false } : e))
-                                        } else {
-                                            setMessage(effect.id, "There was an error enabling this effect!")
-                                        }
-                                    }} disabled={!effect.enabled}>Off</button>
-                                </div>
+                                    <Switch
+                                        label="Enabled"
+                                        state={effect.enabled}
+                                        onToggle={async (newState) => {
+                                            const success = await messageJUCE(
+                                                JuceFunctionHandlers.effectUpdate,
+                                                effect.name,
+                                                effect.id,
+                                                effect.priority,
+                                                newState,
+                                                effect.uniforms
+                                            )
+
+                                            if (success) {
+                                                setEffects(previous =>
+                                                    previous.map(e =>
+                                                        e.id === effect.id
+                                                            ? { ...e, enabled: newState }
+                                                            : e
+                                                    )
+                                                )
+                                            } else {
+                                                setMessage(
+                                                    effect.id,
+                                                    `There was an error ${newState ? 'enabling' : 'disabling'} this effect!`
+                                                )
+                                            }
+                                        }}
+                                    />
                             </div>
                             <div>
                                 {effect.uniforms && <div style={{ height: 0, width: '100%', borderTop: '1px solid #045f41', marginTop: '15px', marginBottom: '10px',}}/>}

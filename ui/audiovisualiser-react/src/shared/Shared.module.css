@@ -105,3 +105,21 @@
     gap: 6px;
     background-color: transparent;
 }
+
+.contentInset {
+    padding: 10px;
+    background-color: var(--color-background-soft);
+    border-radius: 6px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.7) inset;
+}
+
+/* For a more spread out look */
+.contentInsetExpanded {
+    padding: 20px;
+    background-color: var(--color-background-soft);
+    border-radius: 6px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.7) inset;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}

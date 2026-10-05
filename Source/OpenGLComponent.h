@@ -141,6 +141,7 @@ private:
     RingBuffer<float>& ringBuffer;
     juce::AudioBuffer<GLfloat> readBuffer;
     GLfloat visualizationBufferTD[RING_BUFFER_READ_SIZE];
+    std::array<float, FFT_BIN_SIZE> visualizationBufferFD;
 
     std::atomic<unsigned int> selectedState{ 1 };
     unsigned int time = 0;

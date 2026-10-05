@@ -45,3 +45,14 @@ button:hover {
 button:active {
     background-color: #FFFFFF;
 }
+
+textarea {
+    background-color: var(--color-background-soft);
+    border: 1px solid var(--color-emerald);
+    color: var(--color-emerald);
+}
+
+textarea:focus {
+    border: 2px solid var(--color-even-darker-emerald);
+    outline: none;
+}

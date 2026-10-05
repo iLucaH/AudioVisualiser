@@ -144,8 +144,15 @@ void OpenGLComponent::renderOpenGL() {
     GLuint visualizationUniformTD = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "audioBufferTD");
     openGLContext.extensions.glUniform1fv(visualizationUniformTD, RING_BUFFER_READ_SIZE, visualizationBufferTD);
 
+    const auto& fft = processor.getShaderFFT();
+    const float scalar = appSettings.getAudioScalar();
+
+    for (int i = 0; i < FFT_BIN_SIZE; ++i)
+        visualizationBufferFD[i] = fft[i] * scalar;
+
+
     GLuint visualizationUniformFD = openGLContext.extensions.glGetUniformLocation(renderState->getShaderProgramID(), "audioBufferFD");
-    openGLContext.extensions.glUniform1fv(visualizationUniformFD, FFT_BIN_SIZE, processor.getShaderFFT().data());
+    openGLContext.extensions.glUniform1fv(visualizationUniformFD, FFT_BIN_SIZE, visualizationBufferFD.data());
 
     if (!isOpenGLEnabled()) { // If we aren't rendering openGL, then dont let it reach here.
         return;

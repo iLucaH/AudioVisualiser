@@ -29,7 +29,7 @@ public:
 				})
 			.withNativeIntegrationEnabled() } {
 
-		webView.goToURL(webView.getResourceProviderRoot() + "appqr.html");
+		//webView.goToURL(webView.getResourceProviderRoot() + "appqr.html");
 		DBG("WebView Location set to Root: " << webView.getResourceProviderRoot());
 
 		addAndMakeVisible(webView);
