@@ -5,7 +5,7 @@
               binaryDataNamespace="webview_files" cppLanguageStandard="20">
   <MAINGROUP id="qUTN4J" name="AudioVisualiser">
     <GROUP id="{2C5C7675-649F-AAD9-2D9E-98D3A1FE4CF2}" name="Source">
-      <FILE id="kCT29E" name="ui.zip" compile="0" resource="1" file="Source/ui.zip"/>
+      <FILE id="eryhGR" name="ui.zip" compile="0" resource="1" file="Source/ui.zip"/>
       <FILE id="jk1piT" name="EventBus.h" compile="0" resource="0" file="Source/EventBus.h"/>
       <GROUP id="{18F6A59A-67C7-6005-7129-D813423003BA}" name="services">
         <FILE id="aYyDgc" name="VisualiserCueService.cpp" compile="1" resource="0"

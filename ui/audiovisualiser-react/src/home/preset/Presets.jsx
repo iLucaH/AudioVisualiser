@@ -51,9 +51,20 @@ function Presets() {
         }
     }, [presets, selectedValue, setSelectedValue])
 
-    const [inputValues, setInputValues] = useState({})
+    const { inputValues, setInputValues } = useApp()
     const [hiddenContent, setHiddenContent] = useState(null)
-    const [informationMessage, setInformationMessage] = useState("")
+
+    const { presetInformationMessage, setPresetInformationMessage } = useApp()
+    const getInformationMessage = (key) => {
+        return presetInformationMessage[key] ?? ""
+    }
+
+    const setInformationMessage = (key, value) => {
+        setPresetInformationMessage(previous => ({
+            ...previous,
+            [key]: value
+        }))
+    }
 
     const handleInputChange = (key, value) => {
         setInputValues(previous => ({ ...previous, [key]: value }))
@@ -72,7 +83,7 @@ function Presets() {
                 subcontentItem.type === 'button' ? (
                     <button key={index} onClick={async () => {
                         const value = inputValues[subcontentItem.link]
-                        setInformationMessage(value ? await messageJUCE(subcontentItem.clickhandler, value) : await messageJUCE(subcontentItem.clickhandler))
+                        setInformationMessage(selectedValue.key, value ? await messageJUCE(subcontentItem.clickhandler, value) : await messageJUCE(subcontentItem.clickhandler))
                     }}>
                         {subcontentItem.label}
                     </button>
@@ -81,6 +92,7 @@ function Presets() {
                         <label>{subcontentItem.label}</label>
                         <textarea
                             className={styles.textfieldlong}
+                            value={inputValues[subcontentItem.label] ?? ""}
                             onChange={(e) =>
                                 handleInputChange(subcontentItem.label, e.target.value)
                             }
@@ -91,6 +103,7 @@ function Presets() {
                         <label>{subcontentItem.label}</label>
                         <textarea
                             className={styles.textfieldshort}
+                            value={inputValues[subcontentItem.label] ?? ""}
                             onChange={(e) =>
                                 handleInputChange(subcontentItem.label, e.target.value)
                             }
@@ -118,12 +131,12 @@ function Presets() {
                             const response = value ? await messageJUCE(subcontentItem.clickhandler, value) : await messageJUCE(subcontentItem.clickhandler)
                             console.log(response)
 
-                            setInformationMessage(response[1])
+                            setInformationMessage(selectedValue.key, response[1])
                             if (response[0] === false) {
                                 return
                             }
                             const message = await eventPromise
-                            setInformationMessage(message[0])
+                            setInformationMessage(selectedValue.key, message[0])
                         }}
                     >{subcontentItem.label}</button>
                 ) : subcontentItem.type === 'picker' ? (
@@ -139,11 +152,10 @@ function Presets() {
         <div>
             <Preset options={presets} selectedValue={selectedValue} setSelectedValue={setSelectedValue} onChange={ () => {
                 setHiddenContent(null)
-                setInformationMessage("")
                 } } />
-            {informationMessage !== "" ? 
+            {getInformationMessage(selectedValue.key) !== "" ? 
                 <div className={styles.informationMessage}>
-                    {informationMessage}
+                    {getInformationMessage(selectedValue.key)}
                 </div>
             : null }
             {evaluateOption(selectedValue.subcontent)}

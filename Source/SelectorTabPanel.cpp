@@ -162,7 +162,10 @@ SelectorTabPanel::SelectorTabPanel(AudioVisualiserAudioProcessor& p, OpenGLCompo
             if (args.size() < 2) {
                 return juce::var();
             }
-            eventBus.emit(Local_Events::LoginComplete, juce::var());
+            // Delay the login event so that the listener in AskAI.h has time to subscribe.
+            juce::Timer::callAfterDelay(500, [this]() {
+                eventBus.emit(Local_Events::LoginComplete, juce::var());
+            });
             appSettings.setAuthJWT(args[1]);
             return juce::var();
         }

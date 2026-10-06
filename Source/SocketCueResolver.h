@@ -12,6 +12,7 @@
 
 #include "VisualiserCueService.h"
 #include "EventBus.h"
+#include "GlobalSocketHandler.h"
 
 #define COMMAND_AUTH 0
 #define COMMAND_METRIC 1
@@ -60,7 +61,8 @@
 
 class SocketCueResolver {
 public:
-    SocketCueResolver(SelectorTabPanel& selectorTabPanel) : selectorTabPanel(selectorTabPanel) {}
+    SocketCueResolver(SelectorTabPanel& selectorTabPanel) : selectorTabPanel(selectorTabPanel) {
+    }
 
     juce::String postCue(int cueId, juce::String body) {
         switch (cueId) {

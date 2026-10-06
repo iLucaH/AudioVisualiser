@@ -10,6 +10,7 @@ export const JuceFunctionHandlers = {
     getSelectorOptions: 'receive.preset.selector.options',
 
     getOpenWebsite: 'receive.qr.opensite',
+    getSocketHandle: 'receive.qr.handle',
 
     setAuthTokenAlreadyExists: 'receive.auth.token.already.exists',
     registerNewUser: 'receive.register.new.user',

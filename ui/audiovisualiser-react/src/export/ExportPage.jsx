@@ -10,7 +10,7 @@ import { messageJUCE, JuceFunctionHandlers } from '../services/juceHandlerServic
 
 function ExportPage() {
     const [recording, setRecording] = useState(false)
-    const [outputPath, setOutputPath] = useState('testPath')
+    const [outputPath, setOutputPath] = useState('...')
     
     const [recordings, setRecordings] = useState(['Loading...'])
 

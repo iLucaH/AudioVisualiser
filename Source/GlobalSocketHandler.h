@@ -15,6 +15,7 @@
 
 #include "PluginEditor.h"
 #include "SocketCueResolver.h"
+#include "SelectorTabPanel.h"
 
 class GlobalSocketHandler {
 public:
@@ -28,7 +29,12 @@ public:
         }
     }
 
-    void startListening() {
+    void startListening(SelectorTabPanel& selectorTabPanel) {
+        selectorTabPanel.getEventBus().subscribe(Receive_Events::QRSocketHandle,
+            [this](const auto& args) {
+                return juce::var(getConnectionHandle());
+            }
+        );
         juce::Thread::launch([this]() {
             running.store(true);
             while (running.load()) {

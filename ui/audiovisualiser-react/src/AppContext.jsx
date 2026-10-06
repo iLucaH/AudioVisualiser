@@ -13,9 +13,11 @@ export function AppProvider({ children }) {
             id: -1,
     })
     const [dropdownSelectorOpen, setDropdownSelectorOpen] = useState([])
+    const [inputValues, setInputValues] = useState({})
+    const [presetInformationMessage, setPresetInformationMessage] = useState({})
 
     return (
-        <AppContext.Provider value={{ selectedValue, setSelectedValue, dropdownSelectorOpen, setDropdownSelectorOpen, selectedEffect, setSelectedEffect }}>
+        <AppContext.Provider value={{ selectedValue, setSelectedValue, dropdownSelectorOpen, setDropdownSelectorOpen, selectedEffect, setSelectedEffect, inputValues, setInputValues, presetInformationMessage, setPresetInformationMessage }}>
             {children}
         </AppContext.Provider>
     )

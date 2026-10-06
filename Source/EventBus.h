@@ -30,6 +30,7 @@ namespace Receive_Events {
 
     // QR
     inline constexpr auto QROpenSite = "receive.qr.opensite";
+    inline constexpr auto QRSocketHandle = "receive.qr.handle";
 
     // Presets
     inline constexpr auto VisualiserPresetGetAll = "receive.preset.getall";

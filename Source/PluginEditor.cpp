@@ -18,8 +18,8 @@ namespace Theme
     const juce::Colour cardEdge{ 0xff5a6b7a };
     const juce::Colour text{ 0xffe6ebf0 };
     const juce::Colour textDim{ 0xff9aa6b2 };
-    const juce::Colour accent{ 0xff3fd0ff };
-    const juce::Colour accent2{ 0xff9b5cff };
+    const juce::Colour accent{ 0xff10b981 };
+    const juce::Colour accent2{ 0xff045f41 };
 }
 
 //==============================================================================
@@ -44,7 +44,7 @@ AudioVisualiserAudioProcessorEditor::AudioVisualiserAudioProcessorEditor(AudioVi
     addAndMakeVisible(openGLComponent);
     addAndMakeVisible(panelComponent);
 
-    globalSocketHandler.startListening();
+    globalSocketHandler.startListening(selectorPanel);
 }
 
 AudioVisualiserAudioProcessorEditor::~AudioVisualiserAudioProcessorEditor() {

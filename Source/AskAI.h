@@ -481,12 +481,12 @@ loadChooser("Load Shader", juce::File::getSpecialLocation(juce::File::userDocume
             juce::MessageManager::callAsync([this, success]() { // inform the front end of the changes
                 juce::Array<juce::var> responseAsync;
                 responseAsync.add(success);
-                responseAsync.add(success ? "" : "There was an error processing your prompt!");
+                responseAsync.add(success ? "New Preset Generated!" : "There was an error processing your prompt!");
                 appSettings.getEventBus().emit(Send_Events::PromptResponseComplete, juce::var(responseAsync));
             });
         });
         response.add(true);
-        response.add("Loading Shader...");
+        response.add("Generating Shader...");
         return response;
     }
 
