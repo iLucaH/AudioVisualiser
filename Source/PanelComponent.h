@@ -26,7 +26,7 @@ public:
 	PanelComponent(SelectorTabPanel& selectorTabPanel) : selectorTabPanel(selectorTabPanel), webView(createWebViewOptions()) {
 		// Web View Management
 		DBG("Panel Loging Searching for resource provider root.");
-		webView.goToURL("http://localhost:5173/"); // Ask c++ backend for the resource.
+		webView.goToURL(webView.getResourceProviderRoot()); // Ask c++ backend for the resource.
 		DBG("WebView Location set to Root: " << webView.getResourceProviderRoot());
 		addAndMakeVisible(webView);
 
