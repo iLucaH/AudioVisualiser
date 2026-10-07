@@ -23,7 +23,8 @@ OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p, ApplicationSe
     addRenderState(std::make_unique<TimeDomain2_2D>(6, openGLContext));
     addRenderState(std::make_unique<TimeDomain3_2D>(7, openGLContext));
     addRenderState(std::make_unique<SDF_1_2D>(8, openGLContext));
-    addRenderState(std::make_unique<AskAI>(9, *this, openGLContext, appSettings));
+    addRenderState(std::make_unique<ImageOverlay>(9, openGLContext));
+    addRenderState(std::make_unique<AskAI>(10, *this, openGLContext, appSettings));
 
     postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createWaveDistortionPostProcessingEffect(), openGLContext));
     postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createAberrationPostProcessingEffect(), openGLContext));
@@ -39,6 +40,7 @@ OpenGLComponent::OpenGLComponent(AudioVisualiserAudioProcessor &p, ApplicationSe
     postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createPosterizePostProcessingEffect(), openGLContext));
     postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createEdgeDetectPostProcessingEffect(), openGLContext));
     postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createBarrelDistortionPostProcessingEffect(), openGLContext));
+    postProcessor.addPostProcessEffect(std::make_unique<PostProcessEffect>(createTimeWarpPostProcessingEffect(), openGLContext));
     
     setOpaque(true); // Indicates that no part of this Component is transparent
     openGLContext.setRenderer(this); // Set this instance as the renderer for the context

@@ -63,4 +63,6 @@ private:
 
     std::vector<std::unique_ptr<PostProcessEffect>> postProcessEffects;
 
+    double startTime = juce::Time::getMillisecondCounterHiRes() * 0.001;
+
 };

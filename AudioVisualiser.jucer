@@ -5,7 +5,7 @@
               binaryDataNamespace="webview_files" cppLanguageStandard="20">
   <MAINGROUP id="qUTN4J" name="AudioVisualiser">
     <GROUP id="{2C5C7675-649F-AAD9-2D9E-98D3A1FE4CF2}" name="Source">
-      <FILE id="eryhGR" name="ui.zip" compile="0" resource="1" file="Source/ui.zip"/>
+      <FILE id="ujMG3p" name="ui.zip" compile="0" resource="1" file="Source/ui.zip"/>
       <FILE id="jk1piT" name="EventBus.h" compile="0" resource="0" file="Source/EventBus.h"/>
       <GROUP id="{18F6A59A-67C7-6005-7129-D813423003BA}" name="services">
         <FILE id="aYyDgc" name="VisualiserCueService.cpp" compile="1" resource="0"
@@ -69,6 +69,7 @@
           <FILE id="YREYxA" name="Classic2_2D.h" compile="0" resource="0" file="Source/Classic2_2D.h"/>
           <FILE id="wXEFh0" name="Classic3_2D.h" compile="0" resource="0" file="Source/Classic3_2D.h"/>
           <FILE id="puYTWN" name="Classic4_2D.h" compile="0" resource="0" file="Source/Classic4_2D.h"/>
+          <FILE id="NIyChA" name="ImageOverlay.h" compile="0" resource="0" file="Source/ImageOverlay.h"/>
           <FILE id="q7v8Dz" name="RenderHeaders.h" compile="0" resource="0" file="Source/RenderHeaders.h"/>
           <FILE id="xiBIbS" name="SDF_1_2D.h" compile="0" resource="0" file="Source/SDF_1_2D.h"/>
           <FILE id="aFcpUy" name="TimeDomain1_2D.h" compile="0" resource="0"

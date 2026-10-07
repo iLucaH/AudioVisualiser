@@ -657,3 +657,469 @@ inline PostProcessingEffectStruct createBarrelDistortionPostProcessingEffect() {
         juce::var(uniforms)
     };
 }
+
+// Animated screen warping with multiple selectable warp designs.
+inline PostProcessingEffectStruct createTimeWarpPostProcessingEffect() {
+    juce::Array<juce::var> uniforms;
+
+    uniforms.add(createIntSliderComponent(
+        "Design",
+        "u_design",
+        0,
+        0,
+        9
+    ));
+
+    uniforms.add(createFloatSliderComponent(
+        "Strength",
+        "u_strength",
+        0.15f,
+        0.0f,
+        1.0f
+    ));
+
+    uniforms.add(createFloatSliderComponent(
+        "Speed",
+        "u_speed",
+        1.0f,
+        0.0f,
+        5.0f
+    ));
+
+    uniforms.add(createFloatSliderComponent(
+        "Frequency",
+        "u_frequency",
+        3.0f,
+        0.1f,
+        20.0f
+    ));
+
+    uniforms.add(createFloatSliderComponent(
+        "Twist",
+        "u_twist",
+        1.0f,
+        -5.0f,
+        5.0f
+    ));
+
+    uniforms.add(createFloatSliderComponent(
+        "Zoom",
+        "u_zoom",
+        1.0f,
+        0.5f,
+        2.0f
+    ));
+
+    uniforms.add(createFloatSliderComponent(
+        "Centre X",
+        "u_centreX",
+        0.5f,
+        0.0f,
+        1.0f
+    ));
+
+    uniforms.add(createFloatSliderComponent(
+        "Centre Y",
+        "u_centreY",
+        0.5f,
+        0.0f,
+        1.0f
+    ));
+
+    uniforms.add(createBooleanButtonComponent(
+        "Mirror",
+        "u_mirror",
+        false
+    ));
+
+    return {
+        14,
+        "Time Warp",
+        14,
+        false,
+
+        R"(#version 330 core
+
+        in vec2 uv;
+        out vec4 fragColor;
+
+        uniform sampler2D u_screenTexture;
+
+        uniform float u_time;
+
+        uniform int   u_design;
+        uniform float u_strength;
+        uniform float u_speed;
+        uniform float u_frequency;
+        uniform float u_twist;
+        uniform float u_zoom;
+
+        uniform float u_centreX;
+        uniform float u_centreY;
+
+        uniform bool u_mirror;
+
+
+        // ------------------------------------------------------------
+        // Helpers
+        // ------------------------------------------------------------
+
+        vec2 centreUV()
+        {
+            return uv - vec2(u_centreX, u_centreY);
+        }
+
+
+        vec2 aspectCorrect(vec2 p)
+        {
+            vec2 size = vec2(textureSize(u_screenTexture, 0));
+            float aspect = size.x / size.y;
+
+            p.x *= aspect;
+
+            return p;
+        }
+
+
+        vec2 restoreAspect(vec2 p)
+        {
+            vec2 size = vec2(textureSize(u_screenTexture, 0));
+            float aspect = size.x / size.y;
+
+            p.x /= aspect;
+
+            return p;
+        }
+
+
+        vec2 rotate(vec2 p, float angle)
+        {
+            float c = cos(angle);
+            float s = sin(angle);
+
+            return mat2(c, -s, s, c) * p;
+        }
+
+
+        // ------------------------------------------------------------
+        // Warp 0 - Ripple
+        // ------------------------------------------------------------
+
+        vec2 rippleWarp(vec2 p, float time)
+        {
+            float dist = length(p);
+
+            float wave =
+                sin(dist * u_frequency - time * u_speed * 3.0)
+                * u_strength;
+
+            return p + normalize(p + vec2(0.00001)) * wave * dist;
+        }
+
+
+        // ------------------------------------------------------------
+        // Warp 1 - Vortex
+        // ------------------------------------------------------------
+
+        vec2 vortexWarp(vec2 p, float time)
+        {
+            float dist = length(p);
+
+            float falloff =
+                1.0 - smoothstep(0.0, 1.2, dist);
+
+            float angle =
+                u_twist
+                * falloff
+                * sin(time * u_speed);
+
+            return rotate(p, angle);
+        }
+
+
+        // ------------------------------------------------------------
+        // Warp 2 - Spiral
+        // ------------------------------------------------------------
+
+        vec2 spiralWarp(vec2 p, float time)
+        {
+            float dist = length(p);
+
+            float angle =
+                dist * u_frequency
+                + time * u_speed
+                + u_twist;
+
+            angle *= u_strength * 4.0;
+
+            return rotate(p, angle);
+        }
+
+
+        // ------------------------------------------------------------
+        // Warp 3 - Horizontal wave
+        // ------------------------------------------------------------
+
+        vec2 horizontalWave(vec2 p, float time)
+        {
+            p.y +=
+                sin(
+                    p.x * u_frequency
+                    + time * u_speed
+                )
+                * u_strength;
+
+            return p;
+        }
+
+
+        // ------------------------------------------------------------
+        // Warp 4 - Vertical wave
+        // ------------------------------------------------------------
+
+        vec2 verticalWave(vec2 p, float time)
+        {
+            p.x +=
+                sin(
+                    p.y * u_frequency
+                    + time * u_speed
+                )
+                * u_strength;
+
+            return p;
+        }
+
+
+        // ------------------------------------------------------------
+        // Warp 5 - Liquid
+        // ------------------------------------------------------------
+
+        vec2 liquidWarp(vec2 p, float time)
+        {
+            float xWave =
+                sin(
+                    p.y * u_frequency
+                    + time * u_speed
+                );
+
+            float yWave =
+                cos(
+                    p.x * u_frequency * 1.37
+                    - time * u_speed * 0.8
+                );
+
+            p.x += xWave * u_strength;
+            p.y += yWave * u_strength;
+
+            return p;
+        }
+
+
+        // ------------------------------------------------------------
+        // Warp 6 - Pinch / bulge
+        // ------------------------------------------------------------
+
+        vec2 pinchWarp(vec2 p, float time)
+        {
+            float dist = length(p);
+
+            float pulse =
+                1.0
+                + sin(time * u_speed) * u_strength;
+
+            float falloff =
+                1.0 - smoothstep(0.0, 1.2, dist);
+
+            float scale =
+                mix(1.0, pulse, falloff);
+
+            return p * scale;
+        }
+
+
+        // ------------------------------------------------------------
+        // Warp 7 - Shockwave
+        // ------------------------------------------------------------
+
+        vec2 shockwaveWarp(vec2 p, float time)
+        {
+            float dist = length(p);
+
+            float wavePosition =
+                fract(time * u_speed * 0.15) * 1.5;
+
+            float wave =
+                1.0
+                - smoothstep(
+                    0.0,
+                    0.15,
+                    abs(dist - wavePosition)
+                );
+
+            float direction =
+                sin(time * u_speed * 0.5);
+
+            p +=
+                normalize(p + vec2(0.00001))
+                * wave
+                * u_strength
+                * direction;
+
+            return p;
+        }
+
+
+        // ------------------------------------------------------------
+        // Warp 8 - Elastic
+        // ------------------------------------------------------------
+
+        vec2 elasticWarp(vec2 p, float time)
+        {
+            float dist = length(p);
+
+            float wave =
+                sin(
+                    dist * u_frequency
+                    - time * u_speed
+                );
+
+            float amount =
+                wave
+                * u_strength
+                * (1.0 - smoothstep(0.0, 1.3, dist));
+
+            return p * (1.0 + amount);
+        }
+
+
+        // ------------------------------------------------------------
+        // Warp 9 - Cosmic / multi-wave
+        // ------------------------------------------------------------
+
+        vec2 cosmicWarp(vec2 p, float time)
+        {
+            float t = time * u_speed;
+
+            float a =
+                sin(
+                    p.x * u_frequency
+                    + t
+                );
+
+            float b =
+                cos(
+                    p.y * u_frequency * 1.3
+                    - t * 1.2
+                );
+
+            float c =
+                sin(
+                    length(p) * u_frequency * 2.0
+                    - t * 2.0
+                );
+
+            p.x += (a + c) * u_strength * 0.5;
+            p.y += (b + c) * u_strength * 0.5;
+
+            p = rotate(
+                p,
+                c * u_twist * u_strength
+            );
+
+            return p;
+        }
+
+
+        // ------------------------------------------------------------
+        // Main
+        // ------------------------------------------------------------
+
+        void main()
+        {
+            float time = u_time;
+
+            vec2 p = centreUV();
+
+            // Correct the warp so circles remain circular
+            p = aspectCorrect(p);
+
+            // Zoom
+            p /= max(u_zoom, 0.001);
+
+
+            // Select warp design
+            if (u_design == 0)
+            {
+                p = rippleWarp(p, time);
+            }
+            else if (u_design == 1)
+            {
+                p = vortexWarp(p, time);
+            }
+            else if (u_design == 2)
+            {
+                p = spiralWarp(p, time);
+            }
+            else if (u_design == 3)
+            {
+                p = horizontalWave(p, time);
+            }
+            else if (u_design == 4)
+            {
+                p = verticalWave(p, time);
+            }
+            else if (u_design == 5)
+            {
+                p = liquidWarp(p, time);
+            }
+            else if (u_design == 6)
+            {
+                p = pinchWarp(p, time);
+            }
+            else if (u_design == 7)
+            {
+                p = shockwaveWarp(p, time);
+            }
+            else if (u_design == 8)
+            {
+                p = elasticWarp(p, time);
+            }
+            else if (u_design == 9)
+            {
+                p = cosmicWarp(p, time);
+            }
+
+
+            // Restore texture aspect ratio
+            p = restoreAspect(p);
+
+            vec2 warpedUV =
+                vec2(u_centreX, u_centreY)
+                + p;
+
+
+            // Optional mirror effect
+            if (u_mirror)
+            {
+                warpedUV = abs(fract(warpedUV) * 2.0 - 1.0);
+            }
+
+
+            // Keep sampling inside the texture.
+            warpedUV = clamp(
+                warpedUV,
+                vec2(0.001),
+                vec2(0.999)
+            );
+
+
+            fragColor =
+                texture(
+                    u_screenTexture,
+                    warpedUV
+                );
+        })",
+
+        juce::var(uniforms)
+    };
+}

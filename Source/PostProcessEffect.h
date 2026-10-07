@@ -30,9 +30,9 @@ public:
         screenSpaceQuad->initAndCompileShaders();
     }
 
-    void render() {
-        screenSpaceQuad->render([this](auto& gl, GLuint program) {
-            useSetUniforms(gl, program);
+    void render(double time) {
+        screenSpaceQuad->render([this, time](auto& gl, GLuint program) {
+            useSetUniforms(gl, program, time);
         });
     }
 
@@ -93,7 +93,7 @@ private:
     mutable juce::CriticalSection uniformLock; // mutual exclusion for uniforms since its set in message thread but accessed in gl thread.
     juce::var uniforms;
 
-    void useSetUniforms(juce::OpenGLExtensionFunctions& gl, GLuint program) {
+    void useSetUniforms(juce::OpenGLExtensionFunctions& gl, GLuint program, double time) {
         juce::var snapshot;
         {
             const juce::ScopedLock sl(uniformLock);
@@ -103,6 +103,10 @@ private:
         auto* array = snapshot.getArray();
         if (array == nullptr)
             return;
+
+        GLuint timeUniform = gl.glGetUniformLocation(program, "u_time");
+        if (timeUniform != -1)
+            gl.glUniform1f(timeUniform, static_cast<float>(time));
 
         for (const auto& uniform : *uniforms.getArray()) {
             auto* object = uniform.getDynamicObject();

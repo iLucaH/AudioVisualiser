@@ -43,6 +43,21 @@ namespace Receive_Events {
     inline constexpr auto VisualiserLoadFromFile = "receive.preset.ai.load.file";
     inline constexpr auto VisualiserLoadFromAccountGet = "receive.preset.ai.load.account.get";
     inline constexpr auto VisualiserLoadFromAccountSet = "receive.preset.ai.load.account.set";
+    // Presets - Image
+    inline constexpr auto VisualiserImageLoad = "receive.preset.image.load";
+    inline constexpr auto VisualiserImagePulse = "receive.preset.image.pulse";
+    inline constexpr auto VisualiserImageShake = "receive.preset.image.shake";
+    inline constexpr auto VisualiserImageRipple = "receive.preset.image.ripple";
+    inline constexpr auto VisualiserImageRGBSplit = "receive.preset.image.rgbsplit";
+    inline constexpr auto VisualiserImageGlitch = "receive.preset.image.glitch";
+    inline constexpr auto VisualiserImageHueShift = "receive.preset.image.hueshift";
+    inline constexpr auto VisualiserImageMirror = "receive.preset.image.mirror";
+    inline constexpr auto VisualiserImageFlash = "receive.preset.image.flash";
+    inline constexpr auto VisualiserImageIntensityUp = "receive.preset.image.intensity.up";
+    inline constexpr auto VisualiserImageIntensityDown= "receive.preset.image.intensity.down";
+    inline constexpr auto VisualiserImageReset = "receive.preset.image.reset";
+    inline constexpr auto VisualiserImageFlipX = "receive.preset.image.flip.x";
+    inline constexpr auto VisualiserImageFlipY = "receive.preset.image.flip.y";
 
     // Effects
     inline constexpr auto VisualiserEffectGetAll = "receive.effect.getall";

@@ -118,16 +118,18 @@ bool PostProcessor::noPostProcessorsEnabled() {
 }
 
 void PostProcessor::renderAll(int viewportWidth, int viewportHeight) {
+    double currentTime = juce::Time::getMillisecondCounterHiRes() * 0.001;
+    double time = currentTime - startTime;
+
     for (size_t i = 0; i < renderOrder.size(); ++i) {
         PostProcessEffect* effect = renderOrder[i];
         const bool isLast = (i + 1 == renderOrder.size());
 
-        juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER,
-            isLast ? 0 : renderOrder[i + 1]->getScreenSpaceQuadFrameBuffer());
+        juce::gl::glBindFramebuffer(juce::gl::GL_FRAMEBUFFER, isLast ? 0 : renderOrder[i + 1]->getScreenSpaceQuadFrameBuffer());
 
         juce::gl::glClear(juce::gl::GL_COLOR_BUFFER_BIT);
         juce::gl::glViewport(0, 0, viewportWidth, viewportHeight);
 
-        effect->render();
+        effect->render(time);
     }
 }
